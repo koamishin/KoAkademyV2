@@ -17,6 +17,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/octane (OCTANE) - v2
 - laravel/pennant (PENNANT) - v1
 - laravel/prompts (PROMPTS) - v0
+- laravel/socialite (SOCIALITE) - v5
 - laravel/wayfinder (WAYFINDER) - v0
 - livewire/livewire (LIVEWIRE) - v4
 - tightenco/ziggy (ZIGGY) - v2

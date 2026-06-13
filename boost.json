@@ -15,6 +15,7 @@
         "laravel-best-practices",
         "octane-development",
         "pennant-development",
+        "socialite-development",
         "wayfinder-development",
         "pest-testing",
         "inertia-vue-development",
