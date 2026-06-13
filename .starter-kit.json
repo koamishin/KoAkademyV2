@@ -1,0 +1,9 @@
+{
+    "docker_enabled": true,
+    "docker_update_strategy": "manual",
+    "packagist_enabled": false,
+    "docker_registry": "ghcr.io",
+    "docker_registry_type": "ghcr",
+    "docker_image_name": "koamishin/koakademyv2",
+    "configured_at": "2026-06-13T10:46:56+00:00"
+}
