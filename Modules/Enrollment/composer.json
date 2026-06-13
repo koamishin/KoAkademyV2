@@ -1,0 +1,1 @@
+{"name":"koakademy/enrollment","autoload":{"psr-4":{"Modules\\Enrollment\\":"app/"}}}

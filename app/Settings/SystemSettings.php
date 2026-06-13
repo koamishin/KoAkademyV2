@@ -51,7 +51,7 @@ class SystemSettings extends Settings
             'registration_enabled' => true,
             'email_verification_required' => true,
             'two_factor_authentication_enabled' => true,
-            'default_user_role' => 'user',
+            'default_user_role' => 'applicant',
         ];
     }
 }

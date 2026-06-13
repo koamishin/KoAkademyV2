@@ -1,0 +1,1 @@
+{"name":"Admissions","alias":"admissions","description":"Applicant intake and review.","keywords":["admissions"],"priority":90,"providers":["Modules\\Admissions\\Providers\\AdmissionsServiceProvider"],"files":[]}

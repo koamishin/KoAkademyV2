@@ -76,7 +76,7 @@ const openEnable = async () => {
         const validationMessage = e.response?.data?.errors?.email?.[0];
         error.value =
             validationMessage ?? e.response?.data?.message ?? defaultMessage;
-        toast.error(error.value);
+        toast.error(error.value ?? defaultMessage);
     } finally {
         isSending.value = false;
     }
@@ -92,7 +92,7 @@ const resend = async () => {
         toast.success('A new code has been sent to your email address.');
     } catch (e: any) {
         error.value = e.response?.data?.message ?? 'Failed to resend code';
-        toast.error(error.value);
+        toast.error(error.value ?? 'Failed to resend code');
     } finally {
         isSending.value = false;
     }
@@ -113,7 +113,7 @@ const enable = async () => {
     } catch (e: any) {
         error.value = e.response?.data?.message ?? 'Failed to enable';
         fieldError.value = e.response?.data?.errors?.code?.[0] ?? null;
-        toast.error(error.value);
+        toast.error(error.value ?? 'Failed to enable');
     } finally {
         isSubmitting.value = false;
     }
@@ -129,7 +129,7 @@ const disable = async () => {
         toast.success('Email authentication has been disabled.');
     } catch (e: any) {
         error.value = e.response?.data?.message ?? 'Failed to disable';
-        toast.error(error.value);
+        toast.error(error.value ?? 'Failed to disable');
     }
 };
 </script>
@@ -178,7 +178,7 @@ const disable = async () => {
             <div v-else class="space-y-4">
                 <div class="space-y-2">
                     <div class="flex justify-center">
-                        <InputOTP v-model="code" :maxLength="6">
+                        <InputOTP v-model="code" :maxlength="6">
                             <InputOTPGroup>
                                 <InputOTPSlot
                                     v-for="slot in 6"

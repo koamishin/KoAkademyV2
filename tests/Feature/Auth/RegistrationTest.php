@@ -9,7 +9,7 @@ test('registration screen can be rendered', function (): void {
 });
 
 test('new users can register', function (): void {
-    Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'applicant', 'guard_name' => 'web']);
 
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
@@ -20,4 +20,5 @@ test('new users can register', function (): void {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+    expect(auth()->user()?->hasRole('applicant'))->toBeTrue();
 });

@@ -13,7 +13,7 @@ beforeEach(function (): void {
     $this->artisan('migrate', ['--path' => 'database/settings', '--no-interaction' => true]);
     app()->forgetInstance(SocialLoginSettings::class);
 
-    Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'applicant', 'guard_name' => 'web']);
 
     config()->set('services.github.client_id', 'test-id');
     config()->set('services.github.client_secret', 'test-secret');
@@ -62,6 +62,7 @@ test('callback with new provider id creates a user and social account', function
     expect($user->name)->toBe('Octo Cat');
     expect($user->email_verified_at)->not->toBeNull();
     expect($user->profile_photo_path)->toBe('https://avatars.githubusercontent.com/u/1');
+    expect($user->hasRole('applicant'))->toBeTrue();
 
     $account = SocialAccount::query()
         ->where('user_id', $user->id)

@@ -13,8 +13,10 @@ use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
 use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -36,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, PasskeyUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Impersonate, Notifiable;
@@ -49,12 +51,18 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasRole('super_admin');
+        return $this->hasAnyRole([
+            'super_admin',
+            'school_admin',
+            'registrar',
+            'admissions_officer',
+            'academic_coordinator',
+        ]);
     }
 
     public function canImpersonate(): bool
     {
-        return $this->hasRole('admin');
+        return $this->hasAnyRole(['super_admin', 'school_admin']);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -65,7 +73,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canBeImpersonated(): bool
     {
-        return ! $this->hasRole('admin');
+        return ! $this->hasAnyRole(['super_admin', 'school_admin']);
     }
 
     /**
@@ -132,5 +140,10 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    public function person(): HasOne
+    {
+        return $this->hasOne(Person::class);
     }
 }

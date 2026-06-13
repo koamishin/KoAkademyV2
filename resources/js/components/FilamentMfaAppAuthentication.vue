@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { useClipboard } from '@vueuse/core';
-import { toast } from 'vue-sonner';
 import { Copy } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -101,7 +101,7 @@ const openSetup = async () => {
         enableError.value =
             error.response?.data?.message ?? 'Failed to start setup';
         setup.value = null;
-        toast.error(enableError.value);
+        toast.error(enableError.value ?? 'Failed to start setup');
     } finally {
         isLoadingSetup.value = false;
     }
@@ -144,7 +144,7 @@ const enable = async () => {
         enableError.value = error.response?.data?.message ?? 'Failed to enable';
         enableFieldError.value =
             error.response?.data?.errors?.code?.[0] ?? null;
-        toast.error(enableError.value);
+        toast.error(enableError.value ?? 'Failed to enable');
     }
 };
 
@@ -159,7 +159,7 @@ const disable = async () => {
     } catch (error: any) {
         enableError.value =
             error.response?.data?.message ?? 'Failed to disable';
-        toast.error(enableError.value);
+        toast.error(enableError.value ?? 'Failed to disable');
     }
 };
 
@@ -177,7 +177,7 @@ const regenerateRecoveryCodes = async () => {
     } catch (error: any) {
         enableError.value =
             error.response?.data?.message ?? 'Failed to regenerate codes';
-        toast.error(enableError.value);
+        toast.error(enableError.value ?? 'Failed to regenerate codes');
     }
 };
 
@@ -272,7 +272,7 @@ const recoveryCodesText = computed(() =>
                 <div class="space-y-2">
                     <p class="text-sm font-medium">Authentication code</p>
                     <div class="flex justify-center">
-                        <InputOTP v-model="code" :maxLength="6">
+                        <InputOTP v-model="code" :maxlength="6">
                             <InputOTPGroup>
                                 <InputOTPSlot
                                     v-for="slot in 6"

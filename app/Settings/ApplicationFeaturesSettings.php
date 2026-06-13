@@ -42,7 +42,7 @@ class ApplicationFeaturesSettings extends Settings
             'two_factor_authentication_enabled' => true,
             'password_reset_enabled' => true,
             'user_impersonation_enabled' => true,
-            'default_user_role' => 'user',
+            'default_user_role' => 'applicant',
             'activity_log_enabled' => true,
             'notifications_enabled' => true,
             'auth_layout' => 'simple',

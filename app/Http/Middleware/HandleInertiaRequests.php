@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Academic\AcademicModuleRegistry;
 use App\Enums\SocialLoginProvider;
 use App\Features\FeatureRegistry;
 use App\Settings\ApplicationFeaturesSettings;
@@ -56,6 +57,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'impersonating' => app('impersonate')->isImpersonating(),
+                'roles' => $request->user()?->getRoleNames()->values()->all() ?? [],
+            ],
+            'academic' => [
+                'enabledModules' => app(AcademicModuleRegistry::class)->enabledKeys(),
+                'person' => $request->user()?->person,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'authLayout' => app(ApplicationFeaturesSettings::class)->auth_layout,

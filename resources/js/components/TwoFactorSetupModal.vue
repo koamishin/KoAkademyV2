@@ -241,9 +241,8 @@ watch(
 
                 <template v-else>
                     <Form
-                        v-bind="
-                            enableApp.form({ code: code, encrypted: encrypted })
-                        "
+                        v-bind="enableApp.form()"
+                        :transform="() => ({ code, encrypted })"
                         reset-on-error
                         @finish="code = ''"
                         @success="isOpen = false"

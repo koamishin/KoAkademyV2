@@ -1,0 +1,1 @@
+{"name":"koakademy/admissions","autoload":{"psr-4":{"Modules\\Admissions\\":"app/","Modules\\Admissions\\Database\\Factories\\":"database/factories/"}}}

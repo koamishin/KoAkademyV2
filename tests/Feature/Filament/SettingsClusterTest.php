@@ -15,6 +15,7 @@ beforeEach(function (): void {
     Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'applicant', 'guard_name' => 'web']);
 
     $this->artisan('migrate', ['--path' => 'database/settings', '--no-interaction' => true]);
 

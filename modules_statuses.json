@@ -1,3 +1,6 @@
 {
+    "Admissions": true,
+    "Enrollment": true,
+    "Classroom": true,
     "Blog": true
 }

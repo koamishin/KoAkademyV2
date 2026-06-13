@@ -6,6 +6,9 @@ parameters:
     level: 5
     paths:
         - app
+        - Modules/Admissions/app
+        - Modules/Enrollment/app
+        - Modules/Classroom/app
         - routes
         - tests
     

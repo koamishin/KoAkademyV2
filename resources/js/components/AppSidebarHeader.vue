@@ -1,18 +1,18 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
     Popover,
     PopoverTrigger,
     PopoverContent,
 } from '@/components/ui/popover';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
     index as getNotifications,
     markAsRead,
     markAllRead,
 } from '@/routes/notifications';
 import type { BreadcrumbItem } from '@/types';
-import { ref, onMounted } from 'vue';
 
 withDefaults(
     defineProps<{

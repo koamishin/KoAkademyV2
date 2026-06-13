@@ -9,7 +9,13 @@ export type AppPageProps<
 > = T & {
     name: string;
     auth: Auth;
+    academic?: {
+        enabledModules: string[];
+        person: Record<string, unknown> | null;
+    };
     sidebarOpen: boolean;
     authLayout: 'simple' | 'card' | 'split';
     [key: string]: unknown;
 };
+
+export type SharedData = AppPageProps;

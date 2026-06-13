@@ -3,10 +3,14 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import fastGlob from 'fast-glob';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
+const projectDirectory = dirname(fileURLToPath(import.meta.url));
+
 const moduleEntries = fastGlob.sync('Modules/*/resources/js/entries/*.ts', {
-    cwd: __dirname,
+    cwd: projectDirectory,
     absolute: true,
 });
 

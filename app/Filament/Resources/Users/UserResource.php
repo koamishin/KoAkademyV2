@@ -93,8 +93,8 @@ class UserResource extends Resource
                         TextEntry::make('roles.name')
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
-                                'admin' => 'danger',
-                                'user' => 'success',
+                                'super_admin', 'school_admin' => 'danger',
+                                'student', 'guardian', 'applicant' => 'success',
                                 default => 'gray',
                             }),
                         TextEntry::make('created_at')
@@ -140,8 +140,8 @@ class UserResource extends Resource
                 TextColumn::make('roles.name')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'admin' => 'danger',
-                        'user' => 'success',
+                        'super_admin', 'school_admin' => 'danger',
+                        'student', 'guardian', 'applicant' => 'success',
                         default => 'gray',
                     })
                     ->sortable(),
@@ -197,7 +197,7 @@ class UserResource extends Resource
                     ->icon('heroicon-o-user-plus')
                     ->url(fn (User $user): string => route('impersonate', $user->id))
                     ->openUrlInNewTab()
-                    ->visible(fn (User $record): bool => ($user = Auth::user()) instanceof User && $user->hasRole('admin') && $record->canBeImpersonated()),
+                    ->visible(fn (User $record): bool => ($user = Auth::user()) instanceof User && $user->hasAnyRole(['super_admin', 'school_admin']) && $record->canBeImpersonated()),
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('verify_email')

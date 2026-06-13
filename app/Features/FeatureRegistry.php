@@ -169,6 +169,7 @@ class FeatureRegistry
         );
 
         static::registerSettingsFeatures();
+        static::registerAcademicFeatures();
     }
 
     public static function registerSettingsFeatures(): void
@@ -221,6 +222,14 @@ class FeatureRegistry
             'Allow deleting account',
             false
         );
+    }
+
+    public static function registerAcademicFeatures(): void
+    {
+        static::register('guardian-access', 'Guardian Access', 'Allow linked guardians to access learner information.', true);
+        static::register('classroom-comments', 'Classroom Comments', 'Allow comments on classroom posts and submissions.', true);
+        static::register('classroom-private-comments', 'Private Classroom Comments', 'Allow private teacher and student comments.', true);
+        static::register('academic-notifications', 'Academic Notifications', 'Send admissions, enrollment, and classroom notifications.', true);
     }
 
     public static function isFeatureAvailableForUser($user, string $feature): bool

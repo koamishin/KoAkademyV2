@@ -1,5 +1,5 @@
-import { themes, type ColorTheme } from '@/conf/themes';
 import { ref } from 'vue';
+import { themes, type ColorTheme } from '@/conf/themes';
 
 const currentTheme = ref<ColorTheme>('default');
 const themeClassPrefix = 'theme-';

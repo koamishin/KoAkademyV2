@@ -155,7 +155,7 @@ class SocialAuthController extends Controller
         if (filled($defaultRole)) {
             $user->assignRole($defaultRole);
         } else {
-            $user->assignRole('user');
+            $user->assignRole('applicant');
         }
 
         return $user;

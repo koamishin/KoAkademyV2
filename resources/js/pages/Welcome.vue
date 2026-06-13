@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
+import KoamishinLogo from '@/components/KoamishinLogo.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -9,8 +11,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import KoamishinLogo from '@/components/KoamishinLogo.vue';
 
 defineProps<{
     canRegister?: boolean;

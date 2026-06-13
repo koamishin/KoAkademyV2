@@ -41,14 +41,16 @@ class RolesAndPermissionsSeeder extends Seeder
 
     protected function discoverPermissionsFromPolicies(): array
     {
-        $policiesPath = app_path('Policies');
+        $policyPaths = [
+            app_path('Policies'),
+            ...collect(File::directories(base_path('Modules')))
+                ->map(fn (string $module): string => $module.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Policies')
+                ->filter(fn (string $path): bool => File::isDirectory($path))
+                ->all(),
+        ];
         $permissions = [];
 
-        if (! File::exists($policiesPath)) {
-            return $permissions;
-        }
-
-        $policyFiles = File::files($policiesPath);
+        $policyFiles = collect($policyPaths)->flatMap(fn (string $path): array => File::files($path));
 
         foreach ($policyFiles as $file) {
             $policyName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
@@ -95,12 +97,23 @@ class RolesAndPermissionsSeeder extends Seeder
     protected function assignPermissionsToRoles(array $roles, array $permissions): void
     {
         $superAdminPermissions = Permission::all()->pluck('name')->toArray();
-        $adminPermissions = array_filter($permissions, fn ($p) => ! str_contains($p, 'Role:'));
-        $userPermissions = array_filter($permissions, fn ($p) => str_starts_with($p, 'ViewAny:'));
-
         $roles[RoleEnums::SUPER_ADMIN->value]->syncPermissions($superAdminPermissions);
-        $roles[RoleEnums::ADMIN->value]->syncPermissions($adminPermissions);
-        $roles[RoleEnums::USER->value]->syncPermissions($userPermissions);
+
+        foreach ([
+            RoleEnums::SCHOOL_ADMIN,
+            RoleEnums::REGISTRAR,
+            RoleEnums::ADMISSIONS_OFFICER,
+            RoleEnums::ACADEMIC_COORDINATOR,
+        ] as $role) {
+            $roles[$role->value]->syncPermissions(array_filter(
+                $permissions,
+                fn (string $permission): bool => ! str_contains($permission, 'Role:'),
+            ));
+        }
+
+        foreach ([RoleEnums::TEACHER, RoleEnums::APPLICANT, RoleEnums::STUDENT, RoleEnums::GUARDIAN] as $role) {
+            $roles[$role->value]->syncPermissions([]);
+        }
     }
 
     protected function createDefaultUsers(array $roles): void
@@ -123,6 +136,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $user->assignRole($roles[RoleEnums::USER->value]);
+        $user->assignRole($roles[RoleEnums::STUDENT->value]);
     }
 }

@@ -1,0 +1,1 @@
+{"name":"Enrollment","alias":"enrollment","description":"Student enrollment and subject loading.","keywords":["enrollment"],"priority":80,"providers":["Modules\\Enrollment\\Providers\\EnrollmentServiceProvider"],"files":[]}

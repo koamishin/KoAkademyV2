@@ -3,10 +3,9 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
-import { initializeColorTheme } from './composables/useColorTheme';
-import { initializeTheme } from './composables/useAppearance';
-
 import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/index.esm.js';
+import { initializeTheme } from './composables/useAppearance';
+import { initializeColorTheme } from './composables/useColorTheme';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
