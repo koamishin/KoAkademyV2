@@ -42,7 +42,20 @@
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
     @routes
-    @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
+    @php
+        $pagePath = "resources/js/pages/{$page['component']}.vue";
+        if (!file_exists(base_path($pagePath))) {
+            $parts = explode('/', $page['component']);
+            if (count($parts) > 1) {
+                $moduleDir = \Illuminate\Support\Str::studly($parts[0]);
+                $modulePath = "Modules/{$moduleDir}/resources/js/pages/{$page['component']}.vue";
+                if (file_exists(base_path($modulePath))) {
+                    $pagePath = $modulePath;
+                }
+            }
+        }
+    @endphp
+    @vite(['resources/js/app.ts', $pagePath])
     @inertiaHead
 </head>
 

@@ -2,8 +2,43 @@
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/classroom';
+
 defineProps<{ classroom: any }>();
+
+function formatDate(dateStr: string | null): string {
+    if (!dateStr) return 'No due date';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+}
+
+function formatTime(time: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const suffix = hours >= 12 ? 'PM' : 'AM';
+    const h = hours % 12 || 12;
+    return `${h}:${String(minutes).padStart(2, '0')} ${suffix}`;
+}
+
+function relativeTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 </script>
+
 <template>
     <Head :title="classroom.name" />
     <AppLayout
@@ -12,92 +47,189 @@ defineProps<{ classroom: any }>();
             { title: classroom.name },
         ]"
     >
-        <div class="grid gap-6 p-4 lg:grid-cols-[0.75fr_1.5fr]">
-            <aside class="grid content-start gap-4">
-                <section class="rounded-xl border bg-card p-5 shadow-sm">
-                    <p
-                        class="text-xs font-semibold tracking-wider text-primary uppercase"
-                    >
-                        {{ classroom.code }}
-                    </p>
-                    <h1 class="mt-1 text-2xl font-semibold">
-                        {{ classroom.name }}
-                    </h1>
-                </section>
-                <section class="rounded-xl border bg-card p-5">
-                    <h2 class="font-semibold">Schedule</h2>
-                    <div class="mt-3 grid gap-2 text-sm text-muted-foreground">
+        <div
+            class="mx-auto flex w-full max-w-[1400px] flex-col gap-6 p-4 sm:p-6 lg:p-8"
+        >
+            <!-- Glassmorphic Banner -->
+            <header
+                class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-8 backdrop-blur-2xl transition-all duration-500 sm:p-12"
+            >
+                <!-- Animated ambient light blobs (Amber/Orange tint) -->
+                <div
+                    class="pointer-events-none absolute -top-20 -right-20 h-80 w-80 animate-pulse rounded-full bg-amber-600/15 blur-[100px]"
+                    style="animation-duration: 5s"
+                />
+                <div
+                    class="pointer-events-none absolute -bottom-32 -left-20 h-[400px] w-[400px] animate-pulse rounded-full bg-orange-600/10 blur-[120px]"
+                    style="animation-duration: 7s; animation-delay: 2s"
+                />
+
+                <div
+                    class="relative z-10 flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between"
+                >
+                    <div>
                         <p
-                            v-for="meeting in classroom.meetings"
-                            :key="meeting.id"
+                            class="text-xs font-semibold tracking-widest text-zinc-500 uppercase"
                         >
-                            {{
-                                meeting.meeting_date ||
-                                `Day ${meeting.day_of_week}`
-                            }}
-                            · {{ meeting.starts_at }}–{{ meeting.ends_at }}
+                            {{ classroom.code }}
                         </p>
-                        <p v-if="!classroom.meetings.length">
-                            No meetings configured.
-                        </p>
+                        <h1
+                            class="mt-2 text-4xl font-medium tracking-tighter text-zinc-100 sm:text-5xl"
+                        >
+                            {{ classroom.name }}
+                        </h1>
                     </div>
-                </section>
-                <section class="rounded-xl border bg-card p-5">
-                    <h2 class="font-semibold">Assignments</h2>
-                    <div class="mt-3 grid gap-3">
-                        <article
-                            v-for="assignment in classroom.assignments"
-                            :key="assignment.id"
-                            class="rounded-lg bg-muted/50 p-3"
+                </div>
+            </header>
+
+            <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
+                <!-- Left Sidebar: Schedule & Assignments -->
+                <aside class="flex flex-col gap-6">
+                    <!-- Schedule -->
+                    <section
+                        class="flex flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl"
+                    >
+                        <div class="border-b border-white/[0.04] px-8 py-6">
+                            <h2
+                                class="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+                            >
+                                Schedule
+                            </h2>
+                        </div>
+                        <div
+                            v-if="classroom.meetings.length === 0"
+                            class="p-8 text-center"
                         >
-                            <p class="font-medium">{{ assignment.title }}</p>
-                            <p class="text-xs text-muted-foreground">
-                                {{
-                                    assignment.due_at
-                                        ? `Due ${assignment.due_at}`
-                                        : 'No due date'
-                                }}
+                            <p
+                                class="text-sm font-medium tracking-wide text-zinc-500"
+                            >
+                                No meetings configured.
                             </p>
-                        </article>
-                        <p
-                            v-if="!classroom.assignments.length"
-                            class="text-sm text-muted-foreground"
+                        </div>
+                        <div v-else class="flex flex-col p-4">
+                            <div
+                                v-for="meeting in classroom.meetings"
+                                :key="meeting.id"
+                                class="rounded-2xl p-4 transition-colors hover:bg-white/[0.04]"
+                            >
+                                <p
+                                    class="text-base font-medium tracking-tight text-zinc-100"
+                                >
+                                    {{
+                                        meeting.meeting_date ||
+                                        `Day ${meeting.day_of_week}`
+                                    }}
+                                </p>
+                                <p
+                                    class="mt-1 text-xs font-medium tracking-wide text-zinc-500"
+                                >
+                                    {{ formatTime(meeting.starts_at) }} —
+                                    {{ formatTime(meeting.ends_at) }}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Assignments -->
+                    <section
+                        class="flex flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl"
+                    >
+                        <div class="border-b border-white/[0.04] px-8 py-6">
+                            <h2
+                                class="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+                            >
+                                Assignments
+                            </h2>
+                        </div>
+                        <div
+                            v-if="classroom.assignments.length === 0"
+                            class="p-8 text-center"
                         >
-                            No published assignments.
+                            <p
+                                class="text-sm font-medium tracking-wide text-zinc-500"
+                            >
+                                No published assignments.
+                            </p>
+                        </div>
+                        <div v-else class="flex flex-col p-4">
+                            <article
+                                v-for="assignment in classroom.assignments"
+                                :key="assignment.id"
+                                class="rounded-2xl p-4 transition-colors hover:bg-white/[0.04]"
+                            >
+                                <p
+                                    class="text-base font-medium tracking-tight text-zinc-100"
+                                >
+                                    {{ assignment.title }}
+                                </p>
+                                <p
+                                    class="mt-1 text-xs font-medium tracking-wide"
+                                    :class="
+                                        assignment.due_at
+                                            ? 'text-amber-500/80'
+                                            : 'text-zinc-500'
+                                    "
+                                >
+                                    {{ formatDate(assignment.due_at) }}
+                                </p>
+                            </article>
+                        </div>
+                    </section>
+                </aside>
+
+                <!-- Right Main Area: Stream/Posts -->
+                <main class="flex flex-col gap-6">
+                    <div
+                        v-if="classroom.posts.length === 0"
+                        class="flex flex-col items-center justify-center rounded-[2rem] border border-white/[0.04] bg-white/[0.01] p-16 text-center backdrop-blur-sm"
+                    >
+                        <p
+                            class="text-2xl font-semibold tracking-tighter text-zinc-300"
+                        >
+                            Stream Empty
+                        </p>
+                        <p
+                            class="mt-3 text-sm font-medium tracking-wide text-zinc-500"
+                        >
+                            The class stream is quiet for now.
                         </p>
                     </div>
-                </section>
-            </aside>
-            <main class="grid content-start gap-4">
-                <article
-                    v-for="post in classroom.posts"
-                    :key="post.id"
-                    class="rounded-xl border bg-card p-6 shadow-sm"
-                >
-                    <div class="flex items-center justify-between gap-3">
-                        <span
-                            class="text-xs font-semibold tracking-wider text-primary uppercase"
-                            >{{ post.type }}</span
-                        ><time class="text-xs text-muted-foreground">{{
-                            post.published_at || post.created_at
-                        }}</time>
-                    </div>
-                    <h2 v-if="post.title" class="mt-3 text-lg font-semibold">
-                        {{ post.title }}
-                    </h2>
-                    <p
-                        class="mt-2 text-sm leading-6 whitespace-pre-wrap text-muted-foreground"
+
+                    <article
+                        v-for="post in classroom.posts"
+                        :key="post.id"
+                        class="flex flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] p-8 backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.03]"
                     >
-                        {{ post.body }}
-                    </p>
-                </article>
-                <p
-                    v-if="!classroom.posts.length"
-                    class="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground"
-                >
-                    The class stream is quiet for now.
-                </p>
-            </main>
+                        <div class="flex items-center justify-between gap-4">
+                            <span
+                                class="rounded bg-white/[0.06] px-2 py-1 text-[10px] font-bold tracking-widest text-zinc-300 uppercase"
+                            >
+                                {{ post.type }}
+                            </span>
+                            <time
+                                class="text-xs font-medium tracking-wide text-zinc-500"
+                            >
+                                {{
+                                    relativeTime(
+                                        post.published_at || post.created_at,
+                                    )
+                                }}
+                            </time>
+                        </div>
+                        <h2
+                            v-if="post.title"
+                            class="mt-5 text-xl font-semibold tracking-tight text-zinc-100"
+                        >
+                            {{ post.title }}
+                        </h2>
+                        <p
+                            class="mt-4 text-sm leading-relaxed font-medium tracking-wide whitespace-pre-wrap text-zinc-400"
+                        >
+                            {{ post.body }}
+                        </p>
+                    </article>
+                </main>
+            </div>
         </div>
     </AppLayout>
 </template>
