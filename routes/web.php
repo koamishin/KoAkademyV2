@@ -2,6 +2,7 @@
 
 use App\Enums\SocialLoginProvider;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
@@ -12,7 +13,7 @@ Route::get('/', fn () => Inertia::render('Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ]))->name('home');
 
-Route::get('dashboard', fn () => Inertia::render('Dashboard'))->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
