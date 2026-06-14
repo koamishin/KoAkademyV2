@@ -4,7 +4,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import type { DashboardProps } from '@/types/dashboard';
 import { type BreadcrumbItem } from '@/types';
-import { BookOpen, Calculator, ClipboardCheck, Bell } from 'lucide-vue-next';
 
 import WelcomeHeader from '@/components/dashboard/WelcomeHeader.vue';
 import StatCard from '@/components/dashboard/StatCard.vue';
@@ -41,25 +40,21 @@ const breadcrumbs: BreadcrumbItem[] = [
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <!-- Stat Cards -->
                 <StatCard
-                    :icon="BookOpen"
                     :value="props.stats.totalClasses"
                     label="Enrolled Classes"
                     accent-color="text-violet-400"
                 />
                 <StatCard
-                    :icon="Calculator"
                     :value="props.stats.totalUnits"
                     label="Total Units"
                     accent-color="text-blue-400"
                 />
                 <StatCard
-                    :icon="ClipboardCheck"
                     :value="props.stats.pendingAssignments"
                     label="Pending Tasks"
                     accent-color="text-amber-400"
                 />
                 <StatCard
-                    :icon="Bell"
                     :value="props.stats.unreadAnnouncements"
                     label="Announcements"
                     accent-color="text-emerald-400"

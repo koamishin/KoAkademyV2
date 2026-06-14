@@ -4,7 +4,6 @@ import type {
     AcademicContext,
     EnrollmentSummary,
 } from '@/types/dashboard';
-import { Sparkles } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -51,7 +50,7 @@ const enrollmentStatusLabel = computed(() => {
 
 <template>
     <div
-        class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-2xl transition-all duration-500 sm:p-8"
+        class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-2xl transition-all duration-500 sm:p-10"
     >
         <!-- Animated ambient light blobs -->
         <div
@@ -64,58 +63,50 @@ const enrollmentStatusLabel = computed(() => {
         />
 
         <div
-            class="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between"
+            class="relative z-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
         >
             <div class="min-w-0 flex-1">
-                <div class="flex items-start gap-4 sm:items-center">
-                    <!-- Icon / Avatar Placeholder -->
-                    <div
-                        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.125rem] bg-gradient-to-br from-violet-500/20 to-indigo-500/20 ring-1 ring-white/[0.08]"
+                <div class="min-w-0">
+                    <p
+                        class="text-xs font-semibold tracking-widest text-zinc-500 uppercase"
                     >
-                        <Sparkles class="h-6 w-6 text-violet-300" />
-                    </div>
-                    <div class="min-w-0">
-                        <h1
-                            class="truncate text-2xl font-semibold tracking-tight text-zinc-100 sm:text-3xl"
+                        {{ greeting }}
+                    </p>
+                    <h1
+                        class="mt-2 truncate text-4xl font-medium tracking-tighter text-zinc-100 sm:text-5xl"
+                    >
+                        {{ student?.fullName ?? 'Student' }}
+                    </h1>
+                    <p
+                        v-if="academicContext"
+                        class="mt-3 text-sm font-medium tracking-wide text-zinc-400"
+                    >
+                        {{ academicContext.academicYearName }}
+                        <span
+                            v-if="academicContext.termName"
+                            class="px-1.5 text-zinc-600"
+                            >·</span
                         >
-                            {{ greeting }},
-                            <span
-                                class="bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent"
-                                >{{ student?.firstName ?? 'Student' }}</span
-                            >
-                        </h1>
-                        <p
-                            v-if="academicContext"
-                            class="mt-1 text-sm font-medium text-zinc-400"
-                        >
-                            {{ academicContext.academicYearName }}
-                            <span
-                                v-if="academicContext.termName"
-                                class="px-1 text-zinc-600"
-                                >·</span
-                            >
-                            <span v-if="academicContext.termName">{{
-                                academicContext.termName
-                            }}</span>
-                        </p>
-                    </div>
+                        <span v-if="academicContext.termName">{{
+                            academicContext.termName
+                        }}</span>
+                    </p>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col items-start gap-3 md:items-end">
                 <span
-                    v-if="student?.studentNumber || enrollment?.studentNumber"
-                    class="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.04] px-4 py-2 text-xs font-semibold tracking-wide text-zinc-300 ring-1 ring-white/[0.08]"
-                >
-                    <span class="h-1.5 w-1.5 rounded-full bg-violet-400" />
-                    {{ enrollment?.studentNumber ?? student?.studentNumber }}
-                </span>
-
-                <span
-                    class="inline-flex items-center rounded-xl px-4 py-2 text-xs font-bold tracking-wide ring-1"
+                    class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase ring-1"
                     :class="enrollmentStatusColor"
                 >
                     {{ enrollmentStatusLabel }}
+                </span>
+
+                <span
+                    v-if="student?.studentNumber || enrollment?.studentNumber"
+                    class="text-sm font-medium tracking-widest text-zinc-500"
+                >
+                    {{ enrollment?.studentNumber ?? student?.studentNumber }}
                 </span>
             </div>
         </div>
@@ -123,22 +114,27 @@ const enrollmentStatusLabel = computed(() => {
         <!-- Meta / Context Row -->
         <div
             v-if="enrollment?.sectionName"
-            class="relative z-10 mt-6 flex items-center gap-4 border-t border-white/[0.08] pt-5 text-sm font-medium text-zinc-400"
+            class="relative z-10 mt-8 flex items-center gap-6 border-t border-white/[0.06] pt-6 text-sm font-medium text-zinc-400"
         >
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col">
                 <span
-                    class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-zinc-300"
+                    class="text-[10px] font-bold tracking-widest text-zinc-600 uppercase"
                     >Section</span
                 >
-                <span class="text-zinc-200">{{ enrollment.sectionName }}</span>
+                <span class="mt-0.5 text-zinc-200">{{
+                    enrollment.sectionName
+                }}</span>
             </div>
-            <span class="h-1 w-1 rounded-full bg-zinc-700"></span>
-            <span>
-                <strong class="font-semibold text-zinc-200">{{
+            <div class="h-8 w-px bg-white/[0.06]"></div>
+            <div class="flex flex-col">
+                <span
+                    class="text-[10px] font-bold tracking-widest text-zinc-600 uppercase"
+                    >Enrolled Subjects</span
+                >
+                <span class="mt-0.5 text-zinc-200">{{
                     enrollment.subjectsCount
-                }}</strong>
-                {{ enrollment.subjectsCount === 1 ? 'subject' : 'subjects' }}
-            </span>
+                }}</span>
+            </div>
         </div>
     </div>
 </template>
