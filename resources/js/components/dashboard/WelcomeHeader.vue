@@ -4,7 +4,7 @@ import type {
     AcademicContext,
     EnrollmentSummary,
 } from '@/types/dashboard';
-import { GraduationCap } from 'lucide-vue-next';
+import { Sparkles } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -29,14 +29,14 @@ const enrollmentStatusColor = computed(() => {
     switch (status) {
         case 'approved':
         case 'completed':
-            return 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30';
+            return 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20';
         case 'pending':
         case 'waitlisted':
-            return 'bg-amber-500/15 text-amber-400 ring-amber-500/30';
+            return 'bg-amber-500/10 text-amber-400 ring-amber-500/20';
         case 'cancelled':
-            return 'bg-red-500/15 text-red-400 ring-red-500/30';
+            return 'bg-red-500/10 text-red-400 ring-red-500/20';
         default:
-            return 'bg-zinc-500/15 text-zinc-400 ring-zinc-500/30';
+            return 'bg-white/5 text-zinc-400 ring-white/10';
     }
 });
 
@@ -51,60 +51,68 @@ const enrollmentStatusLabel = computed(() => {
 
 <template>
     <div
-        class="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-br from-zinc-900/80 via-zinc-900/60 to-zinc-800/40 p-5 sm:p-7"
+        class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-2xl transition-all duration-500 sm:p-8"
     >
-        <!-- Decorative gradient orb -->
+        <!-- Animated ambient light blobs -->
         <div
-            class="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-gradient-to-br from-violet-600/20 to-indigo-600/10 blur-3xl"
+            class="pointer-events-none absolute -top-20 -right-20 h-64 w-64 animate-pulse rounded-full bg-violet-600/20 blur-[80px]"
+            style="animation-duration: 4s"
         />
         <div
-            class="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-gradient-to-tr from-emerald-600/10 to-cyan-600/5 blur-2xl"
+            class="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 animate-pulse rounded-full bg-indigo-600/10 blur-[100px]"
+            style="animation-duration: 6s; animation-delay: 1s"
         />
 
         <div
-            class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            class="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between"
         >
             <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-3">
+                <div class="flex items-start gap-4 sm:items-center">
+                    <!-- Icon / Avatar Placeholder -->
                     <div
-                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20"
+                        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.125rem] bg-gradient-to-br from-violet-500/20 to-indigo-500/20 ring-1 ring-white/[0.08]"
                     >
-                        <GraduationCap class="h-5.5 w-5.5 text-white" />
+                        <Sparkles class="h-6 w-6 text-violet-300" />
                     </div>
                     <div class="min-w-0">
                         <h1
-                            class="truncate text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl"
+                            class="truncate text-2xl font-semibold tracking-tight text-zinc-100 sm:text-3xl"
                         >
                             {{ greeting }},
-                            {{ student?.firstName ?? 'Student' }}!
+                            <span
+                                class="bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent"
+                                >{{ student?.firstName ?? 'Student' }}</span
+                            >
                         </h1>
                         <p
                             v-if="academicContext"
-                            class="mt-0.5 text-sm text-zinc-400"
+                            class="mt-1 text-sm font-medium text-zinc-400"
                         >
                             {{ academicContext.academicYearName }}
                             <span
                                 v-if="academicContext.termName"
-                                class="text-zinc-500"
+                                class="px-1 text-zinc-600"
+                                >·</span
                             >
-                                · {{ academicContext.termName }}
-                            </span>
+                            <span v-if="academicContext.termName">{{
+                                academicContext.termName
+                            }}</span>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-3">
                 <span
                     v-if="student?.studentNumber || enrollment?.studentNumber"
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800/80 px-3 py-1.5 text-xs font-medium tracking-wide text-zinc-300 ring-1 ring-white/[0.06]"
+                    class="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.04] px-4 py-2 text-xs font-semibold tracking-wide text-zinc-300 ring-1 ring-white/[0.08]"
                 >
                     <span class="h-1.5 w-1.5 rounded-full bg-violet-400" />
                     {{ enrollment?.studentNumber ?? student?.studentNumber }}
                 </span>
 
                 <span
-                    class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold ring-1"
+                    class="inline-flex items-center rounded-xl px-4 py-2 text-xs font-bold tracking-wide ring-1"
                     :class="enrollmentStatusColor"
                 >
                     {{ enrollmentStatusLabel }}
@@ -112,22 +120,24 @@ const enrollmentStatusLabel = computed(() => {
             </div>
         </div>
 
-        <!-- Section & subjects info -->
+        <!-- Meta / Context Row -->
         <div
             v-if="enrollment?.sectionName"
-            class="relative mt-4 flex items-center gap-4 border-t border-white/[0.04] pt-4 text-sm text-zinc-400"
+            class="relative z-10 mt-6 flex items-center gap-4 border-t border-white/[0.08] pt-5 text-sm font-medium text-zinc-400"
         >
+            <div class="flex items-center gap-2">
+                <span
+                    class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-zinc-300"
+                    >Section</span
+                >
+                <span class="text-zinc-200">{{ enrollment.sectionName }}</span>
+            </div>
+            <span class="h-1 w-1 rounded-full bg-zinc-700"></span>
             <span>
-                Section:
-                <span class="font-medium text-zinc-300">
-                    {{ enrollment.sectionName }}
-                </span>
-            </span>
-            <span class="text-zinc-600">•</span>
-            <span>
-                {{ enrollment.subjectsCount }}
+                <strong class="font-semibold text-zinc-200">{{
+                    enrollment.subjectsCount
+                }}</strong>
                 {{ enrollment.subjectsCount === 1 ? 'subject' : 'subjects' }}
-                enrolled
             </span>
         </div>
     </div>

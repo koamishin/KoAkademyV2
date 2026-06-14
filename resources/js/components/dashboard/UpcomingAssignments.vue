@@ -6,7 +6,6 @@ import {
     ClipboardCheck,
     PartyPopper,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 const props = defineProps<{
     items: AssignmentItem[];
@@ -50,7 +49,7 @@ function dueDateColor(dateStr: string | null): string {
     if (diffDays <= 1) {
         return 'text-amber-400';
     }
-    return 'text-zinc-500';
+    return 'text-zinc-400';
 }
 
 function statusLabel(status: string | null): string {
@@ -86,75 +85,80 @@ function statusColor(status: string | null): string {
 </script>
 
 <template>
-    <div class="rounded-xl border border-white/[0.06] bg-zinc-900/60">
+    <div
+        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl transition-colors hover:bg-white/[0.03]"
+    >
         <div
-            class="flex items-center justify-between border-b border-white/[0.04] px-5 py-3.5"
+            class="flex items-center justify-between border-b border-white/[0.04] px-6 py-5"
         >
-            <h2 class="text-sm font-semibold text-zinc-200">
+            <h2 class="text-base font-semibold text-zinc-100">
                 Upcoming Assignments
             </h2>
-            <span v-if="items.length > 0" class="text-xs text-zinc-500"
-                >{{ items.length }} pending</span
+            <span
+                v-if="items.length > 0"
+                class="rounded-lg bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-zinc-400 ring-1 ring-white/[0.08]"
             >
+                {{ items.length }} pending
+            </span>
         </div>
 
         <div
             v-if="items.length === 0"
-            class="flex flex-col items-center justify-center px-5 py-10 text-center"
+            class="flex flex-1 flex-col items-center justify-center p-8 text-center"
         >
             <div
-                class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-800/80 ring-1 ring-white/[0.06]"
+                class="mb-4 flex h-14 w-14 items-center justify-center rounded-[1.125rem] bg-white/[0.02] ring-1 ring-white/[0.08]"
             >
-                <PartyPopper class="h-5 w-5 text-zinc-500" />
+                <PartyPopper class="h-6 w-6 text-zinc-500" />
             </div>
-            <p class="text-sm font-medium text-zinc-400">All caught up!</p>
-            <p class="mt-1 text-xs text-zinc-600">
+            <p class="text-sm font-medium text-zinc-300">All caught up!</p>
+            <p class="mt-1 text-xs text-zinc-500">
                 No pending assignments right now.
             </p>
         </div>
 
-        <div v-else class="divide-y divide-white/[0.04]">
+        <div v-else class="flex-1 p-3">
             <div
                 v-for="item in items"
                 :key="item.id"
-                class="px-5 py-3.5 transition-colors hover:bg-white/[0.02]"
+                class="group rounded-xl p-3 transition-colors hover:bg-white/[0.04]"
             >
-                <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2.5">
                             <span
                                 v-if="item.subjectCode"
-                                class="shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase ring-1 ring-white/[0.04]"
+                                class="shrink-0 rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-zinc-300 uppercase"
                             >
                                 {{ item.subjectCode }}
                             </span>
                             <p
-                                class="truncate text-sm font-medium text-zinc-200"
+                                class="truncate text-sm font-medium text-zinc-100"
                             >
                                 {{ item.title }}
                             </p>
                         </div>
                         <div
-                            class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+                            class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium"
                         >
                             <span :class="dueDateColor(item.dueAt)">
                                 {{ relativeDate(item.dueAt) }}
                             </span>
-                            <span v-if="item.points" class="text-zinc-600">
+                            <span v-if="item.points" class="text-zinc-500">
                                 {{ item.points }} pts
                             </span>
                         </div>
                     </div>
 
                     <div
-                        class="flex shrink-0 items-center gap-1.5"
+                        class="flex shrink-0 items-center gap-1.5 rounded-lg bg-white/[0.02] px-2.5 py-1.5 ring-1 ring-white/[0.04]"
                         :class="statusColor(item.submissionStatus)"
                     >
                         <component
                             :is="statusIcon(item.submissionStatus)"
                             class="h-3.5 w-3.5"
                         />
-                        <span class="text-xs font-medium">
+                        <span class="text-[11px] font-semibold tracking-wide">
                             {{ statusLabel(item.submissionStatus) }}
                         </span>
                     </div>

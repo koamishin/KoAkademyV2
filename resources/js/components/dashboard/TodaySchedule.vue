@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ScheduleItem } from '@/types/dashboard';
 import { CalendarOff, Clock, MapPin } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 const props = defineProps<{
     items: ScheduleItem[];
@@ -36,21 +35,25 @@ function getStatus(
 }
 
 const statusStyles: Record<string, string> = {
-    done: 'bg-zinc-600',
-    ongoing: 'bg-emerald-500 animate-pulse',
-    upcoming: 'bg-blue-500',
+    done: 'bg-zinc-700',
+    ongoing: 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.5)]',
+    upcoming: 'bg-blue-400',
 };
 </script>
 
 <template>
-    <div class="rounded-xl border border-white/[0.06] bg-zinc-900/60">
+    <div
+        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl transition-colors hover:bg-white/[0.03]"
+    >
         <div
-            class="flex items-center justify-between border-b border-white/[0.04] px-5 py-3.5"
+            class="flex items-center justify-between border-b border-white/[0.04] px-6 py-5"
         >
-            <h2 class="text-sm font-semibold text-zinc-200">
+            <h2 class="text-base font-semibold text-zinc-100">
                 Today's Schedule
             </h2>
-            <span class="text-xs text-zinc-500">
+            <span
+                class="rounded-lg bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-zinc-400 ring-1 ring-white/[0.08]"
+            >
                 {{
                     new Date().toLocaleDateString('en-US', {
                         weekday: 'long',
@@ -63,66 +66,68 @@ const statusStyles: Record<string, string> = {
 
         <div
             v-if="items.length === 0"
-            class="flex flex-col items-center justify-center px-5 py-10 text-center"
+            class="flex flex-1 flex-col items-center justify-center p-8 text-center"
         >
             <div
-                class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-800/80 ring-1 ring-white/[0.06]"
+                class="mb-4 flex h-14 w-14 items-center justify-center rounded-[1.125rem] bg-white/[0.02] ring-1 ring-white/[0.08]"
             >
-                <CalendarOff class="h-5 w-5 text-zinc-500" />
+                <CalendarOff class="h-6 w-6 text-zinc-500" />
             </div>
-            <p class="text-sm font-medium text-zinc-400">
-                No classes scheduled for today
-            </p>
-            <p class="mt-1 text-xs text-zinc-600">Enjoy your free time!</p>
+            <p class="text-sm font-medium text-zinc-300">No classes today</p>
+            <p class="mt-1 text-xs text-zinc-500">Enjoy your free time!</p>
         </div>
 
-        <div v-else class="divide-y divide-white/[0.04]">
+        <div v-else class="flex-1 p-3">
             <div
                 v-for="item in items"
                 :key="item.id"
-                class="flex items-start gap-3.5 px-5 py-3.5 transition-colors hover:bg-white/[0.02]"
+                class="group relative flex items-start gap-4 rounded-xl p-3 transition-colors hover:bg-white/[0.04]"
             >
-                <!-- Status indicator -->
-                <div class="flex flex-col items-center pt-0.5">
+                <!-- Timeline indicator -->
+                <div class="relative flex flex-col items-center pt-1.5">
                     <div
                         class="h-2.5 w-2.5 rounded-full"
                         :class="
                             statusStyles[getStatus(item.startsAt, item.endsAt)]
                         "
                     />
-                    <div class="mt-1 h-full w-px bg-zinc-800" />
+                    <div
+                        class="absolute top-4 bottom-[-1.5rem] w-px bg-white/[0.08] group-last:hidden"
+                    />
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-zinc-200">
+                    <p class="truncate text-sm font-medium text-zinc-100">
                         {{ item.subjectName }}
                     </p>
                     <div
-                        class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500"
+                        class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-400"
                     >
-                        <span class="inline-flex items-center gap-1">
-                            <Clock class="h-3 w-3" />
+                        <span
+                            class="inline-flex items-center gap-1.5 rounded text-zinc-300"
+                        >
+                            <Clock class="h-3.5 w-3.5 text-zinc-500" />
                             {{ formatTime(item.startsAt) }} –
                             {{ formatTime(item.endsAt) }}
                         </span>
                         <span
                             v-if="item.roomName"
-                            class="inline-flex items-center gap-1"
+                            class="inline-flex items-center gap-1.5"
                         >
-                            <MapPin class="h-3 w-3" />
+                            <MapPin class="h-3.5 w-3.5 text-zinc-500" />
                             {{ item.roomName }}
                         </span>
                     </div>
                 </div>
 
                 <span
-                    class="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase"
+                    class="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ring-1 ring-inset"
                     :class="{
-                        'bg-zinc-800 text-zinc-500':
+                        'bg-zinc-800/50 text-zinc-500 ring-zinc-700/50':
                             getStatus(item.startsAt, item.endsAt) === 'done',
-                        'bg-emerald-500/15 text-emerald-400':
+                        'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20':
                             getStatus(item.startsAt, item.endsAt) === 'ongoing',
-                        'bg-blue-500/15 text-blue-400':
+                        'bg-blue-500/10 text-blue-400 ring-blue-500/20':
                             getStatus(item.startsAt, item.endsAt) ===
                             'upcoming',
                     }"

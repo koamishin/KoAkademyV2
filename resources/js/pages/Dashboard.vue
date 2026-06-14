@@ -28,54 +28,56 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div
-            class="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4 sm:p-6 lg:p-8"
+            class="mx-auto flex w-full max-w-[1400px] flex-col gap-5 p-4 sm:p-6 lg:p-8"
         >
-            <!-- Section 1: Welcome Header -->
+            <!-- Header (Full width of the container) -->
             <WelcomeHeader
                 :student="props.student"
                 :academic-context="props.academicContext"
                 :enrollment="props.enrollment"
             />
 
-            <!-- Section 2: Stats Row -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Main Bento Grid -->
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <!-- Stat Cards -->
                 <StatCard
                     :icon="BookOpen"
                     :value="props.stats.totalClasses"
-                    label="Classes Enrolled"
-                    accent-color="bg-gradient-to-b from-violet-500 to-indigo-600/60"
+                    label="Enrolled Classes"
+                    accent-color="text-violet-400"
                 />
                 <StatCard
                     :icon="Calculator"
                     :value="props.stats.totalUnits"
                     label="Total Units"
-                    accent-color="bg-gradient-to-b from-blue-500 to-cyan-600/60"
+                    accent-color="text-blue-400"
                 />
                 <StatCard
                     :icon="ClipboardCheck"
                     :value="props.stats.pendingAssignments"
                     label="Pending Tasks"
-                    accent-color="bg-gradient-to-b from-amber-500 to-orange-600/60"
+                    accent-color="text-amber-400"
                 />
                 <StatCard
                     :icon="Bell"
                     :value="props.stats.unreadAnnouncements"
-                    label="New Announcements"
-                    accent-color="bg-gradient-to-b from-emerald-500 to-teal-600/60"
+                    label="Announcements"
+                    accent-color="text-emerald-400"
                 />
-            </div>
 
-            <!-- Section 3: Main Content Grid -->
-            <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
-                <!-- Left Column (col-span 3) -->
-                <div class="flex flex-col gap-6 lg:col-span-3">
+                <!-- Schedule & Assignments -->
+                <div class="flex flex-col gap-5 md:col-span-2 xl:col-span-2">
                     <TodaySchedule :items="props.todaySchedule" />
+                </div>
+                <div class="flex flex-col gap-5 md:col-span-2 xl:col-span-2">
                     <UpcomingAssignments :items="props.upcomingAssignments" />
                 </div>
 
-                <!-- Right Column (col-span 2) -->
-                <div class="flex flex-col gap-6 lg:col-span-2">
+                <!-- Grades & Feed -->
+                <div class="flex flex-col gap-5 md:col-span-2 xl:col-span-2">
                     <GradeSummary :items="props.gradeSummary" />
+                </div>
+                <div class="flex flex-col gap-5 md:col-span-2 xl:col-span-2">
                     <RecentAnnouncements :items="props.recentAnnouncements" />
                 </div>
             </div>
