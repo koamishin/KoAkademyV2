@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use AlizHarb\ActivityLog\ActivityLogPlugin;
 use AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Pages\Auth\EditProfile;
+use App\Http\Middleware\EnsureApplicationSetupIsComplete;
 use App\Http\Middleware\ResolveCurrentCampus;
 use App\Models\Campus;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -118,6 +119,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                EnsureApplicationSetupIsComplete::class,
+            ], isPersistent: true);
     }
 }

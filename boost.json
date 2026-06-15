@@ -1,6 +1,8 @@
 {
     "agents": [
-        "opencode"
+        "opencode",
+        "codex",
+        "zed"
     ],
     "cloud": false,
     "guidelines": true,
