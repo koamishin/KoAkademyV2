@@ -20,7 +20,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+// use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -32,6 +32,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use RobertBoes\FilamentPasskeys\FilamentPasskeysPlugin;
+use Openplain\FilamentShadcnTheme\Color;
+
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -58,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Default,
             ])
             ->profile(EditProfile::class, isSimple: false)
             ->userMenuItems([
