@@ -557,8 +557,14 @@ jobs:
           }
           EOF
 
-          # Update composer.json version
-          jq --arg v "${VERSION}" '.version = $v' composer.json > composer.json.tmp
+          # Update composer.json version. Only write the field when VERSION is a valid
+          # semver; otherwise strip it so composer install's schema check still passes.
+          if [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            jq --arg v "${VERSION}" '.version = $v' composer.json > composer.json.tmp
+          else
+            echo "::warning::VERSION='${VERSION}' is not a valid semver; removing composer.json 'version' field instead of writing it."
+            jq 'del(.version)' composer.json > composer.json.tmp
+          fi
           mv composer.json.tmp composer.json
 
           git config --local user.email "action@github.com"
