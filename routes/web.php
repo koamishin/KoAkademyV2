@@ -2,8 +2,10 @@
 
 use App\Enums\SocialLoginProvider;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
+use App\Models\Campus;
 use App\Models\User;
 use App\Support\CampusMembershipProvisioner;
 use Illuminate\Support\Facades\Route;
@@ -19,7 +21,7 @@ Route::get('dashboard', function (CampusMembershipProvisioner $campusMembershipP
     $user = request()->user();
     $campus = $campusMembershipProvisioner->provision($user);
 
-    if (!$campus instanceof \App\Models\Campus) {
+    if (! $campus instanceof Campus) {
         return to_route('campus.assignment.pending');
     }
 
@@ -34,7 +36,7 @@ Route::prefix('campus/{campus:slug}')
     ->middleware(['auth', 'verified', 'campus'])
     ->scopeBindings()
     ->group(function (): void {
-        Route::get('dashboard', fn () => Inertia::render('Dashboard'))->name('campus.dashboard');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('campus.dashboard');
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
         Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');

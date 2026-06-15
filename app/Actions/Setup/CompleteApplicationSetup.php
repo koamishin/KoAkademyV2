@@ -126,7 +126,7 @@ final readonly class CompleteApplicationSetup
             'login_rate_limit_decay' => ['required', 'integer', 'between:30,3600'],
         ]);
 
-        $validator->after(fn (\Illuminate\Validation\Validator $validator) => $this->validateCalendar($configuration, $validator));
+        $validator->after(fn (LaravelValidator $laravelValidator) => $this->validateCalendar($configuration, $laravelValidator));
 
         return $validator->validate();
     }
@@ -148,7 +148,7 @@ final readonly class CompleteApplicationSetup
             'terms.*.ends_on' => ['required', 'date'],
         ]);
 
-        $validator->after(fn (\Illuminate\Validation\Validator $validator) => $this->validateCalendar($configuration, $validator));
+        $validator->after(fn (LaravelValidator $laravelValidator) => $this->validateCalendar($configuration, $laravelValidator));
         $validator->validate();
     }
 

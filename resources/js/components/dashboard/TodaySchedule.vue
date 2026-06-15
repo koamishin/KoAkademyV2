@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ScheduleItem } from '@/types/dashboard';
 
-const props = defineProps<{
+defineProps<{
     items: ScheduleItem[];
 }>();
 

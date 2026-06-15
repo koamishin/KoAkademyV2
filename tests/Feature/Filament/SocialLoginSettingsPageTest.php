@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\RoleEnums;
 use App\Filament\Clusters\Settings\Pages\SocialLoginSettingsPage;
+use App\Models\Campus;
+use App\Models\Institution;
 use App\Models\User;
 use App\Settings\SocialLoginSettings;
 use Filament\Facades\Filament;
@@ -14,6 +17,29 @@ beforeEach(function (): void {
     Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
     $this->artisan('migrate', ['--path' => 'database/settings', '--no-interaction' => true]);
+
+    $institution = Institution::query()->create([
+        'name' => 'Ko Academy',
+        'code' => 'KO',
+    ]);
+    $this->socialSettingsCampus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $this->socialSettingsAdministrator = User::factory()->create();
+    $this->socialSettingsAdministrator->assignRole('super_admin');
+    $this->socialSettingsAdministrator->campusMemberships()->create([
+        'campus_id' => $this->socialSettingsCampus->id,
+        'role' => RoleEnums::SUPER_ADMIN,
+        'active' => true,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($this->socialSettingsAdministrator);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Filament::setTenant($this->socialSettingsCampus);
+    Filament::bootCurrentPanel();
 
     app()->forgetInstance(SocialLoginSettings::class);
 });
@@ -31,26 +57,15 @@ test('social login settings page is registered in the admin panel', function ():
 });
 
 test('super admin users can access the social login settings page', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
-    $response = $this->get(SocialLoginSettingsPage::getUrl());
+    $response = $this->get(SocialLoginSettingsPage::getUrl(
+        panel: 'admin',
+        tenant: $this->socialSettingsCampus,
+    ));
 
     $response->assertSuccessful();
 });
 
 test('social login settings can be saved', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(SocialLoginSettingsPage::class)
         ->fillForm([
             'github_enabled' => true,
@@ -77,13 +92,6 @@ test('env override state is exposed on the page', function (): void {
     config()->set('services.google.client_id');
     config()->set('services.google.client_secret');
 
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(SocialLoginSettingsPage::class)
         ->assertSet('providerStatuses', function (array $statuses): bool {
             $bySlug = collect($statuses)->keyBy('slug');
@@ -95,13 +103,6 @@ test('env override state is exposed on the page', function (): void {
 });
 
 test('enabling a provider without credentials fails validation', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(SocialLoginSettingsPage::class)
         ->fillForm([
             'github_enabled' => true,

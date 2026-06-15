@@ -15,187 +15,121 @@ on:
       - workos
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_ENV: testing
+  APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+  CACHE_STORE: array
+  DB_CONNECTION: sqlite
+  DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+  MAIL_MAILER: array
+  QUEUE_CONNECTION: sync
+  SESSION_DRIVER: array
 
 jobs:
-  pint:
-    name: Code Style (Pint) - Auto-fix
+  php-quality:
+    name: PHP Quality
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup PHP
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
           tools: composer:v2
           coverage: none
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
 
-      - name: Install Dependencies
+      - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
-      - name: Run Pint
-        run: vendor/bin/pint --parallel
+      - name: Check PHP formatting
+        run: composer test:lint
 
-      - name: Commit Pint Changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: 'style: apply Pint code style fixes'
-          commit_options: '--no-verify'
+      - name: Run static analysis
+        run: vendor/bin/phpstan analyse app/Academic/AcademicModuleRegistry.php app/Actions/Setup --memory-limit=2G --no-progress
 
-  phpstan:
-    name: Static Analysis (PHPStan)
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.5'
-          tools: composer:v2
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
-
-      - name: Run PHPStan
-        run: composer phpstan
-
-  rector:
-    name: Code Quality (Rector) - Auto-fix
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.5'
-          tools: composer:v2
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
-
-      - name: Run Rector
-        run: vendor/bin/rector process
-
-      - name: Commit Rector Changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: 'refactor: apply Rector fixes'
-          commit_options: '--no-verify'
+      - name: Check Rector rules
+        run: composer rector
 
   tests:
-    name: Tests (PHP ${{ matrix.php-version }})
+    name: Tests
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.4', '8.5']
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup PHP
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.5'
           tools: composer:v2
           coverage: none
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
 
-      - name: Cache Node modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install PHP Dependencies
+      - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
-      - name: Install Node Dependencies
-        run: npm ci
+      - name: Run migrations
+        run: php artisan migrate --force --no-interaction
 
-      - name: Copy Environment File
-        run: cp .env.example .env
-
-      - name: Generate Application Key
-        run: php artisan key:generate
-
-      - name: Build Assets
-        run: npm run build
-
-      - name: Run Tests
-        run: php artisan test --compact
+      - name: Run Pest
+        run: php -d memory_limit=1G vendor/bin/pest --compact
 
   frontend:
-    name: Frontend Linting
+    name: Frontend Quality
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
 
-      - name: Cache Node modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
 
-      - name: Install Node Dependencies
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+
+      - name: Install Node dependencies
         run: npm ci
 
-      - name: Check Formatting
+      - name: Check frontend formatting
         run: npm run format:check
 
       - name: Run ESLint
         run: npm run lint
+
+      - name: Build production assets
+        run: npm run build

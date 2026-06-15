@@ -143,20 +143,20 @@ function pricingAssessmentContext(bool $configurePricing = true): array
         'starts_on' => '2026-06-01',
         'ends_on' => '2026-10-31',
     ]);
-    EnrollmentPeriod::query()->create([
+    $enrollmentPeriod = EnrollmentPeriod::query()->create([
         'campus_id' => $campus->id,
         'term_id' => $term->id,
         'name' => 'Regular Enrollment',
         'opens_at' => now()->subDay(),
         'closes_at' => now()->addWeek(),
     ]);
-    Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    $person = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
 
     if (! $configurePricing) {
         assessmentItem($curriculum, 'CORE101', 1, 1, 3, 0);
     }
 
-    return ['curriculum' => $curriculum, 'student' => $student, 'period' => $period];
+    return ['curriculum' => $curriculum, 'student' => $person, 'period' => $enrollmentPeriod];
 }
 
 function assessmentItem(

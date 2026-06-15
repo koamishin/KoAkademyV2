@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\RoleEnums;
+use App\Models\Campus;
+use App\Models\Institution;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
@@ -12,9 +16,29 @@ it('requires authentication', function (): void {
 
 it('renders the dashboard page for authenticated users', function (): void {
     $user = User::factory()->create();
+    $institution = Institution::query()->create([
+        'name' => 'Ko Academy',
+        'code' => 'KO',
+    ]);
+    $campus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    Role::query()->firstOrCreate([
+        'campus_id' => null,
+        'name' => RoleEnums::STUDENT->value,
+        'guard_name' => 'web',
+    ]);
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::STUDENT,
+        'active' => true,
+        'is_default' => true,
+    ]);
 
     actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('campus.dashboard', ['campus' => $campus]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Dashboard')

@@ -4,7 +4,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/campus';
 import { type BreadcrumbItem } from '@/types';
 import type { AppPageProps } from '@/types';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 
 const page = usePage<AppPageProps>();
 

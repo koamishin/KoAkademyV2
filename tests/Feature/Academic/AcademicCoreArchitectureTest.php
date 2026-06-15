@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\File;
 
 test('academic core belongs to the main application', function (): void {
-    expect(File::allFiles(base_path('Modules/AcademicCore')))->toBeEmpty();
+    expect(File::isDirectory(base_path('Modules/AcademicCore')))->toBeFalse();
 
     $sourceDirectories = [
         app_path(),

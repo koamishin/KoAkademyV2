@@ -81,7 +81,7 @@ final class CurriculumTemplateRegistry
             $template['program_aliases'] ?? [],
         );
 
-        return $aliases === [] || ($program instanceof \App\Models\Program && collect([$program->code, $program->name])
+        return $aliases === [] || ($program instanceof Program && collect([$program->code, $program->name])
             ->filter()
             ->map(fn (string $value): string => Str::upper(Str::squish($value)))
             ->intersect($aliases)

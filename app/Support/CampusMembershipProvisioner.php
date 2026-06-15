@@ -27,7 +27,7 @@ final class CampusMembershipProvisioner
         return DB::transaction(function () use ($user): ?Campus {
             $role = $this->legacyRole($user);
 
-            if (!$role instanceof \App\Enums\RoleEnums) {
+            if (! $role instanceof RoleEnums) {
                 return null;
             }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Academic;
 
 use App\Models\AcademicModuleSetting;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -66,13 +67,17 @@ final class AcademicModuleRegistry
             return false;
         }
 
-        if (! Schema::hasTable('academic_module_settings')) {
+        try {
+            if (! Schema::hasTable('academic_module_settings')) {
+                return $module->isEnabledByDefault();
+            }
+
+            return AcademicModuleSetting::query()
+                ->where('module', $key)
+                ->value('enabled') ?? $module->isEnabledByDefault();
+        } catch (QueryException) {
             return $module->isEnabledByDefault();
         }
-
-        return AcademicModuleSetting::query()
-            ->where('module', $key)
-            ->value('enabled') ?? $module->isEnabledByDefault();
     }
 
     /**

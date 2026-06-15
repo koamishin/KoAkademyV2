@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { AnnouncementItem } from '@/types/dashboard';
 import { Link } from '@inertiajs/vue3';
 import { show as showClass } from '@/routes/classroom';
+import type { AnnouncementItem } from '@/types/dashboard';
 
-const props = defineProps<{
+defineProps<{
     items: AnnouncementItem[];
 }>();
 

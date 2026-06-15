@@ -31,7 +31,7 @@ final class DashboardController extends Controller
      */
     private function buildProps(?Person $person): array
     {
-        if (!$person instanceof \App\Models\Person) {
+        if (! $person instanceof Person) {
             return $this->emptyProps();
         }
 

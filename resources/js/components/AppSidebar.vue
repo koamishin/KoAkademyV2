@@ -20,11 +20,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes/campus';
 import { dashboard as dashboardRedirect } from '@/routes';
-import { index as applicationsIndex } from '@/routes/applications';
-import { index as classroomIndex } from '@/routes/classroom';
 import { show as academicHistory } from '@/routes/academic-history';
+import { index as applicationsIndex } from '@/routes/applications';
+import { dashboard } from '@/routes/campus';
+import { index as classroomIndex } from '@/routes/classroom';
 import { type NavItem } from '@/types';
 import type { AppPageProps } from '@/types';
 import AppLogo from './AppLogo.vue';

@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type {
     StudentInfo,
     AcademicContext,
     EnrollmentSummary,
 } from '@/types/dashboard';
-import { computed } from 'vue';
 
 const props = defineProps<{
     student: StudentInfo | null;

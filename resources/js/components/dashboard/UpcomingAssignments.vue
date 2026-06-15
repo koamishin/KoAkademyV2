@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { AssignmentItem } from '@/types/dashboard';
 
-const props = defineProps<{
+defineProps<{
     items: AssignmentItem[];
 }>();
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GradeItem } from '@/types/dashboard';
 
-const props = defineProps<{
+defineProps<{
     items: GradeItem[];
 }>();
 
@@ -80,9 +80,7 @@ function dashoffset(percentage: number): number {
                         ></span>
                         <span
                             >{{ item.gradedCount }}
-                            {{
-                                item.gradedCount === 1 ? 'item' : 'items'
-                            }}
+                            {{ item.gradedCount === 1 ? 'item' : 'items' }}
                             graded</span
                         >
                     </div>

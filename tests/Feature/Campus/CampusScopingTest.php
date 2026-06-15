@@ -58,7 +58,7 @@ test('administrators may enter assigned campuses but not unassigned campuses', f
     $this->actingAs($user)
         ->get(route('campus.dashboard', ['campus' => $assignedCampus]))
         ->assertSuccessful()
-        ->assertInertia(fn (AssertableInertia $assertableInertia): \Inertia\Testing\AssertableInertia => $assertableInertia
+        ->assertInertia(fn (AssertableInertia $assertableInertia): AssertableInertia => $assertableInertia
             ->where('currentCampus.id', $assignedCampus->id)
             ->where('auth.campusRole', RoleEnums::SCHOOL_ADMIN->value));
 
@@ -245,7 +245,7 @@ test('student academic history contains only the assigned campus', function (): 
     $this->actingAs($user)
         ->get(route('academic-history.show', ['campus' => $assignedCampus]))
         ->assertSuccessful()
-        ->assertInertia(fn (AssertableInertia $assertableInertia): \Inertia\Testing\AssertableInertia => $assertableInertia
+        ->assertInertia(fn (AssertableInertia $assertableInertia): AssertableInertia => $assertableInertia
             ->has('enrollments', 1)
             ->where('enrollments.0.campus_id', $assignedCampus->id));
 });

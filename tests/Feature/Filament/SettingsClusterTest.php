@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\RoleEnums;
 use App\Filament\Clusters\Settings\Pages\ApplicationDetailsSettingsPage;
 use App\Filament\Clusters\Settings\Pages\ApplicationFeaturesSettingsPage;
 use App\Filament\Clusters\Settings\Pages\ApplicationSecuritySettingsPage;
 use App\Filament\Clusters\Settings\SettingsCluster;
+use App\Models\Campus;
+use App\Models\Institution;
 use App\Models\User;
 use App\Settings\ApplicationDetailsSettings;
 use App\Settings\ApplicationFeaturesSettings;
@@ -18,6 +21,29 @@ beforeEach(function (): void {
     Role::firstOrCreate(['name' => 'applicant', 'guard_name' => 'web']);
 
     $this->artisan('migrate', ['--path' => 'database/settings', '--no-interaction' => true]);
+
+    $institution = Institution::query()->create([
+        'name' => 'Ko Academy',
+        'code' => 'KO',
+    ]);
+    $this->settingsCampus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $this->settingsAdministrator = User::factory()->create();
+    $this->settingsAdministrator->assignRole('super_admin');
+    $this->settingsAdministrator->campusMemberships()->create([
+        'campus_id' => $this->settingsCampus->id,
+        'role' => RoleEnums::SUPER_ADMIN,
+        'active' => true,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($this->settingsAdministrator);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Filament::setTenant($this->settingsCampus);
+    Filament::bootCurrentPanel();
 
     app()->forgetInstance(ApplicationDetailsSettings::class);
     app()->forgetInstance(ApplicationFeaturesSettings::class);
@@ -73,52 +99,33 @@ test('application security settings page is registered', function (): void {
 });
 
 test('super admin users can access application details settings page', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
-    $response = $this->get(ApplicationDetailsSettingsPage::getUrl());
+    $response = $this->get(ApplicationDetailsSettingsPage::getUrl(
+        panel: 'admin',
+        tenant: $this->settingsCampus,
+    ));
 
     $response->assertSuccessful();
 });
 
 test('super admin users can access application features settings page', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
-    $response = $this->get(ApplicationFeaturesSettingsPage::getUrl());
+    $response = $this->get(ApplicationFeaturesSettingsPage::getUrl(
+        panel: 'admin',
+        tenant: $this->settingsCampus,
+    ));
 
     $response->assertSuccessful();
 });
 
 test('super admin users can access application security settings page', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
-    $response = $this->get(ApplicationSecuritySettingsPage::getUrl());
+    $response = $this->get(ApplicationSecuritySettingsPage::getUrl(
+        panel: 'admin',
+        tenant: $this->settingsCampus,
+    ));
 
     $response->assertSuccessful();
 });
 
 test('application details settings can be saved', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationDetailsSettingsPage::class)
         ->fillForm([
             'site_name' => 'Updated Site Name',
@@ -139,13 +146,6 @@ test('application details settings can be saved', function (): void {
 });
 
 test('application features settings can be saved', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationFeaturesSettingsPage::class)
         ->fillForm([
             'registration_enabled' => false,
@@ -168,13 +168,6 @@ test('application features settings can be saved', function (): void {
 });
 
 test('application security settings can be saved', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationSecuritySettingsPage::class)
         ->fillForm([
             'password_min_length' => 12,
@@ -196,13 +189,6 @@ test('application security settings can be saved', function (): void {
 });
 
 test('site name is required for application details', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationDetailsSettingsPage::class)
         ->fillForm([
             'site_name' => '',
@@ -216,13 +202,6 @@ test('site name is required for application details', function (): void {
 });
 
 test('password min length must be at least 6', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationSecuritySettingsPage::class)
         ->fillForm([
             'password_min_length' => 3,
@@ -235,13 +214,6 @@ test('password min length must be at least 6', function (): void {
 });
 
 test('auth layout can be changed to split', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
-
-    $this->actingAs($user);
-
-    filament()->setCurrentPanel('admin');
-
     Livewire::test(ApplicationFeaturesSettingsPage::class)
         ->fillForm([
             'auth_layout' => 'split',
