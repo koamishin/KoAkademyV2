@@ -25,7 +25,7 @@ final class ClassOfferingResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('campus_id')->relationship('campus', 'name')->required(), Select::make('term_id')->relationship('term', 'name')->required(),
+            Select::make('term_id')->relationship('term', 'name')->required(),
             Select::make('subject_id')->relationship('subject', 'name')->required(), Select::make('section_id')->relationship('section', 'name')->nullable(),
             Select::make('teacher_id')->relationship('teacher', 'last_name')->searchable()->nullable(), TextInput::make('name')->required(), TextInput::make('code')->required(), TextInput::make('capacity')->numeric(),
             TextInput::make('online_meeting_url')->url()->columnSpanFull(),

@@ -17,6 +17,8 @@ use Filament\Tables\Table;
 
 class FeatureFlagResource extends Resource
 {
+    protected static bool $isScopedToTenant = false;
+
     protected static ?string $model = Role::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-flag';

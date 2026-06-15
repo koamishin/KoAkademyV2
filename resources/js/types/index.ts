@@ -13,6 +13,12 @@ export type AppPageProps<
         enabledModules: string[];
         person: Record<string, unknown> | null;
     };
+    currentCampus: {
+        id: number;
+        name: string;
+        code: string;
+        slug: string;
+    } | null;
     sidebarOpen: boolean;
     authLayout: 'simple' | 'card' | 'split';
     [key: string]: unknown;

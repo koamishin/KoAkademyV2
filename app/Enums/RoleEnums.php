@@ -35,4 +35,15 @@ enum RoleEnums: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    public static function administrativeValues(): array
+    {
+        return [
+            self::SUPER_ADMIN->value,
+            self::SCHOOL_ADMIN->value,
+            self::REGISTRAR->value,
+            self::ADMISSIONS_OFFICER->value,
+            self::ACADEMIC_COORDINATOR->value,
+        ];
+    }
 }

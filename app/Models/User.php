@@ -12,14 +12,18 @@ use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
 use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\PasskeyAuthenticatable;
@@ -38,7 +42,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, HasTenants, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Impersonate, Notifiable;
@@ -51,13 +55,10 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasAnyRole([
-            'super_admin',
-            'school_admin',
-            'registrar',
-            'admissions_officer',
-            'academic_coordinator',
-        ]);
+        return $this->campusMemberships()
+            ->where('active', true)
+            ->whereIn('role', \App\Enums\RoleEnums::administrativeValues())
+            ->exists();
     }
 
     public function canImpersonate(): bool
@@ -145,5 +146,45 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function person(): HasOne
     {
         return $this->hasOne(Person::class);
+    }
+
+    public function campusMemberships(): HasMany
+    {
+        return $this->hasMany(CampusMembership::class);
+    }
+
+    public function campuses(): BelongsToMany
+    {
+        return $this->belongsToMany(Campus::class)
+            ->withPivot(['role', 'active', 'is_default'])
+            ->withTimestamps();
+    }
+
+    public function assignedCampus(): ?Campus
+    {
+        return $this->campuses()
+            ->wherePivot('active', true)
+            ->orderByPivot('is_default', 'desc')
+            ->orderBy('campuses.name')
+            ->first();
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->campuses()
+            ->wherePivot('active', true)
+            ->wherePivotIn('role', \App\Enums\RoleEnums::administrativeValues())
+            ->orderBy('campuses.name')
+            ->get();
+    }
+
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $tenant instanceof Campus
+            && $this->campusMemberships()
+                ->where('campus_id', $tenant->getKey())
+                ->where('active', true)
+                ->whereIn('role', \App\Enums\RoleEnums::administrativeValues())
+                ->exists();
     }
 }

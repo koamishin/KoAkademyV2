@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use AlizHarb\ActivityLog\ActivityLogPlugin;
 use App\Filament\Pages\Auth\EditProfile;
+use App\Http\Middleware\ResolveCurrentCampus;
+use App\Models\Campus;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -36,6 +38,12 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->tenant(Campus::class, slugAttribute: 'slug')
+            ->tenantRoutePrefix('campus')
+            ->searchableTenantMenu()
+            ->tenantMiddleware([
+                ResolveCurrentCampus::class,
+            ], isPersistent: true)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->renderHook(
                 PanelsRenderHook::BODY_START,
@@ -71,6 +79,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->scopeToTenant()
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,

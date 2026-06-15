@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { store } from '@/routes/applications';
+import type { AppPageProps } from '@/types';
 
 type Period = { id: number; name: string };
 type Application = {
@@ -13,6 +14,8 @@ type Application = {
 };
 
 defineProps<{ applications: Application[]; periods: Period[] }>();
+
+const page = usePage<AppPageProps>();
 </script>
 
 <template>
@@ -69,7 +72,11 @@ defineProps<{ applications: Application[]; periods: Period[] }>();
             >
                 <h2 class="text-lg font-semibold">Start an application</h2>
                 <Form
-                    v-bind="store.form()"
+                    v-bind="
+                        store.form({
+                            campus: page.props.currentCampus!.slug,
+                        })
+                    "
                     class="mt-5 grid gap-4"
                     #default="{ errors, processing }"
                 >

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Academic\AcademicModuleRegistry;
 use App\Features\FeatureRegistry;
+use App\Support\CurrentCampus;
 use Carbon\CarbonImmutable;
 use Filament\Panel;
 use Illuminate\Support\Facades\Date;
@@ -21,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AcademicModuleRegistry::class);
+        $this->app->scoped(CurrentCampus::class);
         $this->registerFilamentPlugins();
     }
 

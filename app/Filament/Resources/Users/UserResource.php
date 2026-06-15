@@ -7,6 +7,7 @@ use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Models\User;
+use App\Enums\RoleEnums;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -18,6 +19,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Repeater;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -33,6 +35,8 @@ use Illuminate\Support\Facades\Hash;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
+    protected static bool $isScopedToTenant = false;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::User;
 
@@ -63,12 +67,31 @@ class UserResource extends Resource
                             ->password()
                             ->required(fn (string $context): bool => $context === 'create')
                             ->visible(fn (string $context): bool => $context === 'create' || $context === 'edit'),
-                        Select::make('roles')
-                            ->relationship('roles', 'name')
-                            ->multiple()
-                            ->preload()
-                            ->searchable(),
                     ])->columns(2),
+
+                Section::make('Campus Memberships')
+                    ->components([
+                        Repeater::make('campusMemberships')
+                            ->relationship()
+                            ->schema([
+                                Select::make('campus_id')
+                                    ->relationship('campus', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload(),
+                                Select::make('role')
+                                    ->options(collect(RoleEnums::cases())->mapWithKeys(
+                                        fn (RoleEnums $role): array => [$role->value => $role->label()],
+                                    ))
+                                    ->required(),
+                                \Filament\Forms\Components\Toggle::make('active')
+                                    ->default(true),
+                                \Filament\Forms\Components\Toggle::make('is_default')
+                                    ->label('Default campus'),
+                            ])
+                            ->columns(2)
+                            ->columnSpanFull(),
+                    ]),
 
                 Section::make('Security')
                     ->components([

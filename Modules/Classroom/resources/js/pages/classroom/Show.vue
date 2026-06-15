@@ -1,49 +1,22 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/classroom';
-
+import type { AppPageProps } from '@/types';
 defineProps<{ classroom: any }>();
-
-function formatDate(dateStr: string | null): string {
-    if (!dateStr) return 'No due date';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-    });
-}
-
-function formatTime(time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
-    const suffix = hours >= 12 ? 'PM' : 'AM';
-    const h = hours % 12 || 12;
-    return `${h}:${String(minutes).padStart(2, '0')} ${suffix}`;
-}
-
-function relativeTime(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 60) return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+const page = usePage<AppPageProps>();
 </script>
 
 <template>
     <Head :title="classroom.name" />
     <AppLayout
         :breadcrumbs="[
-            { title: 'My Classes', href: index().url },
+            {
+                title: 'My Classes',
+                href: index({
+                    campus: page.props.currentCampus!.slug,
+                }).url,
+            },
             { title: classroom.name },
         ]"
     >

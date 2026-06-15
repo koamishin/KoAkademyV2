@@ -20,6 +20,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { redirect as portalRedirect } from '@/routes/portal';
 import { index as applicationsIndex } from '@/routes/applications';
 import { index as classroomIndex } from '@/routes/classroom';
 import { type NavItem } from '@/types';
@@ -27,6 +28,7 @@ import type { AppPageProps } from '@/types';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage<AppPageProps>();
+const currentCampus = page.props.currentCampus;
 const roles = page.props.auth.roles ?? [];
 const hasAnyRole = (...allowedRoles: string[]) =>
     roles.some((role) => allowedRoles.includes(role));
@@ -34,7 +36,9 @@ const hasAnyRole = (...allowedRoles: string[]) =>
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: currentCampus
+            ? dashboard({ campus: currentCampus.slug })
+            : portalRedirect(),
         icon: LayoutGrid,
     },
 ];
@@ -45,7 +49,7 @@ if (
 ) {
     mainNavItems.push({
         title: 'Applications',
-        href: applicationsIndex(),
+        href: applicationsIndex({ campus: currentCampus!.slug }),
         icon: ClipboardList,
     });
 }
@@ -56,7 +60,7 @@ if (
 ) {
     mainNavItems.push({
         title: 'My Classes',
-        href: classroomIndex(),
+        href: classroomIndex({ campus: currentCampus!.slug }),
         icon: GraduationCap,
     });
 }
@@ -81,7 +85,15 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link
+                            :href="
+                                currentCampus
+                                    ? dashboard({
+                                          campus: currentCampus.slug,
+                                      })
+                                    : portalRedirect()
+                            "
+                        >
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

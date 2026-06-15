@@ -6,6 +6,7 @@ namespace Modules\Admissions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Person;
+use App\Support\CurrentCampus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -17,15 +18,19 @@ use Modules\Admissions\Models\Application;
 
 final class ApplicationController extends Controller
 {
-    public function index(): Response
+    public function index(CurrentCampus $currentCampus): Response
     {
+        $campus = $currentCampus->get();
+
         return Inertia::render('admissions/Index', [
             'applications' => Application::query()
+                ->whereBelongsTo($campus)
                 ->whereHas('person', fn ($query) => $query->where('user_id', request()->user()->id))
                 ->with(['period:id,name', 'program:id,name'])
                 ->latest()
                 ->get(),
             'periods' => AdmissionPeriod::query()
+                ->whereBelongsTo($campus)
                 ->where('active', true)
                 ->where('opens_at', '<=', now())
                 ->where('closes_at', '>=', now())
@@ -34,7 +39,7 @@ final class ApplicationController extends Controller
         ]);
     }
 
-    public function store(StoreApplicationRequest $request): RedirectResponse
+    public function store(StoreApplicationRequest $request, CurrentCampus $currentCampus): RedirectResponse
     {
         DB::transaction(function () use ($request): void {
             $data = $request->validated();
@@ -52,6 +57,7 @@ final class ApplicationController extends Controller
 
             Application::query()->create([
                 'person_id' => $person->id,
+                'campus_id' => $currentCampus->id(),
                 'admission_period_id' => $data['admission_period_id'],
                 'program_id' => $data['program_id'] ?? null,
                 'answers' => $data['answers'] ?? [],
@@ -60,6 +66,6 @@ final class ApplicationController extends Controller
             ]);
         });
 
-        return to_route('applications.index')->with('success', 'Application submitted.');
+        return to_route('applications.index', ['campus' => $currentCampus->get()])->with('success', 'Application submitted.');
     }
 }

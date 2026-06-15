@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -13,12 +14,24 @@ Route::get('/', fn () => Inertia::render('Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ]))->name('home');
 
-Route::get('dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', function () {
+    /** @var User $user */
+    $user = request()->user();
+    $campus = $user->assignedCampus();
 
-Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    abort_unless($campus, 403, 'Your account is not assigned to a campus.');
+
+    return to_route('dashboard', ['campus' => $campus]);
+})->middleware(['auth', 'verified'])->name('portal.redirect');
+
+Route::prefix('campus/{campus:slug}')
+    ->middleware(['auth', 'verified', 'campus'])
+    ->scopeBindings()
+    ->group(function (): void {
+        Route::get('dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
 
 Route::middleware('web')->group(function (): void {

@@ -1,23 +1,18 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import type { DashboardProps } from '@/types/dashboard';
 import { type BreadcrumbItem } from '@/types';
+import type { AppPageProps } from '@/types';
+import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 
-import WelcomeHeader from '@/components/dashboard/WelcomeHeader.vue';
-import StatCard from '@/components/dashboard/StatCard.vue';
-import TodaySchedule from '@/components/dashboard/TodaySchedule.vue';
-import UpcomingAssignments from '@/components/dashboard/UpcomingAssignments.vue';
-import GradeSummary from '@/components/dashboard/GradeSummary.vue';
-import RecentAnnouncements from '@/components/dashboard/RecentAnnouncements.vue';
-
-const props = defineProps<DashboardProps>();
+const page = usePage<AppPageProps>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: dashboard({ campus: page.props.currentCampus!.slug }).url,
     },
 ];
 </script>

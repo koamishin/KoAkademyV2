@@ -36,7 +36,8 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import type { BreadcrumbItem, NavItem } from '@/types';
+import { redirect as portalRedirect } from '@/routes/portal';
+import type { AppPageProps, BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -46,8 +47,9 @@ const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
 
-const page = usePage();
+const page = usePage<AppPageProps>();
 const auth = computed(() => page.props.auth);
+const currentCampus = computed(() => page.props.currentCampus);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
 const activeItemStyles =
@@ -56,7 +58,9 @@ const activeItemStyles =
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: currentCampus.value
+            ? dashboard({ campus: currentCampus.value.slug })
+            : portalRedirect(),
         icon: LayoutGrid,
     },
 ];
@@ -146,7 +150,14 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link
+                    :href="
+                        currentCampus
+                            ? dashboard({ campus: currentCampus.slug })
+                            : portalRedirect()
+                    "
+                    class="flex items-center gap-x-2"
+                >
                     <AppLogo />
                 </Link>
 

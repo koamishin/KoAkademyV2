@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { show } from '@/routes/classroom';
-
+import type { AppPageProps } from '@/types';
 type Classroom = {
     id: number;
     name: string;
@@ -12,17 +12,7 @@ type Classroom = {
 };
 
 defineProps<{ classes: Classroom[] }>();
-
-function statusColor(status: string): string {
-    switch (status.toLowerCase()) {
-        case 'active':
-            return 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20';
-        case 'completed':
-            return 'bg-blue-500/10 text-blue-400 ring-blue-500/20';
-        default:
-            return 'bg-white/5 text-zinc-400 ring-white/10';
-    }
-}
+const page = usePage<AppPageProps>();
 </script>
 
 <template>
@@ -71,8 +61,13 @@ function statusColor(status: string): string {
                 <Link
                     v-for="item in classes"
                     :key="item.id"
-                    :href="show({ classOffering: item.id })"
-                    class="group relative flex min-h-[160px] flex-col justify-between overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-black/40"
+                    :href="
+                        show({
+                            campus: page.props.currentCampus!.slug,
+                            classOffering: item.id,
+                        })
+                    "
+                    class="group rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0">

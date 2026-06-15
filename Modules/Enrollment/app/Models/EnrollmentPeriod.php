@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Enrollment\Models;
 
+use App\Models\Campus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class EnrollmentPeriod extends Model
 {
@@ -15,5 +17,10 @@ final class EnrollmentPeriod extends Model
     protected function casts(): array
     {
         return ['opens_at' => 'datetime', 'closes_at' => 'datetime', 'active' => 'boolean', 'policies' => 'array'];
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
     }
 }

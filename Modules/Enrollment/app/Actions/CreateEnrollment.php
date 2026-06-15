@@ -22,7 +22,7 @@ final class CreateEnrollment
         }
 
         return DB::transaction(function () use ($student, $period, $curriculum, $classification, $sectionId): Enrollment {
-            $enrollment = Enrollment::query()->create(['student_id' => $student->id, 'enrollment_period_id' => $period->id, 'curriculum_id' => $curriculum->id, 'section_id' => $sectionId, 'classification' => $classification, 'status' => EnrollmentStatus::Pending]);
+            $enrollment = Enrollment::query()->create(['student_id' => $student->id, 'campus_id' => $period->campus_id, 'enrollment_period_id' => $period->id, 'curriculum_id' => $curriculum->id, 'section_id' => $sectionId, 'classification' => $classification, 'status' => EnrollmentStatus::Pending]);
             $enrollment->subjects()->createMany($curriculum->items()->get()->map(fn ($item) => ['curriculum_item_id' => $item->id])->all());
 
             return $enrollment->load('subjects');

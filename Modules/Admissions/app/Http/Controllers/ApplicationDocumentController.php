@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Admissions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\CurrentCampus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Modules\Admissions\Http\Requests\StoreApplicationDocumentRequest;
@@ -16,6 +17,9 @@ final class ApplicationDocumentController extends Controller
 {
     public function store(StoreApplicationDocumentRequest $request, Application $application): RedirectResponse
     {
+        abort_unless($application->campus_id === app(CurrentCampus::class)->id(), 404);
+        abort_unless($application->person->user_id === $request->user()->id, 403);
+
         $file = $request->file('document');
         $path = $file->store("applications/{$application->public_id}", 'local');
 
@@ -34,6 +38,7 @@ final class ApplicationDocumentController extends Controller
     public function __invoke(ApplicationDocument $applicationDocument): StreamedResponse
     {
         $application = $applicationDocument->application()->with('person.user')->firstOrFail();
+        abort_unless($application->campus_id === app(CurrentCampus::class)->id(), 404);
         $user = request()->user();
 
         abort_unless(

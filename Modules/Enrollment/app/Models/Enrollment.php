@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Enrollment\Models;
 
 use App\Models\Curriculum;
+use App\Models\Campus;
 use App\Models\Person;
 use App\Models\Section;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Modules\Enrollment\Enums\EnrollmentStatus;
 
 final class Enrollment extends Model
 {
-    protected $fillable = ['student_id', 'enrollment_period_id', 'curriculum_id', 'section_id', 'student_number', 'classification', 'status', 'approved_by', 'approved_at', 'notes'];
+    protected $fillable = ['student_id', 'campus_id', 'enrollment_period_id', 'curriculum_id', 'section_id', 'student_number', 'classification', 'status', 'approved_by', 'approved_at', 'notes'];
 
     protected $attributes = ['status' => 'draft'];
 
@@ -27,6 +28,11 @@ final class Enrollment extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Person::class, 'student_id');
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
     }
 
     public function curriculum(): BelongsTo

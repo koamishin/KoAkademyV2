@@ -19,6 +19,8 @@ final class CampusResource extends Resource
 {
     protected static ?string $model = Campus::class;
 
+    protected static bool $isScopedToTenant = false;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Academic Setup';
@@ -29,6 +31,7 @@ final class CampusResource extends Resource
             Select::make('institution_id')->relationship('institution', 'name')->required()->preload(),
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('code')->required()->maxLength(30),
+            TextInput::make('slug')->required()->maxLength(255)->unique(ignoreRecord: true),
             TextInput::make('timezone')->required()->default('Asia/Manila'),
             Textarea::make('address')->columnSpanFull(),
             Select::make('status')->options(['active' => 'Active', 'inactive' => 'Inactive', 'archived' => 'Archived'])->required(),

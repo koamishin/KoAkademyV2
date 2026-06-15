@@ -7,6 +7,7 @@ use App\Enums\SocialLoginProvider;
 use App\Features\FeatureRegistry;
 use App\Settings\ApplicationFeaturesSettings;
 use App\Settings\SocialLoginSettings;
+use App\Support\CurrentCampus;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -27,6 +28,10 @@ class HandleInertiaRequests extends Middleware
         FeatureRegistry::initialize();
 
         $user = $request->user();
+        $currentCampus = app(CurrentCampus::class)->get();
+        $campusMembership = $user && $currentCampus
+            ? $user->campusMemberships()->where('campus_id', $currentCampus->getKey())->first()
+            : null;
         $settingsFeatures = [];
 
         if ($user) {
@@ -58,7 +63,14 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 'impersonating' => app('impersonate')->isImpersonating(),
                 'roles' => $request->user()?->getRoleNames()->values()->all() ?? [],
+                'campusRole' => $campusMembership?->role->value,
             ],
+            'currentCampus' => $currentCampus ? [
+                'id' => $currentCampus->getKey(),
+                'name' => $currentCampus->name,
+                'code' => $currentCampus->code,
+                'slug' => $currentCampus->slug,
+            ] : null,
             'academic' => [
                 'enabledModules' => app(AcademicModuleRegistry::class)->enabledKeys(),
                 'person' => $request->user()?->person,

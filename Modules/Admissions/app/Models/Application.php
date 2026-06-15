@@ -6,6 +6,7 @@ namespace Modules\Admissions\Models;
 
 use App\Models\Person;
 use App\Models\Program;
+use App\Models\Campus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +16,7 @@ use Modules\Admissions\Enums\ApplicationStatus;
 final class Application extends Model
 {
     protected $fillable = [
-        'person_id', 'admission_period_id', 'program_id', 'application_number', 'status',
+        'person_id', 'campus_id', 'admission_period_id', 'program_id', 'application_number', 'status',
         'answers', 'submitted_at', 'decided_by', 'decided_at', 'decision_notes',
     ];
 
@@ -42,6 +43,11 @@ final class Application extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
     }
 
     public function period(): BelongsTo

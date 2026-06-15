@@ -39,7 +39,19 @@ final class AcceptApplication
             );
 
             if ($application->person->user) {
-                $application->person->user->syncRoles([RoleEnums::STUDENT->value]);
+                $application->person->user->campusMemberships()
+                    ->where('campus_id', '!=', $application->campus_id)
+                    ->whereNotIn('role', RoleEnums::administrativeValues())
+                    ->update(['active' => false, 'is_default' => false]);
+
+                $application->person->user->campusMemberships()->updateOrCreate(
+                    ['campus_id' => $application->campus_id],
+                    [
+                        'role' => RoleEnums::STUDENT,
+                        'active' => true,
+                        'is_default' => true,
+                    ],
+                );
             }
 
             $application->histories()->create([
@@ -54,7 +66,7 @@ final class AcceptApplication
                 'type' => 'application.accepted',
                 'title' => 'Application accepted',
                 'message' => "Application {$application->application_number} has been accepted.",
-                'url' => route('applications.index'),
+                'url' => route('applications.index', ['campus' => $application->campus]),
             ]))->afterCommit());
 
             return $application->refresh();
