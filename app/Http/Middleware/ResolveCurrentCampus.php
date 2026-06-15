@@ -47,6 +47,7 @@ final class ResolveCurrentCampus
         $this->permissionRegistrar->setPermissionsTeamId($campus->getKey());
         $user->unsetRelation('roles')->unsetRelation('permissions');
         $this->currentCampus->set($campus);
+        $request->attributes->set('currentCampus', $campus);
 
         try {
             return $next($request);

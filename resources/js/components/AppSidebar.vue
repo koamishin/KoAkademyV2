@@ -5,6 +5,7 @@ import {
     ClipboardList,
     Folder,
     GraduationCap,
+    History,
     LayoutGrid,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
@@ -19,10 +20,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { redirect as portalRedirect } from '@/routes/portal';
+import { dashboard } from '@/routes/campus';
+import { dashboard as dashboardRedirect } from '@/routes';
 import { index as applicationsIndex } from '@/routes/applications';
 import { index as classroomIndex } from '@/routes/classroom';
+import { show as academicHistory } from '@/routes/academic-history';
 import { type NavItem } from '@/types';
 import type { AppPageProps } from '@/types';
 import AppLogo from './AppLogo.vue';
@@ -38,12 +40,13 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: currentCampus
             ? dashboard({ campus: currentCampus.slug })
-            : portalRedirect(),
+            : dashboardRedirect(),
         icon: LayoutGrid,
     },
 ];
 
 if (
+    currentCampus &&
     page.props.academic?.enabledModules.includes('admissions') &&
     hasAnyRole('applicant', 'super_admin', 'school_admin', 'admissions_officer')
 ) {
@@ -55,6 +58,19 @@ if (
 }
 
 if (
+    currentCampus &&
+    page.props.academic?.enabledModules.includes('enrollment') &&
+    hasAnyRole('student')
+) {
+    mainNavItems.push({
+        title: 'Academic History',
+        href: academicHistory({ campus: currentCampus!.slug }),
+        icon: History,
+    });
+}
+
+if (
+    currentCampus &&
     page.props.academic?.enabledModules.includes('classroom') &&
     hasAnyRole('teacher', 'student', 'super_admin', 'school_admin')
 ) {
@@ -91,7 +107,7 @@ const footerNavItems: NavItem[] = [
                                     ? dashboard({
                                           campus: currentCampus.slug,
                                       })
-                                    : portalRedirect()
+                                    : dashboardRedirect()
                             "
                         >
                             <AppLogo />

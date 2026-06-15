@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\RoleEnums;
+use App\Support\CampusMembershipProvisioner;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
@@ -15,11 +17,11 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -55,9 +57,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canAccessPanel(Panel $panel): bool
     {
+        app(CampusMembershipProvisioner::class)->provision($this);
+
         return $this->campusMemberships()
             ->where('active', true)
-            ->whereIn('role', \App\Enums\RoleEnums::administrativeValues())
+            ->whereIn('role', RoleEnums::administrativeValues())
             ->exists();
     }
 
@@ -173,7 +177,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         return $this->campuses()
             ->wherePivot('active', true)
-            ->wherePivotIn('role', \App\Enums\RoleEnums::administrativeValues())
+            ->wherePivotIn('role', RoleEnums::administrativeValues())
             ->orderBy('campuses.name')
             ->get();
     }
@@ -184,7 +188,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             && $this->campusMemberships()
                 ->where('campus_id', $tenant->getKey())
                 ->where('active', true)
-                ->whereIn('role', \App\Enums\RoleEnums::administrativeValues())
+                ->whereIn('role', RoleEnums::administrativeValues())
                 ->exists();
     }
 }

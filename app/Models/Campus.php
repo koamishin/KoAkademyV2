@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Admissions\Models\Application;
 use Modules\Classroom\Models\ClassOffering;
@@ -22,17 +23,27 @@ final class Campus extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $campus): void {
+        self::creating(function (self $campus): void {
             $campus->slug ??= static::uniqueSlug($campus->code ?: $campus->name);
         });
 
-        static::created(function (self $campus): void {
+        self::created(function (self $campus): void {
+            $modelHasRolesTable = config('permission.table_names.model_has_roles');
+            $rolesTable = config('permission.table_names.roles');
+
+            $superAdminUserIds = DB::table($modelHasRolesTable)
+                ->join($rolesTable, "{$rolesTable}.id", '=', "{$modelHasRolesTable}.role_id")
+                ->where("{$modelHasRolesTable}.model_type", User::class)
+                ->where("{$rolesTable}.name", RoleEnums::SUPER_ADMIN->value)
+                ->distinct()
+                ->pluck("{$modelHasRolesTable}.model_id");
+
             User::query()
-                ->whereHas('roles', fn ($query) => $query->where('name', RoleEnums::SUPER_ADMIN->value))
-                ->each(fn (User $user) => $user->campusMemberships()->create([
-                    'campus_id' => $campus->getKey(),
-                    'role' => RoleEnums::SUPER_ADMIN,
-                ]));
+                ->whereKey($superAdminUserIds)
+                ->each(fn (User $user) => $user->campusMemberships()->firstOrCreate(
+                    ['campus_id' => $campus->getKey()],
+                    ['role' => RoleEnums::SUPER_ADMIN],
+                ));
         });
     }
 
@@ -84,7 +95,7 @@ final class Campus extends Model
         $slug = $baseSlug;
         $sequence = 2;
 
-        while (static::query()->where('slug', $slug)->exists()) {
+        while (self::query()->where('slug', $slug)->exists()) {
             $slug = "{$baseSlug}-{$sequence}";
             $sequence++;
         }

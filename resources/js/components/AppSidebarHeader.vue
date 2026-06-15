@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {
@@ -12,7 +13,7 @@ import {
     markAsRead,
     markAllRead,
 } from '@/routes/notifications';
-import type { BreadcrumbItem } from '@/types';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
 
 withDefaults(
     defineProps<{
@@ -34,10 +35,16 @@ interface Notification {
 const notifications = ref<Notification[]>([]);
 const unreadCount = ref(0);
 const isOpen = ref(false);
+const page = usePage<AppPageProps>();
+const campus = page.props.currentCampus?.slug;
 
 const fetchNotifications = async () => {
+    if (!campus) {
+        return;
+    }
+
     try {
-        const response = await fetch(getNotifications().url, {
+        const response = await fetch(getNotifications({ campus }).url, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -56,8 +63,12 @@ const fetchNotifications = async () => {
 };
 
 const handleMarkAsRead = async (id: string) => {
+    if (!campus) {
+        return;
+    }
+
     try {
-        await fetch(markAsRead({ id }).url, {
+        await fetch(markAsRead({ campus, id }).url, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -76,8 +87,12 @@ const handleMarkAsRead = async (id: string) => {
 };
 
 const handleMarkAllAsRead = async () => {
+    if (!campus) {
+        return;
+    }
+
     try {
-        await fetch(markAllRead().url, {
+        await fetch(markAllRead({ campus }).url, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',

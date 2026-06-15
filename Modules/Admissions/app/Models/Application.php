@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Admissions\Models;
 
+use App\Models\Campus;
 use App\Models\Person;
 use App\Models\Program;
-use App\Models\Campus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +27,9 @@ final class Application extends Model
         self::creating(function (self $application): void {
             $application->public_id ??= (string) Str::uuid();
             $application->application_number ??= 'APP-'.now()->format('Y').'-'.Str::upper(Str::random(8));
+            $application->campus_id ??= AdmissionPeriod::query()
+                ->whereKey($application->admission_period_id)
+                ->value('campus_id');
         });
     }
 

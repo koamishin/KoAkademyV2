@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Role;
 use App\Support\CampusPermissionTeamResolver;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 return [
 

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import type { DashboardProps } from '@/types/dashboard';
+import { dashboard } from '@/routes/campus';
 import { type BreadcrumbItem } from '@/types';
 import type { AppPageProps } from '@/types';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';

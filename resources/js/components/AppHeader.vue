@@ -35,8 +35,8 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
-import { redirect as portalRedirect } from '@/routes/portal';
+import { dashboard } from '@/routes/campus';
+import { dashboard as dashboardRedirect } from '@/routes';
 import type { AppPageProps, BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -60,7 +60,7 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: currentCampus.value
             ? dashboard({ campus: currentCampus.value.slug })
-            : portalRedirect(),
+            : dashboardRedirect(),
         icon: LayoutGrid,
     },
 ];
@@ -154,7 +154,7 @@ const rightNavItems: NavItem[] = [
                     :href="
                         currentCampus
                             ? dashboard({ campus: currentCampus.slug })
-                            : portalRedirect()
+                            : dashboardRedirect()
                     "
                     class="flex items-center gap-x-2"
                 >

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
 use App\Models\User;
+use App\Support\CampusMembershipProvisioner;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -14,25 +15,31 @@ Route::get('/', fn () => Inertia::render('Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ]))->name('home');
 
-Route::get('dashboard', function () {
+Route::get('dashboard', function (CampusMembershipProvisioner $provisioner) {
     /** @var User $user */
     $user = request()->user();
-    $campus = $user->assignedCampus();
+    $campus = $provisioner->provision($user);
 
-    abort_unless($campus, 403, 'Your account is not assigned to a campus.');
+    if (! $campus) {
+        return to_route('campus.assignment.pending');
+    }
 
-    return to_route('dashboard', ['campus' => $campus]);
-})->middleware(['auth', 'verified'])->name('portal.redirect');
+    return to_route('campus.dashboard', ['campus' => $campus]);
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('campus-assignment-required', fn () => Inertia::render('CampusAssignmentRequired'))
+    ->middleware(['auth', 'verified'])
+    ->name('campus.assignment.pending');
 
 Route::prefix('campus/{campus:slug}')
     ->middleware(['auth', 'verified', 'campus'])
     ->scopeBindings()
     ->group(function (): void {
-        Route::get('dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+        Route::get('dashboard', fn () => Inertia::render('Dashboard'))->name('campus.dashboard');
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
         Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-});
+    });
 
 Route::middleware('web')->group(function (): void {
     /** @phpstan-ignore-next-line */

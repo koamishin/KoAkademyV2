@@ -114,6 +114,7 @@ return new class extends Migration
             ->whereNotNull('people.user_id')
             ->whereNotNull('person_roles.campus_id')
             ->where('person_roles.active', true)
+            ->whereIn('person_roles.role', RoleEnums::values())
             ->select([
                 'person_roles.campus_id',
                 'people.user_id',
@@ -153,7 +154,7 @@ return new class extends Migration
             ->each(function (object $assignment): void {
                 $campusIds = $assignment->role === RoleEnums::SUPER_ADMIN->value
                     ? DB::table('campuses')->pluck('id')
-                    : collect();
+                    : DB::table('campuses')->orderBy('id')->limit(1)->pluck('id');
 
                 foreach ($campusIds as $campusId) {
                     DB::table('campus_user')->updateOrInsert(
@@ -167,6 +168,28 @@ return new class extends Migration
                         ],
                     );
                 }
+            });
+
+        DB::table('campus_user')
+            ->where('active', true)
+            ->get(['campus_id', 'user_id', 'role'])
+            ->each(function (object $membership): void {
+                $roleId = DB::table('roles')
+                    ->whereNull('campus_id')
+                    ->where('name', $membership->role)
+                    ->where('guard_name', 'web')
+                    ->value('id');
+
+                if (! $roleId) {
+                    return;
+                }
+
+                DB::table('model_has_roles')->insertOrIgnore([
+                    'campus_id' => $membership->campus_id,
+                    'role_id' => $roleId,
+                    'model_type' => 'App\\Models\\User',
+                    'model_id' => $membership->user_id,
+                ]);
             });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use AlizHarb\ActivityLog\ActivityLogPlugin;
+use AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Http\Middleware\ResolveCurrentCampus;
 use App\Models\Campus;
@@ -34,6 +35,8 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        ActivityLogResource::scopeToTenant(false);
+
         return $panel
             ->default()
             ->id('admin')
@@ -79,7 +82,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->scopeToTenant()
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,

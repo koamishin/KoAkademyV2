@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Academic\AcademicModuleRegistry;
 use App\Enums\SocialLoginProvider;
 use App\Features\FeatureRegistry;
+use App\Models\Campus;
 use App\Settings\ApplicationFeaturesSettings;
 use App\Settings\SocialLoginSettings;
 use App\Support\CurrentCampus;
@@ -28,7 +29,7 @@ class HandleInertiaRequests extends Middleware
         FeatureRegistry::initialize();
 
         $user = $request->user();
-        $currentCampus = app(CurrentCampus::class)->get();
+        $currentCampus = $this->resolveCurrentCampus($request);
         $campusMembership = $user && $currentCampus
             ? $user->campusMemberships()->where('campus_id', $currentCampus->getKey())->first()
             : null;
@@ -80,5 +81,24 @@ class HandleInertiaRequests extends Middleware
             'settingsFeatures' => $settingsFeatures,
             'socialProviders' => $socialProviders,
         ];
+    }
+
+    private function resolveCurrentCampus(Request $request): ?Campus
+    {
+        $currentCampus = $request->attributes->get('currentCampus') ?? app(CurrentCampus::class)->get();
+
+        if ($currentCampus instanceof Campus) {
+            return $currentCampus;
+        }
+
+        $routeCampus = $request->route('campus');
+
+        if ($routeCampus instanceof Campus) {
+            return $routeCampus;
+        }
+
+        return is_string($routeCampus)
+            ? Campus::query()->where('slug', $routeCampus)->first()
+            : null;
     }
 }

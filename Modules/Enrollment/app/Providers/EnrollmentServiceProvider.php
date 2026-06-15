@@ -15,6 +15,8 @@ final class EnrollmentServiceProvider extends ModuleServiceProvider
 
     protected string $nameLower = 'enrollment';
 
+    protected array $providers = [RouteServiceProvider::class];
+
     public function boot(): void
     {
         Gate::policy(Enrollment::class, EnrollmentPolicy::class);

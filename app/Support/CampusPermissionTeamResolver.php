@@ -16,7 +16,10 @@ final class CampusPermissionTeamResolver implements PermissionsTeamResolver
         return $this->campusId;
     }
 
-    public function setPermissionsTeamId(int|string|Model|null $id): void
+    /**
+     * @param  int|string|Model|null  $id
+     */
+    public function setPermissionsTeamId($id): void
     {
         $this->campusId = $id instanceof Model ? $id->getKey() : ($id ?? 0);
     }

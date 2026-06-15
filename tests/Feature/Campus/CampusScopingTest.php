@@ -3,8 +3,11 @@
 use App\Enums\RoleEnums;
 use App\Models\AcademicYear;
 use App\Models\Campus;
+use App\Models\Curriculum;
+use App\Models\EducationLevel;
 use App\Models\Institution;
 use App\Models\Person;
+use App\Models\Program;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Models\User;
@@ -12,6 +15,9 @@ use App\Support\CurrentCampus;
 use Inertia\Testing\AssertableInertia;
 use Modules\Classroom\Models\ClassMember;
 use Modules\Classroom\Models\ClassOffering;
+use Modules\Enrollment\Enums\EnrollmentClassification;
+use Modules\Enrollment\Models\Enrollment;
+use Modules\Enrollment\Models\EnrollmentPeriod;
 use Spatie\Permission\Models\Role;
 
 function createCampus(string $code): Campus
@@ -50,14 +56,14 @@ test('administrators may enter assigned campuses but not unassigned campuses', f
     ]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['campus' => $assignedCampus]))
+        ->get(route('campus.dashboard', ['campus' => $assignedCampus]))
         ->assertSuccessful()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('currentCampus.id', $assignedCampus->id)
             ->where('auth.campusRole', RoleEnums::SCHOOL_ADMIN->value));
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['campus' => $unassignedCampus]))
+        ->get(route('campus.dashboard', ['campus' => $unassignedCampus]))
         ->assertForbidden();
 });
 
@@ -79,11 +85,11 @@ test('students are locked to their active assigned campus', function (): void {
     ]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['campus' => $assignedCampus]))
+        ->get(route('campus.dashboard', ['campus' => $assignedCampus]))
         ->assertSuccessful();
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['campus' => $otherCampus]))
+        ->get(route('campus.dashboard', ['campus' => $otherCampus]))
         ->assertForbidden();
 });
 
@@ -156,8 +162,90 @@ test('campus context is cleared after every request', function (): void {
     ]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['campus' => $campus]))
+        ->get(route('campus.dashboard', ['campus' => $campus]))
         ->assertSuccessful();
 
     expect(app(CurrentCampus::class)->get())->toBeNull();
+});
+
+test('student academic history contains only the assigned campus', function (): void {
+    createCampusRole(RoleEnums::STUDENT);
+    $formerCampus = createCampus('FORMER');
+    $assignedCampus = createCampus('CURRENT');
+    $user = User::factory()->create();
+    $person = Person::query()->create([
+        'user_id' => $user->id,
+        'first_name' => 'Ana',
+        'last_name' => 'Reyes',
+    ]);
+
+    $user->campusMemberships()->create([
+        'campus_id' => $formerCampus->id,
+        'role' => RoleEnums::STUDENT,
+        'active' => false,
+    ]);
+    $user->campusMemberships()->create([
+        'campus_id' => $assignedCampus->id,
+        'role' => RoleEnums::STUDENT,
+        'active' => true,
+        'is_default' => true,
+    ]);
+
+    $academicYear = AcademicYear::query()->create([
+        'institution_id' => $assignedCampus->institution_id,
+        'name' => '2026-2027',
+        'starts_on' => '2026-06-01',
+        'ends_on' => '2027-03-31',
+    ]);
+    $term = Term::query()->create([
+        'academic_year_id' => $academicYear->id,
+        'name' => 'First Term',
+        'code' => 'T1',
+        'sequence' => 1,
+        'starts_on' => '2026-06-01',
+        'ends_on' => '2026-10-31',
+    ]);
+    $educationLevel = EducationLevel::query()->create([
+        'institution_id' => $assignedCampus->institution_id,
+        'name' => 'Senior High School',
+        'code' => 'SHS',
+        'category' => 'basic',
+    ]);
+
+    foreach ([$formerCampus, $assignedCampus] as $campus) {
+        $program = Program::query()->create([
+            'campus_id' => $campus->id,
+            'education_level_id' => $educationLevel->id,
+            'name' => "{$campus->code} Program",
+            'code' => "{$campus->code}-PROGRAM",
+        ]);
+        $curriculum = Curriculum::query()->create([
+            'program_id' => $program->id,
+            'name' => "{$campus->code} Curriculum",
+            'code' => "{$campus->code}-CURRICULUM",
+            'effective_year' => 2026,
+        ]);
+        $period = EnrollmentPeriod::query()->create([
+            'campus_id' => $campus->id,
+            'term_id' => $term->id,
+            'name' => "{$campus->code} Enrollment",
+            'opens_at' => now()->subDay(),
+            'closes_at' => now()->addDay(),
+        ]);
+
+        Enrollment::query()->create([
+            'student_id' => $person->id,
+            'campus_id' => $campus->id,
+            'enrollment_period_id' => $period->id,
+            'curriculum_id' => $curriculum->id,
+            'classification' => EnrollmentClassification::Continuing,
+        ]);
+    }
+
+    $this->actingAs($user)
+        ->get(route('academic-history', ['campus' => $assignedCampus]))
+        ->assertSuccessful()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('enrollments', 1)
+            ->where('enrollments.0.campus_id', $assignedCampus->id));
 });

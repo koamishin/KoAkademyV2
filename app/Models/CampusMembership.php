@@ -7,7 +7,6 @@ namespace App\Models;
 use App\Enums\RoleEnums;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 final class CampusMembership extends Model
@@ -20,8 +19,8 @@ final class CampusMembership extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn (self $membership): bool => $membership->synchronizePermissionRole());
-        static::deleted(fn (self $membership): bool => $membership->removePermissionRole());
+        self::saved(fn (self $membership): bool => $membership->synchronizePermissionRole());
+        self::deleted(fn (self $membership): bool => $membership->removePermissionRole());
     }
 
     protected function casts(): array
@@ -45,11 +44,14 @@ final class CampusMembership extends Model
 
     private function synchronizePermissionRole(): bool
     {
-        $role = Role::query()
-            ->whereNull('campus_id')
-            ->where('name', $this->role->value)
-            ->where('guard_name', 'web')
-            ->first();
+        $role = Role::query()->firstOrCreate(
+            [
+                'campus_id' => $this->campus_id,
+                'name' => $this->role->value,
+                'guard_name' => 'web',
+            ],
+            [],
+        );
 
         if (! $role) {
             return true;

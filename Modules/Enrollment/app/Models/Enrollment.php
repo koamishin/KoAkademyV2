@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Enrollment\Models;
 
-use App\Models\Curriculum;
 use App\Models\Campus;
+use App\Models\Curriculum;
 use App\Models\Person;
 use App\Models\Section;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +19,15 @@ final class Enrollment extends Model
     protected $fillable = ['student_id', 'campus_id', 'enrollment_period_id', 'curriculum_id', 'section_id', 'student_number', 'classification', 'status', 'approved_by', 'approved_at', 'notes'];
 
     protected $attributes = ['status' => 'draft'];
+
+    protected static function booted(): void
+    {
+        self::creating(function (self $enrollment): void {
+            $enrollment->campus_id ??= EnrollmentPeriod::query()
+                ->whereKey($enrollment->enrollment_period_id)
+                ->value('campus_id');
+        });
+    }
 
     protected function casts(): array
     {
