@@ -177,6 +177,28 @@ return [
                 'update',
                 'delete',
             ],
+            \FinityLabs\FinMail\Resources\EmailTemplateResource\EmailTemplateResource::class => [
+                'viewAny',
+                'view',
+                'create',
+                'update',
+                'delete',
+                'preview',
+                'sendTest',
+                'compose',
+            ],
+            \FinityLabs\FinMail\Resources\EmailThemeResource\EmailThemeResource::class => [
+                'viewAny',
+                'view',
+                'create',
+                'update',
+                'delete',
+            ],
+            \FinityLabs\FinMail\Resources\SentEmailResource\SentEmailResource::class => [
+                'viewAny',
+                'view',
+                'resend',
+            ],
         ],
         'exclude' => [
             //

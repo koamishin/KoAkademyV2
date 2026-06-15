@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Openplain\FilamentShadcnTheme\Color;
 use RobertBoes\FilamentPasskeys\FilamentPasskeysPlugin;
+use FinityLabs\FinMail\FinMailPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -85,6 +86,8 @@ class AdminPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->plugins([
+                FinMailPlugin::make(),
+
                 FilamentShieldPlugin::make()
                     ->gridColumns([
                         'default' => 1,

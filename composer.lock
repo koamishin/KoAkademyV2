@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6471549c9f5ba5077cf139c3188f4312",
+    "content-hash": "ef612b5cc43b14a017f548060e372177",
     "packages": [
         {
             "name": "agroezinger/filament-shield-enhanced",
@@ -1748,6 +1748,50 @@
             "time": "2026-06-08T09:28:03+00:00"
         },
         {
+            "name": "filament/spatie-laravel-settings-plugin",
+            "version": "v5.6.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/filamentphp/spatie-laravel-settings-plugin.git",
+                "reference": "533f5486b6c264d130a3de4c2d928586394aee73"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/filamentphp/spatie-laravel-settings-plugin/zipball/533f5486b6c264d130a3de4c2d928586394aee73",
+                "reference": "533f5486b6c264d130a3de4c2d928586394aee73",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "self.version",
+                "php": "^8.2",
+                "spatie/laravel-settings": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Filament\\SpatieLaravelSettingsPluginServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Filament\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Filament support for `spatie/laravel-settings`.",
+            "homepage": "https://github.com/filamentphp/filament",
+            "support": {
+                "issues": "https://github.com/filamentphp/filament/issues",
+                "source": "https://github.com/filamentphp/filament"
+            },
+            "time": "2026-05-22T07:40:45+00:00"
+        },
+        {
             "name": "filament/support",
             "version": "v5.6.7",
             "source": {
@@ -1894,6 +1938,84 @@
                 "source": "https://github.com/filamentphp/filament"
             },
             "time": "2026-06-08T09:28:17+00:00"
+        },
+        {
+            "name": "finity-labs/fin-mail",
+            "version": "v1.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/finity-labs/fin-mail.git",
+                "reference": "962febc1c2049ffb50015ecd4333f2d0344294fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/finity-labs/fin-mail/zipball/962febc1c2049ffb50015ecd4333f2d0344294fe",
+                "reference": "962febc1c2049ffb50015ecd4333f2d0344294fe",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0|^5.0",
+                "filament/spatie-laravel-settings-plugin": "^3.0|^4.0|^5.0",
+                "illuminate/contracts": "^11.0|^12.0|^13.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.16",
+                "spatie/laravel-settings": "^3.0|^4.0",
+                "spatie/laravel-translatable": "^6.0"
+            },
+            "require-dev": {
+                "larastan/larastan": "^2.0|^3.0",
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^2.0|^3.0",
+                "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+            },
+            "suggest": {
+                "awcodes/filament-tiptap-editor": "For a richer email body editor experience",
+                "mohamedsabil83/filament-forms-tinyeditor": "Alternative rich text editor"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FinMail": "FinityLabs\\FinMail\\Facades\\FinMail"
+                    },
+                    "providers": [
+                        "FinityLabs\\FinMail\\FinMailServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "FinityLabs\\FinMail\\": "src/",
+                    "FinityLabs\\FinMail\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Finity Labs",
+                    "email": "filament.infinity@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A powerful email template manager and composer for Filament with dynamic token replacement, template versioning, and inline email sending.",
+            "homepage": "https://github.com/finity-labs/fin-mail",
+            "keywords": [
+                "email",
+                "email-builder",
+                "email-composer",
+                "filament",
+                "laravel",
+                "templates"
+            ],
+            "support": {
+                "issues": "https://github.com/finity-labs/fin-mail/issues",
+                "source": "https://github.com/finity-labs/fin-mail/tree/v1.8.0"
+            },
+            "time": "2026-06-11T09:44:01+00:00"
         },
         {
             "name": "firebase/php-jwt",
@@ -7412,6 +7534,89 @@
                 }
             ],
             "time": "2026-05-26T13:18:06+00:00"
+        },
+        {
+            "name": "spatie/laravel-translatable",
+            "version": "6.14.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/laravel-translatable.git",
+                "reference": "d120a925cf413b2427f886264bb6eb102ac23d42"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/laravel-translatable/zipball/d120a925cf413b2427f886264bb6eb102ac23d42",
+                "reference": "d120a925cf413b2427f886264bb6eb102ac23d42",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.3",
+                "spatie/laravel-package-tools": "^1.93.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.90",
+                "mockery/mockery": "^1.6.12",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^4.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "aliases": {
+                    "Translatable": "Spatie\\Translatable\\Facades\\Translatable"
+                },
+                "laravel": {
+                    "providers": [
+                        "Spatie\\Translatable\\TranslatableServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\Translatable\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Sebastian De Deyne",
+                    "email": "sebastian@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A trait to make an Eloquent model hold translations",
+            "homepage": "https://github.com/spatie/laravel-translatable",
+            "keywords": [
+                "eloquent",
+                "i8n",
+                "laravel-translatable",
+                "model",
+                "multilingual",
+                "spatie",
+                "translate"
+            ],
+            "support": {
+                "issues": "https://github.com/spatie/laravel-translatable/issues",
+                "source": "https://github.com/spatie/laravel-translatable/tree/6.14.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/spatie",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-04-23T08:26:29+00:00"
         },
         {
             "name": "spatie/shiki-php",
