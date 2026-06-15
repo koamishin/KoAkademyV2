@@ -39,7 +39,7 @@ permissions:
 
 env:
   DOCKER_ENABLED: true
-  DOCKER_UPDATE_STRATEGY: manual  # rolling=auto-build on push, manual=release on explicit trigger
+  DOCKER_UPDATE_STRATEGY: manual # rolling=auto-build on push, manual=release on explicit trigger
   PACKAGIST_ENABLED: false
   REGISTRY: ghcr.io
   IMAGE_NAME: koamishin/koakademyv2
@@ -67,10 +67,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "${{ github.ref_name }}" != "main" ]; then
-            echo "This workflow must be run from main (current: ${{ github.ref_name }})."
-            exit 1
-          fi
+          case "${{ github.ref_name }}" in
+            main|master) ;;
+            *)
+              echo "This workflow must be run from main or master (current: ${{ github.ref_name }})."
+              exit 1
+              ;;
+          esac
 
           git fetch --tags --force
 
