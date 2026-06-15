@@ -1,18 +1,18 @@
 {
-  "version": "1.4.0",
-  "image": "ghcr.io/koamishin/KoamiStarterKit:v1.4.0",
-  "commit": "b4e6d4e053c399743784928e978058e9c6eae7d3",
-  "branch": "main",
-  "timestamp": "2026-06-13T03:46:48Z",
-  "build_url": "https://github.com/koamishin/KoamiStarterKit/actions/runs/27455541499",
+  "version": "",
+  "image": "ghcr.io/koamishin/koakademyv2:",
+  "commit": "c5a259accb389c94ee7c32ccd1e6c3f286901995",
+  "branch": "master",
+  "timestamp": "2026-06-15T07:46:07Z",
+  "build_url": "https://github.com/koamishin/KoAkademyV2/actions/runs/27531647476",
   "release_type": "official",
   "changelog": {
-    "current": "Version 1.4.0 - manual release",
-    "previous": "1.3.1"
+    "current": "Version  - manual release",
+    "previous": "1.4.0"
   },
   "metadata": {
     "author": "yukazakiri",
     "workflow": "Manual Official Release",
-    "repository": "koamishin/KoamiStarterKit"
+    "repository": "koamishin/KoAkademyV2"
   }
 }
