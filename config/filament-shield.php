@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Models\Campus;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -42,7 +43,7 @@ return [
     |
     */
 
-    'tenant_model' => App\Models\Campus::class,
+    'tenant_model' => Campus::class,
 
     /*
     |--------------------------------------------------------------------------

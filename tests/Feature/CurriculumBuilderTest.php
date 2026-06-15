@@ -36,7 +36,7 @@ test('official curriculum templates have unique keys and source metadata', funct
 
 test('registry offers bsit only to matching college programs and blank to custom levels', function (): void {
     $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
-    $college = EducationLevel::query()->create([
+    $educationLevel = EducationLevel::query()->create([
         'institution_id' => $institution->id,
         'name' => 'Undergraduate',
         'code' => 'UG',
@@ -48,13 +48,13 @@ test('registry offers bsit only to matching college programs and blank to custom
         'code' => 'EXEC',
         'category' => 'custom',
     ]);
-    $registry = app(CurriculumTemplateRegistry::class);
+    $curriculumTemplateRegistry = app(CurriculumTemplateRegistry::class);
 
-    expect($registry->optionsFor($college, new Program(['name' => 'Bachelor of Science in Information Technology', 'code' => 'BSIT'])))
+    expect($curriculumTemplateRegistry->optionsFor($educationLevel, new Program(['name' => 'Bachelor of Science in Information Technology', 'code' => 'BSIT'])))
         ->toHaveKey('ched-bsit-2015')
-        ->and($registry->optionsFor($college, new Program(['name' => 'Bachelor of Arts', 'code' => 'BA'])))
+        ->and($curriculumTemplateRegistry->optionsFor($educationLevel, new Program(['name' => 'Bachelor of Arts', 'code' => 'BA'])))
         ->not->toHaveKey('ched-bsit-2015')
-        ->and($registry->optionsFor($custom))
+        ->and($curriculumTemplateRegistry->optionsFor($custom))
         ->toBe(['blank' => 'Start with a flexible blank curriculum']);
 });
 

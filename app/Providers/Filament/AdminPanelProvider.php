@@ -31,9 +31,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use RobertBoes\FilamentPasskeys\FilamentPasskeysPlugin;
 use Openplain\FilamentShadcnTheme\Color;
-
+use RobertBoes\FilamentPasskeys\FilamentPasskeysPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {

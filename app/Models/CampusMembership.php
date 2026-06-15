@@ -57,11 +57,11 @@ final class CampusMembership extends Model
             return true;
         }
 
-        $registrar = app(PermissionRegistrar::class);
-        $previousCampusId = $registrar->getPermissionsTeamId();
+        $permissionRegistrar = app(PermissionRegistrar::class);
+        $previousCampusId = $permissionRegistrar->getPermissionsTeamId();
 
         try {
-            $registrar->setPermissionsTeamId($this->campus_id);
+            $permissionRegistrar->setPermissionsTeamId($this->campus_id);
             $user = $this->user()->firstOrFail();
             $user->unsetRelation('roles')->unsetRelation('permissions');
 
@@ -71,7 +71,7 @@ final class CampusMembership extends Model
                 $user->syncRoles([]);
             }
         } finally {
-            $registrar->setPermissionsTeamId($previousCampusId);
+            $permissionRegistrar->setPermissionsTeamId($previousCampusId);
         }
 
         return true;
@@ -79,16 +79,16 @@ final class CampusMembership extends Model
 
     private function removePermissionRole(): bool
     {
-        $registrar = app(PermissionRegistrar::class);
-        $previousCampusId = $registrar->getPermissionsTeamId();
+        $permissionRegistrar = app(PermissionRegistrar::class);
+        $previousCampusId = $permissionRegistrar->getPermissionsTeamId();
 
         try {
-            $registrar->setPermissionsTeamId($this->campus_id);
+            $permissionRegistrar->setPermissionsTeamId($this->campus_id);
             $user = $this->user()->first();
             $user?->unsetRelation('roles')->unsetRelation('permissions');
             $user?->syncRoles([]);
         } finally {
-            $registrar->setPermissionsTeamId($previousCampusId);
+            $permissionRegistrar->setPermissionsTeamId($previousCampusId);
         }
 
         return true;

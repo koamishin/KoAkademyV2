@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-final class CreateCurriculumFromBuilder
+final readonly class CreateCurriculumFromBuilder
 {
-    public function __construct(private readonly CurriculumTemplateRegistry $templates) {}
+    public function __construct(private CurriculumTemplateRegistry $curriculumTemplateRegistry) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -73,14 +73,14 @@ final class CreateCurriculumFromBuilder
                 ->firstOrFail();
             $program = $this->resolveProgram($campus, $educationLevel, $validated);
             $template = $validated['template_key'] === 'blank'
-                ? $this->templates->blank()
-                : $this->templates->find($validated['template_key']);
+                ? $this->curriculumTemplateRegistry->blank()
+                : $this->curriculumTemplateRegistry->find($validated['template_key']);
 
             if ($template === null) {
                 throw ValidationException::withMessages(['template_key' => 'The selected curriculum template is unavailable.']);
             }
 
-            if (! array_key_exists($validated['template_key'], $this->templates->optionsFor($educationLevel, $program))) {
+            if (! array_key_exists($validated['template_key'], $this->curriculumTemplateRegistry->optionsFor($educationLevel, $program))) {
                 throw ValidationException::withMessages([
                     'template_key' => 'The selected template does not support this education level and program.',
                 ]);
@@ -124,7 +124,7 @@ final class CreateCurriculumFromBuilder
 
             $groups = collect($validated['elective_groups'] ?? [])
                 ->mapWithKeys(function (array $group) use ($curriculum): array {
-                    $record = $curriculum->electiveGroups()->create([
+                    $model = $curriculum->electiveGroups()->create([
                         'code' => Str::upper($group['code']),
                         'name' => $group['name'],
                         'minimum_subjects' => $group['minimum_subjects'] ?? 0,
@@ -133,7 +133,7 @@ final class CreateCurriculumFromBuilder
                         'maximum_units' => $group['maximum_units'] ?? null,
                     ]);
 
-                    return [$record->code => $record];
+                    return [$model->code => $model];
                 });
 
             $subjectsByCode = collect();

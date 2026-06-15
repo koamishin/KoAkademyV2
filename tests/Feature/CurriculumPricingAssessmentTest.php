@@ -69,7 +69,7 @@ test('assessment charges units flat laboratory subjects and curriculum miscellan
 test('assessment snapshots do not change when curriculum pricing is edited later', function (): void {
     $context = pricingAssessmentContext();
     $curriculum = $context['curriculum'];
-    $fee = $curriculum->miscellaneousFees()->create([
+    $model = $curriculum->miscellaneousFees()->create([
         'code' => 'REG',
         'name' => 'Registration Fee',
         'amount' => 500,
@@ -84,7 +84,7 @@ test('assessment snapshots do not change when curriculum pricing is edited later
     )->assessment;
 
     $curriculum->update(['tuition_per_unit' => 999, 'laboratory_fee_per_subject' => 9999]);
-    $fee->update(['name' => 'Changed Fee', 'amount' => 900]);
+    $model->update(['name' => 'Changed Fee', 'amount' => 900]);
     $assessment->refresh();
 
     expect($assessment->tuition_total)->toBe('1125.00')
@@ -143,20 +143,20 @@ function pricingAssessmentContext(bool $configurePricing = true): array
         'starts_on' => '2026-06-01',
         'ends_on' => '2026-10-31',
     ]);
-    $period = EnrollmentPeriod::query()->create([
+    EnrollmentPeriod::query()->create([
         'campus_id' => $campus->id,
         'term_id' => $term->id,
         'name' => 'Regular Enrollment',
         'opens_at' => now()->subDay(),
         'closes_at' => now()->addWeek(),
     ]);
-    $student = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
 
     if (! $configurePricing) {
         assessmentItem($curriculum, 'CORE101', 1, 1, 3, 0);
     }
 
-    return compact('curriculum', 'student', 'period');
+    return ['curriculum' => $curriculum, 'student' => $student, 'period' => $period];
 }
 
 function assessmentItem(

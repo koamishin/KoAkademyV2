@@ -90,15 +90,7 @@ beforeEach(function (): void {
         'closes_at' => now()->addWeek(),
     ]);
 
-    $this->academic = compact(
-        'institution',
-        'campus',
-        'term',
-        'curriculum',
-        'subject',
-        'section',
-        'enrollmentPeriod',
-    );
+    $this->academic = ['institution' => $institution, 'campus' => $campus, 'term' => $term, 'curriculum' => $curriculum, 'subject' => $subject, 'section' => $section, 'enrollmentPeriod' => $enrollmentPeriod];
 });
 
 test('starter presets are editable and idempotent while guardian links support multiple students', function (): void {
@@ -107,21 +99,21 @@ test('starter presets are editable and idempotent while guardian links support m
     app(ApplyAcademicPreset::class)->execute($institution, 'grade_school');
     app(ApplyAcademicPreset::class)->execute($institution, 'grade_school');
 
-    $guardian = Person::query()->create(['first_name' => 'Maria', 'last_name' => 'Santos']);
+    $person = Person::query()->create(['first_name' => 'Maria', 'last_name' => 'Santos']);
     $firstStudent = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Santos']);
     $secondStudent = Person::query()->create(['first_name' => 'Leo', 'last_name' => 'Santos']);
-    $guardian->students()->attach([
+    $person->students()->attach([
         $firstStudent->id => ['relationship' => 'mother', 'is_primary' => true],
         $secondStudent->id => ['relationship' => 'mother', 'is_primary' => false],
     ]);
 
     expect(EducationLevel::query()->where('institution_id', $institution->id)->where('category', 'grade_school')->count())->toBe(7)
-        ->and($guardian->students()->count())->toBe(2)
-        ->and($firstStudent->guardians()->whereKey($guardian->id)->exists())->toBeTrue();
+        ->and($person->students()->count())->toBe(2)
+        ->and($firstStudent->guardians()->whereKey($person->id)->exists())->toBeTrue();
 });
 
 test('enrollment loads curriculum subjects rejects duplicates and waitlists at section capacity', function (): void {
-    $student = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    $person = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
     $secondStudent = Person::query()->create(['first_name' => 'Ben', 'last_name' => 'Cruz']);
     $actor = User::factory()->create();
     AcademicSetting::query()->create([
@@ -130,7 +122,7 @@ test('enrollment loads curriculum subjects rejects duplicates and waitlists at s
     ]);
 
     $enrollment = app(CreateEnrollment::class)->execute(
-        $student,
+        $person,
         $this->academic['enrollmentPeriod'],
         $this->academic['curriculum'],
         EnrollmentClassification::NewStudent,
@@ -139,7 +131,7 @@ test('enrollment loads curriculum subjects rejects duplicates and waitlists at s
 
     expect($enrollment->subjects)->toHaveCount(1);
     expect(fn () => app(CreateEnrollment::class)->execute(
-        $student,
+        $person,
         $this->academic['enrollmentPeriod'],
         $this->academic['curriculum'],
         EnrollmentClassification::NewStudent,
@@ -164,7 +156,7 @@ test('enrollment loads curriculum subjects rejects duplicates and waitlists at s
 });
 
 test('class members can submit work and scores cannot exceed assignment points', function (): void {
-    $student = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    $person = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
     $teacher = User::factory()->create();
     $classOffering = ClassOffering::query()->create([
         'campus_id' => $this->academic['campus']->id,
@@ -175,7 +167,7 @@ test('class members can submit work and scores cannot exceed assignment points',
     ]);
     ClassMember::query()->create([
         'class_offering_id' => $classOffering->id,
-        'person_id' => $student->id,
+        'person_id' => $person->id,
     ]);
     $assignment = Assignment::query()->create([
         'class_offering_id' => $classOffering->id,
@@ -184,7 +176,7 @@ test('class members can submit work and scores cannot exceed assignment points',
         'points' => 100,
     ]);
 
-    $submission = app(SubmitAssignment::class)->execute($assignment, $student, 'My answer');
+    $submission = app(SubmitAssignment::class)->execute($assignment, $person, 'My answer');
     $graded = app(GradeSubmission::class)->execute($submission, $teacher, 95, 'Good work');
 
     expect($graded->status)->toBe('returned')

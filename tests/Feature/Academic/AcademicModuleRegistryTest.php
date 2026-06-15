@@ -4,27 +4,27 @@ use App\Academic\AcademicModuleRegistry;
 use App\Models\AcademicModuleSetting;
 
 test('academic core is always application functionality and not a module', function (): void {
-    $registry = app(AcademicModuleRegistry::class);
+    $academicModuleRegistry = app(AcademicModuleRegistry::class);
 
-    expect($registry->get('academic-core'))->toBeNull()
-        ->and($registry->enabled('academic-core'))->toBeFalse()
+    expect($academicModuleRegistry->get('academic-core'))->toBeNull()
+        ->and($academicModuleRegistry->enabled('academic-core'))->toBeFalse()
         ->and(AcademicModuleSetting::query()->where('module', 'academic-core')->exists())->toBeFalse();
 });
 
 test('admissions and enrollment can be enabled independently', function (): void {
-    $registry = app(AcademicModuleRegistry::class);
-    $registry->setEnabled('admissions', false);
-    $registry->setEnabled('enrollment', true);
+    $academicModuleRegistry = app(AcademicModuleRegistry::class);
+    $academicModuleRegistry->setEnabled('admissions', false);
+    $academicModuleRegistry->setEnabled('enrollment', true);
 
-    expect($registry->enabled('admissions'))->toBeFalse()
-        ->and($registry->enabled('enrollment'))->toBeTrue();
+    expect($academicModuleRegistry->enabled('admissions'))->toBeFalse()
+        ->and($academicModuleRegistry->enabled('enrollment'))->toBeTrue();
 });
 
 test('disabling enrollment disables classroom', function (): void {
-    $registry = app(AcademicModuleRegistry::class);
-    $registry->setEnabled('classroom', true);
-    $registry->setEnabled('enrollment', false);
+    $academicModuleRegistry = app(AcademicModuleRegistry::class);
+    $academicModuleRegistry->setEnabled('classroom', true);
+    $academicModuleRegistry->setEnabled('enrollment', false);
 
-    expect($registry->enabled('enrollment'))->toBeFalse()
-        ->and($registry->enabled('classroom'))->toBeFalse();
+    expect($academicModuleRegistry->enabled('enrollment'))->toBeFalse()
+        ->and($academicModuleRegistry->enabled('classroom'))->toBeFalse();
 });

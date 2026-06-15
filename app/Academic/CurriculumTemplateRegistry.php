@@ -66,11 +66,11 @@ final class CurriculumTemplateRegistry
     /**
      * @param  array<string, mixed>  $template
      */
-    private function supports(array $template, EducationLevel $level, ?Program $program): bool
+    private function supports(array $template, EducationLevel $educationLevel, ?Program $program): bool
     {
-        $codes = array_map('strtoupper', $template['education_level_codes'] ?? []);
-        $supportsLevel = ($codes !== [] && in_array(strtoupper($level->code), $codes, true))
-            || (($template['category'] ?? null) === $level->category);
+        $codes = array_map(strtoupper(...), $template['education_level_codes'] ?? []);
+        $supportsLevel = ($codes !== [] && in_array(strtoupper($educationLevel->code), $codes, true))
+            || (($template['category'] ?? null) === $educationLevel->category);
 
         if (! $supportsLevel) {
             return false;
@@ -81,7 +81,7 @@ final class CurriculumTemplateRegistry
             $template['program_aliases'] ?? [],
         );
 
-        return $aliases === [] || ($program !== null && collect([$program->code, $program->name])
+        return $aliases === [] || ($program instanceof \App\Models\Program && collect([$program->code, $program->name])
             ->filter()
             ->map(fn (string $value): string => Str::upper(Str::squish($value)))
             ->intersect($aliases)
@@ -170,16 +170,16 @@ final class CurriculumTemplateRegistry
                         code: 'SSHS-'.$levelCode.'-CORE'.($position + 1),
                         name: $subject[0],
                         position: $position + 1,
-                        term: $subject[1],
                         year: $year,
+                        term: $subject[1],
                         contactHours: 4,
                     ))->all(),
                     ...collect($electives)->map(fn (array $subject, int $position): array => $this->subject(
                         code: 'SSHS-'.$levelCode.'-ELEC'.($position + 1),
                         name: $subject[0],
                         position: count($core) + $position + 1,
-                        term: $subject[1],
                         year: $year,
+                        term: $subject[1],
                         contactHours: 4,
                         required: false,
                         electiveGroup: 'ACADEMIC-ELECTIVES',

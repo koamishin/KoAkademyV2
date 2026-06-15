@@ -19,11 +19,11 @@ test('accepting an applicant creates a student role without duplicating the pers
     Role::query()->create(['name' => 'student', 'guard_name' => 'web']);
     $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
     $campus = Campus::query()->create(['institution_id' => $institution->id, 'name' => 'Main', 'code' => 'MAIN']);
-    $year = AcademicYear::query()->create(['institution_id' => $institution->id, 'name' => '2026-2027', 'starts_on' => '2026-06-01', 'ends_on' => '2027-03-31']);
-    $term = Term::query()->create(['academic_year_id' => $year->id, 'name' => 'First Term', 'code' => 'T1', 'sequence' => 1, 'starts_on' => '2026-06-01', 'ends_on' => '2026-10-31']);
+    $academicYear = AcademicYear::query()->create(['institution_id' => $institution->id, 'name' => '2026-2027', 'starts_on' => '2026-06-01', 'ends_on' => '2027-03-31']);
+    $term = Term::query()->create(['academic_year_id' => $academicYear->id, 'name' => 'First Term', 'code' => 'T1', 'sequence' => 1, 'starts_on' => '2026-06-01', 'ends_on' => '2026-10-31']);
     $person = Person::query()->create(['user_id' => $applicant->id, 'first_name' => 'Ana', 'last_name' => 'Reyes', 'email' => $applicant->email]);
-    $period = AdmissionPeriod::query()->create(['campus_id' => $campus->id, 'term_id' => $term->id, 'name' => 'First Intake', 'opens_at' => now()->subDay(), 'closes_at' => now()->addDay()]);
-    $application = Application::query()->create(['person_id' => $person->id, 'admission_period_id' => $period->id, 'status' => ApplicationStatus::Submitted]);
+    $admissionPeriod = AdmissionPeriod::query()->create(['campus_id' => $campus->id, 'term_id' => $term->id, 'name' => 'First Intake', 'opens_at' => now()->subDay(), 'closes_at' => now()->addDay()]);
+    $application = Application::query()->create(['person_id' => $person->id, 'admission_period_id' => $admissionPeriod->id, 'status' => ApplicationStatus::Submitted]);
 
     app(AcceptApplication::class)->execute($application, $actor);
 

@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 final readonly class EnsureAcademicModuleEnabled
 {
-    public function __construct(private AcademicModuleRegistry $modules) {}
+    public function __construct(private AcademicModuleRegistry $academicModuleRegistry) {}
 
     public function handle(Request $request, Closure $next, string $module): Response
     {
-        abort_unless($this->modules->enabled($module), Response::HTTP_NOT_FOUND);
+        abort_unless($this->academicModuleRegistry->enabled($module), Response::HTTP_NOT_FOUND);
 
         return $next($request);
     }

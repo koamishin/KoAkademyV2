@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Enums\RoleEnums;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Models\User;
-use App\Enums\RoleEnums;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -17,9 +17,10 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -81,12 +82,12 @@ class UserResource extends Resource
                                     ->preload(),
                                 Select::make('role')
                                     ->options(collect(RoleEnums::cases())->mapWithKeys(
-                                        fn (RoleEnums $role): array => [$role->value => $role->label()],
+                                        fn (RoleEnums $roleEnums): array => [$roleEnums->value => $roleEnums->label()],
                                     ))
                                     ->required(),
-                                \Filament\Forms\Components\Toggle::make('active')
+                                Toggle::make('active')
                                     ->default(true),
-                                \Filament\Forms\Components\Toggle::make('is_default')
+                                Toggle::make('is_default')
                                     ->label('Default campus'),
                             ])
                             ->columns(2)

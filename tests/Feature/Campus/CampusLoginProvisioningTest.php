@@ -13,11 +13,11 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
-function assignLegacyRole(User $user, RoleEnums $role): void
+function assignLegacyRole(User $user, RoleEnums $roleEnums): void
 {
     $permissionRole = Role::query()->firstOrCreate([
         'campus_id' => null,
-        'name' => $role->value,
+        'name' => $roleEnums->value,
         'guard_name' => 'web',
     ]);
 
@@ -39,7 +39,7 @@ test('the first administrator login bootstraps the initial campus', function ():
         ->and($user->fresh()->campusMemberships()->where('role', RoleEnums::SUPER_ADMIN)->exists())->toBeTrue();
 });
 
-test('legacy role accounts are assigned when there is one campus', function (RoleEnums $role): void {
+test('legacy role accounts are assigned when there is one campus', function (RoleEnums $roleEnums): void {
     $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
     $campus = Campus::query()->create([
         'institution_id' => $institution->id,
@@ -47,14 +47,14 @@ test('legacy role accounts are assigned when there is one campus', function (Rol
         'code' => 'MAIN',
     ]);
     $user = User::factory()->create();
-    assignLegacyRole($user, $role);
+    assignLegacyRole($user, $roleEnums);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertRedirect(route('campus.dashboard', ['campus' => $campus]));
 
     expect($user->fresh()->assignedCampus()?->is($campus))->toBeTrue()
-        ->and($user->fresh()->campusMemberships()->value('role'))->toBe($role);
+        ->and($user->fresh()->campusMemberships()->value('role'))->toBe($roleEnums);
 })->with([
     RoleEnums::SUPER_ADMIN,
     RoleEnums::SCHOOL_ADMIN,

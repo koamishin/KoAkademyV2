@@ -30,26 +30,26 @@ final class AcademicModulesSettingsPage extends Page
 
     public ?array $data = [];
 
-    public function mount(AcademicModuleRegistry $modules): void
+    public function mount(AcademicModuleRegistry $academicModuleRegistry): void
     {
-        $this->form->fill($modules->all()->mapWithKeys(
-            fn (ModuleDefinition $module): array => [$module->key() => $modules->enabled($module->key())],
+        $this->form->fill($academicModuleRegistry->all()->mapWithKeys(
+            fn (ModuleDefinition $moduleDefinition): array => [$moduleDefinition->key() => $academicModuleRegistry->enabled($moduleDefinition->key())],
         )->all());
     }
 
     public function form(Schema $schema): Schema
     {
-        $modules = app(AcademicModuleRegistry::class);
+        $academicModuleRegistry = app(AcademicModuleRegistry::class);
 
         return $schema
             ->components([
                 Form::make([
                     Section::make('Enabled capabilities')
                         ->description('Dependencies are enabled automatically. Disabling a dependency also disables modules that require it.')
-                        ->schema($modules->all()->map(
-                            fn (ModuleDefinition $module): Toggle => Toggle::make($module->key())
-                                ->label($module->name())
-                                ->helperText($module->description()),
+                        ->schema($academicModuleRegistry->all()->map(
+                            fn (ModuleDefinition $moduleDefinition): Toggle => Toggle::make($moduleDefinition->key())
+                                ->label($moduleDefinition->name())
+                                ->helperText($moduleDefinition->description()),
                         )->values()->all())
                         ->columns(2),
                 ])
@@ -63,10 +63,10 @@ final class AcademicModulesSettingsPage extends Page
             ->statePath('data');
     }
 
-    public function save(AcademicModuleRegistry $modules): void
+    public function save(AcademicModuleRegistry $academicModuleRegistry): void
     {
         foreach ($this->form->getState() as $module => $enabled) {
-            $modules->setEnabled($module, (bool) $enabled);
+            $academicModuleRegistry->setEnabled($module, (bool) $enabled);
         }
 
         Notification::make()->success()->title('Academic modules updated')->send();

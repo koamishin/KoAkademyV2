@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
-function createSetupAdministrator(RoleEnums $role = RoleEnums::SUPER_ADMIN): array
+function createSetupAdministrator(RoleEnums $roleEnums = RoleEnums::SUPER_ADMIN): array
 {
     $institution = Institution::query()->create([
         'name' => 'Ko Academy',
@@ -37,23 +37,23 @@ function createSetupAdministrator(RoleEnums $role = RoleEnums::SUPER_ADMIN): arr
     $user = User::factory()->create();
     $user->campusMemberships()->create([
         'campus_id' => $campus->getKey(),
-        'role' => $role,
+        'role' => $roleEnums,
         'active' => true,
         'is_default' => true,
     ]);
 
-    return compact('institution', 'campus', 'user');
+    return ['institution' => $institution, 'campus' => $campus, 'user' => $user];
 }
 
 function markApplicationSetupPending(int $step = 1, array $draft = []): void
 {
-    $settings = app(ApplicationSetupSettings::class);
-    $settings->status = $step === 1 ? 'pending' : 'in_progress';
-    $settings->current_step = $step;
-    $settings->draft = $draft;
-    $settings->completed_at = null;
-    $settings->completed_by_user_id = null;
-    $settings->save();
+    $applicationSetupSettings = app(ApplicationSetupSettings::class);
+    $applicationSetupSettings->status = $step === 1 ? 'pending' : 'in_progress';
+    $applicationSetupSettings->current_step = $step;
+    $applicationSetupSettings->draft = $draft;
+    $applicationSetupSettings->completed_at = null;
+    $applicationSetupSettings->completed_by_user_id = null;
+    $applicationSetupSettings->save();
 }
 
 function validApplicationSetupData(): array
@@ -126,14 +126,14 @@ test('setup settings resolve to safe defaults before their database rows exist',
 
     app()->forgetInstance(ApplicationSetupSettings::class);
 
-    $settings = app(ApplicationSetupSettings::class);
+    $applicationSetupSettings = app(ApplicationSetupSettings::class);
 
-    expect($settings->setup_version)->toBe(1)
-        ->and($settings->status)->toBe('pending')
-        ->and($settings->current_step)->toBe(1)
-        ->and($settings->draft)->toBe([])
-        ->and($settings->completed_at)->toBeNull()
-        ->and($settings->completed_by_user_id)->toBeNull();
+    expect($applicationSetupSettings->setup_version)->toBe(1)
+        ->and($applicationSetupSettings->status)->toBe('pending')
+        ->and($applicationSetupSettings->current_step)->toBe(1)
+        ->and($applicationSetupSettings->draft)->toBe([])
+        ->and($applicationSetupSettings->completed_at)->toBeNull()
+        ->and($applicationSetupSettings->completed_by_user_id)->toBeNull();
 });
 
 test('pending setup forces super administrators into the onboarding wizard', function (): void {
@@ -216,21 +216,21 @@ test('wizard progress is saved after a validated step', function (): void {
         ->goToNextWizardStep()
         ->assertHasNoFormErrors();
 
-    $settings = app(ApplicationSetupSettings::class);
-    $settings->refresh();
+    $applicationSetupSettings = app(ApplicationSetupSettings::class);
+    $applicationSetupSettings->refresh();
 
-    expect($settings->status)->toBe('in_progress')
-        ->and($settings->current_step)->toBe(2)
-        ->and($settings->draft['institution_name'])->toBe('North Valley Institute');
+    expect($applicationSetupSettings->status)->toBe('in_progress')
+        ->and($applicationSetupSettings->current_step)->toBe(2)
+        ->and($applicationSetupSettings->draft['institution_name'])->toBe('North Valley Institute');
 });
 
 test('completion configures the placeholder institution and operational foundation idempotently', function (): void {
     ['institution' => $placeholderInstitution, 'campus' => $placeholderCampus, 'user' => $user] = createSetupAdministrator();
     markApplicationSetupPending();
 
-    $action = app(CompleteApplicationSetup::class);
-    $campus = $action->execute($user, validApplicationSetupData());
-    $action->execute($user, validApplicationSetupData());
+    $completeApplicationSetup = app(CompleteApplicationSetup::class);
+    $campus = $completeApplicationSetup->execute($user, validApplicationSetupData());
+    $completeApplicationSetup->execute($user, validApplicationSetupData());
 
     expect(Institution::query()->count())->toBe(1)
         ->and(Campus::query()->count())->toBe(1)
@@ -247,21 +247,21 @@ test('completion configures the placeholder institution and operational foundati
         ])
         ->and($user->fresh()->assignedCampus()?->is($campus))->toBeTrue();
 
-    $setupSettings = app(ApplicationSetupSettings::class);
-    $setupSettings->refresh();
-    $detailsSettings = app(ApplicationDetailsSettings::class);
-    $detailsSettings->refresh();
-    $featuresSettings = app(ApplicationFeaturesSettings::class);
-    $featuresSettings->refresh();
-    $securitySettings = app(ApplicationSecuritySettings::class);
-    $securitySettings->refresh();
+    $applicationSetupSettings = app(ApplicationSetupSettings::class);
+    $applicationSetupSettings->refresh();
+    $applicationDetailsSettings = app(ApplicationDetailsSettings::class);
+    $applicationDetailsSettings->refresh();
+    $applicationFeaturesSettings = app(ApplicationFeaturesSettings::class);
+    $applicationFeaturesSettings->refresh();
+    $applicationSecuritySettings = app(ApplicationSecuritySettings::class);
+    $applicationSecuritySettings->refresh();
 
-    expect($setupSettings->isComplete())->toBeTrue()
-        ->and($setupSettings->completed_by_user_id)->toBe($user->getKey())
-        ->and($detailsSettings->site_name)->toBe('North Valley Institute')
-        ->and($featuresSettings->default_user_role)->toBe('applicant')
-        ->and($securitySettings->password_min_length)->toBe(10)
-        ->and($securitySettings->password_requires_symbols)->toBeTrue();
+    expect($applicationSetupSettings->isComplete())->toBeTrue()
+        ->and($applicationSetupSettings->completed_by_user_id)->toBe($user->getKey())
+        ->and($applicationDetailsSettings->site_name)->toBe('North Valley Institute')
+        ->and($applicationFeaturesSettings->default_user_role)->toBe('applicant')
+        ->and($applicationSecuritySettings->password_min_length)->toBe(10)
+        ->and($applicationSecuritySettings->password_requires_symbols)->toBeTrue();
 });
 
 test('completion normalizes numeric form state before saving typed security settings', function (): void {
@@ -276,13 +276,13 @@ test('completion normalizes numeric form state before saving typed security sett
 
     app(CompleteApplicationSetup::class)->execute($user, $configuration);
 
-    $securitySettings = app(ApplicationSecuritySettings::class);
-    $securitySettings->refresh();
+    $applicationSecuritySettings = app(ApplicationSecuritySettings::class);
+    $applicationSecuritySettings->refresh();
 
-    expect($securitySettings->password_min_length)->toBe(10)
-        ->and($securitySettings->session_lifetime)->toBe(90)
-        ->and($securitySettings->login_rate_limit)->toBe(5)
-        ->and($securitySettings->login_rate_limit_decay)->toBe(60);
+    expect($applicationSecuritySettings->password_min_length)->toBe(10)
+        ->and($applicationSecuritySettings->session_lifetime)->toBe(90)
+        ->and($applicationSecuritySettings->login_rate_limit)->toBe(5)
+        ->and($applicationSecuritySettings->login_rate_limit_decay)->toBe(60);
 });
 
 test('calendar validation rejects duplicate codes overlaps and out of range terms', function (array $terms): void {

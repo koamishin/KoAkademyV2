@@ -24,7 +24,7 @@ final class Campus extends Model
     protected static function booted(): void
     {
         self::creating(function (self $campus): void {
-            $campus->slug ??= static::uniqueSlug($campus->code ?: $campus->name);
+            $campus->slug ??= self::uniqueSlug($campus->code ?: $campus->name);
         });
 
         self::created(function (self $campus): void {

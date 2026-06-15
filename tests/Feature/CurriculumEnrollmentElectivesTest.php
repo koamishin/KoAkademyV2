@@ -39,7 +39,7 @@ test('enrollment loads required subjects and validates elective group choices', 
         'tuition_per_unit' => 375,
         'laboratory_fee_per_subject' => 2000,
     ]);
-    $group = CurriculumElectiveGroup::query()->create([
+    $curriculumElectiveGroup = CurriculumElectiveGroup::query()->create([
         'curriculum_id' => $curriculum->id,
         'code' => 'PROF-ELECTIVES',
         'name' => 'Professional Electives',
@@ -48,9 +48,9 @@ test('enrollment loads required subjects and validates elective group choices', 
         'minimum_units' => 3,
         'maximum_units' => 3,
     ]);
-    $required = curriculumEnrollmentItem($institution->id, $curriculum->id, 'CORE101', true);
-    $firstElective = curriculumEnrollmentItem($institution->id, $curriculum->id, 'ELEC101', false, $group->id);
-    $secondElective = curriculumEnrollmentItem($institution->id, $curriculum->id, 'ELEC102', false, $group->id);
+    $curriculumItem = curriculumEnrollmentItem($institution->id, $curriculum->id, 'CORE101', true);
+    $firstElective = curriculumEnrollmentItem($institution->id, $curriculum->id, 'ELEC101', false, $curriculumElectiveGroup->id);
+    $secondElective = curriculumEnrollmentItem($institution->id, $curriculum->id, 'ELEC102', false, $curriculumElectiveGroup->id);
     $academicYear = AcademicYear::query()->create([
         'institution_id' => $institution->id,
         'name' => '2026-2027',
@@ -65,33 +65,33 @@ test('enrollment loads required subjects and validates elective group choices', 
         'starts_on' => '2026-06-01',
         'ends_on' => '2026-10-31',
     ]);
-    $period = EnrollmentPeriod::query()->create([
+    $enrollmentPeriod = EnrollmentPeriod::query()->create([
         'campus_id' => $campus->id,
         'term_id' => $term->id,
         'name' => 'Regular Enrollment',
         'opens_at' => now()->subDay(),
         'closes_at' => now()->addWeek(),
     ]);
-    $student = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
+    $person = Person::query()->create(['first_name' => 'Ana', 'last_name' => 'Reyes']);
 
     expect(fn () => app(CreateEnrollment::class)->execute(
-        $student,
-        $period,
+        $person,
+        $enrollmentPeriod,
         $curriculum,
         EnrollmentClassification::NewStudent,
     ))->toThrow(ValidationException::class);
 
     expect(fn () => app(CreateEnrollment::class)->execute(
-        $student,
-        $period,
+        $person,
+        $enrollmentPeriod,
         $curriculum,
         EnrollmentClassification::NewStudent,
         selectedElectiveItemIds: [$firstElective->id, $secondElective->id],
     ))->toThrow(ValidationException::class);
 
     $enrollment = app(CreateEnrollment::class)->execute(
-        $student,
-        $period,
+        $person,
+        $enrollmentPeriod,
         $curriculum,
         EnrollmentClassification::NewStudent,
         selectedElectiveItemIds: [$firstElective->id],
@@ -99,7 +99,7 @@ test('enrollment loads required subjects and validates elective group choices', 
 
     expect($enrollment->subjects)->toHaveCount(2)
         ->and($enrollment->subjects->pluck('curriculum_item_id')->all())
-        ->toContain($required->id, $firstElective->id)
+        ->toContain($curriculumItem->id, $firstElective->id)
         ->not->toContain($secondElective->id)
         ->and($enrollment->assessment->tuition_total)->toBe('2250.00')
         ->and($enrollment->assessment->total)->toBe('2250.00');

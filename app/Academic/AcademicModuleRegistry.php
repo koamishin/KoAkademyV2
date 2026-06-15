@@ -40,9 +40,9 @@ final class AcademicModuleRegistry
         ));
     }
 
-    public function register(ModuleDefinition $module): void
+    public function register(ModuleDefinition $moduleDefinition): void
     {
-        $this->modules[$module->key()] = $module;
+        $this->modules[$moduleDefinition->key()] = $moduleDefinition;
     }
 
     /**
@@ -81,7 +81,7 @@ final class AcademicModuleRegistry
     public function enabledKeys(): array
     {
         return $this->all()
-            ->filter(fn (ModuleDefinition $module): bool => $this->enabled($module->key()))
+            ->filter(fn (ModuleDefinition $moduleDefinition): bool => $this->enabled($moduleDefinition->key()))
             ->keys()
             ->values()
             ->all();

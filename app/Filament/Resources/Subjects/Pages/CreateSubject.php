@@ -40,9 +40,9 @@ final class CreateSubject extends CreateRecord
 
     protected static ?string $title = 'Build a curriculum';
 
-    protected ?Curriculum $createdCurriculum = null;
+    private ?Curriculum $createdCurriculum = null;
 
-    public function getSubheading(): ?string
+    public function getSubheading(): string
     {
         return 'Start from an official Philippine template or shape a flexible curriculum for your school.';
     }
@@ -323,7 +323,7 @@ final class CreateSubject extends CreateRecord
                                 ->reorderable()
                                 ->cloneable()
                                 ->collapsible()
-                                ->itemLabel(fn (array $state): ?string => filled($state['code'] ?? null)
+                                ->itemLabel(fn (array $state): string => filled($state['code'] ?? null)
                                     ? "{$state['code']} - {$state['name']}"
                                     : 'New subject')
                                 ->addActionLabel('Add subject')
@@ -392,7 +392,7 @@ final class CreateSubject extends CreateRecord
         ]);
     }
 
-    protected function getCreatedNotificationTitle(): ?string
+    protected function getCreatedNotificationTitle(): string
     {
         return 'Curriculum created successfully';
     }

@@ -190,8 +190,8 @@ final class CurriculumResource extends Resource
                     'archived' => 'Archived',
                 ]),
             ])
-            ->recordUrl(fn (Curriculum $record): string => self::getUrl('edit', [
-                'record' => $record,
+            ->recordUrl(fn (Curriculum $curriculum): string => self::getUrl('edit', [
+                'record' => $curriculum,
                 'tenant' => Filament::getTenant(),
             ]));
     }
@@ -205,7 +205,7 @@ final class CurriculumResource extends Resource
             $campus !== null,
             fn (Builder $builder): Builder => $builder->whereHas(
                 'program',
-                fn (Builder $programQuery): Builder => $programQuery->where('campus_id', $campus->getKey()),
+                fn (Builder $builder): Builder => $builder->where('campus_id', $campus->getKey()),
             ),
         );
     }

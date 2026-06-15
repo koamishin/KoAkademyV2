@@ -14,11 +14,11 @@ use Illuminate\Http\Request;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
-final class ResolveCurrentCampus
+final readonly class ResolveCurrentCampus
 {
     public function __construct(
-        private readonly CurrentCampus $currentCampus,
-        private readonly PermissionRegistrar $permissionRegistrar,
+        private CurrentCampus $currentCampus,
+        private PermissionRegistrar $permissionRegistrar,
     ) {}
 
     public function handle(Request $request, Closure $next): Response

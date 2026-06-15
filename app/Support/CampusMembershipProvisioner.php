@@ -27,7 +27,7 @@ final class CampusMembershipProvisioner
         return DB::transaction(function () use ($user): ?Campus {
             $role = $this->legacyRole($user);
 
-            if (! $role) {
+            if (!$role instanceof \App\Enums\RoleEnums) {
                 return null;
             }
 
@@ -68,7 +68,7 @@ final class CampusMembershipProvisioner
         );
     }
 
-    private function provisionFromAuthoritativeRecords(User $user, RoleEnums $role): void
+    private function provisionFromAuthoritativeRecords(User $user, RoleEnums $roleEnums): void
     {
         $person = $user->person;
 
@@ -80,12 +80,12 @@ final class CampusMembershipProvisioner
             ->where('active', true)
             ->whereNotNull('campus_id')
             ->when(
-                ! in_array($role->value, RoleEnums::administrativeValues(), true),
+                ! in_array($roleEnums->value, RoleEnums::administrativeValues(), true),
                 fn ($query) => $query->latest('id')->limit(1),
             )
             ->pluck('campus_id');
 
-        if ($role === RoleEnums::APPLICANT) {
+        if ($roleEnums === RoleEnums::APPLICANT) {
             $campusIds->push(
                 Application::query()
                     ->where('person_id', $person->getKey())
@@ -95,7 +95,7 @@ final class CampusMembershipProvisioner
             );
         }
 
-        if ($role === RoleEnums::GUARDIAN) {
+        if ($roleEnums === RoleEnums::GUARDIAN) {
             $campusIds = $campusIds->merge(
                 $person->students()
                     ->wherePivot('has_portal_access', true)
@@ -116,21 +116,21 @@ final class CampusMembershipProvisioner
             ->orderBy('name')
             ->get();
 
-        $this->createMemberships($user, $role, $campuses);
+        $this->createMemberships($user, $roleEnums, $campuses);
     }
 
     /**
      * @param  Collection<int, Campus>  $campuses
      */
-    private function createMemberships(User $user, RoleEnums $role, Collection $campuses): void
+    private function createMemberships(User $user, RoleEnums $roleEnums, Collection $campuses): void
     {
         foreach ($campuses as $index => $campus) {
-            $this->ensureCampusRole($campus, $role);
+            $this->ensureCampusRole($campus, $roleEnums);
 
             $user->campusMemberships()->updateOrCreate(
                 ['campus_id' => $campus->getKey()],
                 [
-                    'role' => $role,
+                    'role' => $roleEnums,
                     'active' => true,
                     'is_default' => $index === 0,
                 ],
@@ -138,18 +138,18 @@ final class CampusMembershipProvisioner
         }
     }
 
-    private function ensureCampusRole(Campus $campus, RoleEnums $role): Role
+    private function ensureCampusRole(Campus $campus, RoleEnums $roleEnums): Role
     {
         $campusRole = Role::query()->firstOrCreate([
             'campus_id' => $campus->getKey(),
-            'name' => $role->value,
+            'name' => $roleEnums->value,
             'guard_name' => 'web',
         ]);
 
         if ($campusRole->permissions()->doesntExist()) {
             $globalRole = Role::query()
                 ->whereNull('campus_id')
-                ->where('name', $role->value)
+                ->where('name', $roleEnums->value)
                 ->where('guard_name', 'web')
                 ->first();
 

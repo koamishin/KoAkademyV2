@@ -34,11 +34,11 @@ function createCampus(string $code): Campus
     ]);
 }
 
-function createCampusRole(RoleEnums $role): Role
+function createCampusRole(RoleEnums $roleEnums): Role
 {
     return Role::query()->firstOrCreate([
         'campus_id' => null,
-        'name' => $role->value,
+        'name' => $roleEnums->value,
         'guard_name' => 'web',
     ]);
 }
@@ -58,7 +58,7 @@ test('administrators may enter assigned campuses but not unassigned campuses', f
     $this->actingAs($user)
         ->get(route('campus.dashboard', ['campus' => $assignedCampus]))
         ->assertSuccessful()
-        ->assertInertia(fn (AssertableInertia $page) => $page
+        ->assertInertia(fn (AssertableInertia $assertableInertia): \Inertia\Testing\AssertableInertia => $assertableInertia
             ->where('currentCampus.id', $assignedCampus->id)
             ->where('auth.campusRole', RoleEnums::SCHOOL_ADMIN->value));
 
@@ -245,7 +245,7 @@ test('student academic history contains only the assigned campus', function (): 
     $this->actingAs($user)
         ->get(route('academic-history.show', ['campus' => $assignedCampus]))
         ->assertSuccessful()
-        ->assertInertia(fn (AssertableInertia $page) => $page
+        ->assertInertia(fn (AssertableInertia $assertableInertia): \Inertia\Testing\AssertableInertia => $assertableInertia
             ->has('enrollments', 1)
             ->where('enrollments.0.campus_id', $assignedCampus->id));
 });

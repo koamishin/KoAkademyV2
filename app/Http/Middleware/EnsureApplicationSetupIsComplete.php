@@ -22,14 +22,14 @@ final class EnsureApplicationSetupIsComplete
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $setup = app(ApplicationSetupSettings::class);
+        $applicationSetupSettings = app(ApplicationSetupSettings::class);
         $campus = $request->user()?->assignedCampus();
 
         if (! $campus instanceof Campus) {
             return $next($request);
         }
 
-        if ($setup->isComplete()) {
+        if ($applicationSetupSettings->isComplete()) {
             if ($request->routeIs(ApplicationSetup::getRouteName(), SetupRequired::getRouteName())) {
                 return redirect()->to(Filament::getUrl($campus));
             }

@@ -76,11 +76,11 @@ final class SubjectResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('code')->searchable()->copyable()->weight('semibold'),
-                TextColumn::make('name')->searchable()->sortable()->description(fn (Subject $record): ?string => $record->description),
+                TextColumn::make('name')->searchable()->sortable()->description(fn (Subject $subject): ?string => $subject->description),
                 TextColumn::make('subject_type')->badge(),
                 TextColumn::make('default_credit_units')->label('Units')->numeric(decimalPlaces: 2),
                 TextColumn::make('curriculum_items_count')->counts('curriculumItems')->label('Curricula')->badge(),
-                IconColumn::make('status')->boolean()->getStateUsing(fn (Subject $record): bool => $record->status === 'active')->label('Active'),
+                IconColumn::make('status')->boolean()->getStateUsing(fn (Subject $subject): bool => $subject->status === 'active')->label('Active'),
             ])
             ->filters([
                 SelectFilter::make('subject_type')->options([

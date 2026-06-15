@@ -16,7 +16,7 @@ final class ListCurricula extends ListRecords
 
     protected static ?string $title = 'Curricula';
 
-    public function getSubheading(): ?string
+    public function getSubheading(): string
     {
         return 'Review and refine the official or custom structures used for enrollment.';
     }

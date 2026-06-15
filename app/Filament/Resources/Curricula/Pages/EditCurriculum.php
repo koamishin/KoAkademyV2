@@ -15,7 +15,7 @@ final class EditCurriculum extends EditRecord
 {
     protected static string $resource = CurriculumResource::class;
 
-    public function getSubheading(): ?string
+    public function getSubheading(): string
     {
         return "This is your institution's editable copy; its official source definition remains unchanged.";
     }

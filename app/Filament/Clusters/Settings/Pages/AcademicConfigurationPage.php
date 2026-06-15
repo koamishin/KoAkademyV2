@@ -58,11 +58,11 @@ final class AcademicConfigurationPage extends Page
         ])->livewireSubmitHandler('save')->footer([Actions::make([Action::make('save')->submit('save')])])])->statePath('data');
     }
 
-    public function save(ApplyAcademicPreset $applyPreset): void
+    public function save(ApplyAcademicPreset $applyAcademicPreset): void
     {
         $data = $this->form->getState();
         if (filled($data['preset'])) {
-            $applyPreset->execute(Institution::query()->findOrFail($data['institution_id']), $data['preset']);
+            $applyAcademicPreset->execute(Institution::query()->findOrFail($data['institution_id']), $data['preset']);
         }
         foreach (['schedule_increment', 'working_days', 'student_number_format', 'application_number_format'] as $key) {
             AcademicSetting::query()->updateOrCreate(['campus_id' => null, 'key' => $key], ['value' => (array) $data[$key]]);

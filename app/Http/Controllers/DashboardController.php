@@ -31,7 +31,7 @@ final class DashboardController extends Controller
      */
     private function buildProps(?Person $person): array
     {
-        if (! $person) {
+        if (!$person instanceof \App\Models\Person) {
             return $this->emptyProps();
         }
 
@@ -111,7 +111,7 @@ final class DashboardController extends Controller
         }
 
         $currentTerm = $academicYear->terms
-            ->first(fn ($term) => $term->status === 'active')
+            ->first(fn ($term): bool => $term->status === 'active')
             ?? $academicYear->terms->first();
 
         return [
@@ -175,13 +175,13 @@ final class DashboardController extends Controller
             ->with(['classOffering:id,name,code,subject_id', 'classOffering.subject:id,name,code'])
             ->orderBy('starts_at')
             ->get()
-            ->map(fn (ClassMeeting $meeting): array => [
-                'id' => $meeting->id,
-                'subjectName' => $meeting->classOffering?->subject?->name ?? $meeting->classOffering?->name,
-                'subjectCode' => $meeting->classOffering?->subject?->code ?? $meeting->classOffering?->code,
-                'startsAt' => $meeting->starts_at,
-                'endsAt' => $meeting->ends_at,
-                'roomName' => $meeting->room_id ? $meeting->loadMissing('room:id,name')->room?->name : null,
+            ->map(fn (ClassMeeting $classMeeting): array => [
+                'id' => $classMeeting->id,
+                'subjectName' => $classMeeting->classOffering?->subject?->name ?? $classMeeting->classOffering?->name,
+                'subjectCode' => $classMeeting->classOffering?->subject?->code ?? $classMeeting->classOffering?->code,
+                'startsAt' => $classMeeting->starts_at,
+                'endsAt' => $classMeeting->ends_at,
+                'roomName' => $classMeeting->room_id ? $classMeeting->loadMissing('room:id,name')->room?->name : null,
             ])
             ->all();
     }
@@ -282,14 +282,14 @@ final class DashboardController extends Controller
             ->latest('published_at')
             ->limit(5)
             ->get()
-            ->map(fn (ClassPost $post): array => [
-                'id' => $post->id,
-                'title' => $post->title,
-                'body' => str($post->body)->limit(120)->toString(),
-                'subjectName' => $post->classOffering?->subject?->name ?? $post->classOffering?->name,
-                'subjectCode' => $post->classOffering?->subject?->code,
-                'publishedAt' => ($post->published_at ?? $post->created_at)->toISOString(),
-                'classOfferingId' => $post->class_offering_id,
+            ->map(fn (ClassPost $classPost): array => [
+                'id' => $classPost->id,
+                'title' => $classPost->title,
+                'body' => str($classPost->body)->limit(120)->toString(),
+                'subjectName' => $classPost->classOffering?->subject?->name ?? $classPost->classOffering?->name,
+                'subjectCode' => $classPost->classOffering?->subject?->code,
+                'publishedAt' => ($classPost->published_at ?? $classPost->created_at)->toISOString(),
+                'classOfferingId' => $classPost->class_offering_id,
             ])
             ->all();
     }
@@ -325,16 +325,5 @@ final class DashboardController extends Controller
                     ->count()
                 : 0,
         ];
-    }
-
-    private function loadRoom(ClassMeeting $meeting): ?string
-    {
-        if ($meeting->room_id) {
-            $meeting->loadMissing('room:id,name');
-
-            return $meeting->room?->name;
-        }
-
-        return null;
     }
 }

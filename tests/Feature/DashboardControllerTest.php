@@ -5,12 +5,12 @@ use App\Models\User;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
-it('requires authentication', function () {
+it('requires authentication', function (): void {
     get(route('dashboard'))
         ->assertRedirect(route('login'));
 });
 
-it('renders the dashboard page for authenticated users', function () {
+it('renders the dashboard page for authenticated users', function (): void {
     $user = User::factory()->create();
 
     actingAs($user)

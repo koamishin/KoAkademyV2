@@ -30,7 +30,7 @@ class HandleInertiaRequests extends Middleware
 
         $user = $request->user();
         $currentCampus = $this->resolveCurrentCampus($request);
-        $campusMembership = $user && $currentCampus
+        $campusMembership = $user && $currentCampus instanceof \App\Models\Campus
             ? $user->campusMemberships()->where('campus_id', $currentCampus->getKey())->first()
             : null;
         $settingsFeatures = [];
@@ -66,7 +66,7 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->getRoleNames()->values()->all() ?? [],
                 'campusRole' => $campusMembership?->role->value,
             ],
-            'currentCampus' => $currentCampus ? [
+            'currentCampus' => $currentCampus instanceof \App\Models\Campus ? [
                 'id' => $currentCampus->getKey(),
                 'name' => $currentCampus->name,
                 'code' => $currentCampus->code,

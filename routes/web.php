@@ -2,7 +2,6 @@
 
 use App\Enums\SocialLoginProvider;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonateController;
 use App\Http\Controllers\NotificationController;
 use App\Models\User;
@@ -15,12 +14,12 @@ Route::get('/', fn () => Inertia::render('Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ]))->name('home');
 
-Route::get('dashboard', function (CampusMembershipProvisioner $provisioner) {
+Route::get('dashboard', function (CampusMembershipProvisioner $campusMembershipProvisioner) {
     /** @var User $user */
     $user = request()->user();
-    $campus = $provisioner->provision($user);
+    $campus = $campusMembershipProvisioner->provision($user);
 
-    if (! $campus) {
+    if (!$campus instanceof \App\Models\Campus) {
         return to_route('campus.assignment.pending');
     }
 

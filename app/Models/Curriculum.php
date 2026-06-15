@@ -34,13 +34,13 @@ final class Curriculum extends Model
 
     public function items(): HasMany
     {
-        $relation = $this->hasMany(CurriculumItem::class);
-        $relation->getQuery()
+        $hasMany = $this->hasMany(CurriculumItem::class);
+        $hasMany->getQuery()
             ->orderBy('year_level')
             ->orderBy('term_sequence')
             ->orderBy('position');
 
-        return $relation;
+        return $hasMany;
     }
 
     public function electiveGroups(): HasMany

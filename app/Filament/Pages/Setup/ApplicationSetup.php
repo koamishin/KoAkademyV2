@@ -384,9 +384,9 @@ final class ApplicationSetup extends Page
                     ->required()
                     ->maxLength(100),
                 ...$academicModuleRegistry->all()
-                    ->map(fn (ModuleDefinition $module): Toggle => Toggle::make("modules.{$module->key()}")
-                        ->label($module->name())
-                        ->helperText($module->description()))
+                    ->map(fn (ModuleDefinition $moduleDefinition): Toggle => Toggle::make("modules.{$moduleDefinition->key()}")
+                        ->label($moduleDefinition->name())
+                        ->helperText($moduleDefinition->description()))
                     ->values()
                     ->all(),
             ])
@@ -569,8 +569,8 @@ final class ApplicationSetup extends Page
             'student_number_format' => '{year}-{sequence:6}',
             'application_number_format' => 'APP-{year}-{sequence:6}',
             'modules' => $academicModuleRegistry->all()
-                ->mapWithKeys(fn (ModuleDefinition $module): array => [
-                    $module->key() => $module->isEnabledByDefault(),
+                ->mapWithKeys(fn (ModuleDefinition $moduleDefinition): array => [
+                    $moduleDefinition->key() => $moduleDefinition->isEnabledByDefault(),
                 ])
                 ->all(),
             'registration_enabled' => true,

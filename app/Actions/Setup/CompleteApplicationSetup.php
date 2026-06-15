@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Validator as LaravelValidator;
 
-final class CompleteApplicationSetup
+final readonly class CompleteApplicationSetup
 {
     public function __construct(
         private ApplyAcademicPreset $applyAcademicPreset,
@@ -36,11 +36,11 @@ final class CompleteApplicationSetup
     /**
      * @param  array<string, mixed>  $configuration
      */
-    public function execute(User $administrator, array $configuration): Campus
+    public function execute(User $user, array $configuration): Campus
     {
         $configuration = $this->validateConfiguration($configuration);
 
-        return DB::transaction(function () use ($administrator, $configuration): Campus {
+        return DB::transaction(function () use ($user, $configuration): Campus {
             $institution = $this->configureInstitution($configuration);
             $campus = $this->configureCampus($institution, $configuration);
 
@@ -50,7 +50,7 @@ final class CompleteApplicationSetup
             $this->configureOperations($configuration);
             $this->configureFeaturesAndSecurity($configuration);
 
-            $administrator->campusMemberships()->updateOrCreate(
+            $user->campusMemberships()->updateOrCreate(
                 ['campus_id' => $campus->getKey()],
                 [
                     'role' => RoleEnums::SUPER_ADMIN,
@@ -64,7 +64,7 @@ final class CompleteApplicationSetup
             $this->applicationSetupSettings->current_step = 7;
             $this->applicationSetupSettings->draft = $configuration;
             $this->applicationSetupSettings->completed_at = now()->toISOString();
-            $this->applicationSetupSettings->completed_by_user_id = $administrator->getKey();
+            $this->applicationSetupSettings->completed_by_user_id = $user->getKey();
             $this->applicationSetupSettings->save();
 
             return $campus;
@@ -126,7 +126,7 @@ final class CompleteApplicationSetup
             'login_rate_limit_decay' => ['required', 'integer', 'between:30,3600'],
         ]);
 
-        $validator->after(fn ($validator) => $this->validateCalendar($configuration, $validator));
+        $validator->after(fn (\Illuminate\Validation\Validator $validator) => $this->validateCalendar($configuration, $validator));
 
         return $validator->validate();
     }
@@ -148,7 +148,7 @@ final class CompleteApplicationSetup
             'terms.*.ends_on' => ['required', 'date'],
         ]);
 
-        $validator->after(fn ($validator) => $this->validateCalendar($configuration, $validator));
+        $validator->after(fn (\Illuminate\Validation\Validator $validator) => $this->validateCalendar($configuration, $validator));
         $validator->validate();
     }
 
@@ -160,7 +160,7 @@ final class CompleteApplicationSetup
         $institution = Institution::query()->oldest('id')->first() ?? new Institution;
         $institution->fill([
             'name' => $configuration['institution_name'],
-            'code' => mb_strtoupper($configuration['institution_code']),
+            'code' => mb_strtoupper((string) $configuration['institution_code']),
             'timezone' => $configuration['timezone'],
             'locale' => $configuration['locale'],
             'status' => 'active',
@@ -188,7 +188,7 @@ final class CompleteApplicationSetup
         $campus->fill([
             'institution_id' => $institution->getKey(),
             'name' => $configuration['campus_name'],
-            'code' => mb_strtoupper($configuration['campus_code']),
+            'code' => mb_strtoupper((string) $configuration['campus_code']),
             'slug' => $configuration['campus_slug'],
             'address' => $configuration['campus_address'] ?? null,
             'timezone' => $configuration['campus_timezone'],
@@ -252,7 +252,7 @@ final class CompleteApplicationSetup
             Term::query()->updateOrCreate(
                 [
                     'academic_year_id' => $academicYear->getKey(),
-                    'code' => mb_strtoupper($termData['code']),
+                    'code' => mb_strtoupper((string) $termData['code']),
                 ],
                 [
                     'name' => $termData['name'],
@@ -320,7 +320,7 @@ final class CompleteApplicationSetup
     /**
      * @param  array<string, mixed>  $configuration
      */
-    private function validateCalendar(array $configuration, LaravelValidator $validator): void
+    private function validateCalendar(array $configuration, LaravelValidator $laravelValidator): void
     {
         if (
             blank($configuration['academic_year_starts_on'] ?? null)
@@ -348,15 +348,15 @@ final class CompleteApplicationSetup
             }
 
             if ($endsOn->lessThan($startsOn)) {
-                $validator->errors()->add("terms.{$index}.ends_on", 'The term end date must be on or after its start date.');
+                $laravelValidator->errors()->add("terms.{$index}.ends_on", 'The term end date must be on or after its start date.');
             }
 
             if ($startsOn->lessThan($yearStartsOn) || $endsOn->greaterThan($yearEndsOn)) {
-                $validator->errors()->add("terms.{$index}.starts_on", 'Every term must fall within the academic year.');
+                $laravelValidator->errors()->add("terms.{$index}.starts_on", 'Every term must fall within the academic year.');
             }
 
             if ($previousEnd instanceof CarbonImmutable && $startsOn->lessThanOrEqualTo($previousEnd)) {
-                $validator->errors()->add("terms.{$index}.starts_on", 'Academic terms may not overlap.');
+                $laravelValidator->errors()->add("terms.{$index}.starts_on", 'Academic terms may not overlap.');
             }
 
             $previousEnd = $endsOn;
