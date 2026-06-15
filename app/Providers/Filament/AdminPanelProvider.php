@@ -8,6 +8,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Http\Middleware\ResolveCurrentCampus;
 use App\Models\Campus;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -45,6 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->tenantRoutePrefix('campus')
             ->searchableTenantMenu()
             ->tenantMiddleware([
+                SyncShieldTenant::class,
                 ResolveCurrentCampus::class,
             ], isPersistent: true)
             ->viteTheme('resources/css/filament/admin/theme.css')

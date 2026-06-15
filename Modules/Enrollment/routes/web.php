@@ -8,5 +8,5 @@ Route::prefix('campus/{campus:slug}')
     ->scopeBindings()
     ->group(function (): void {
         Route::get('/academic-history', AcademicHistoryController::class)
-            ->name('academic-history');
+            ->name('academic-history.show');
     });

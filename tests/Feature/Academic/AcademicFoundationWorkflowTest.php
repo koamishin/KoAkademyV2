@@ -60,6 +60,8 @@ beforeEach(function (): void {
         'name' => 'BSIT 2026',
         'code' => 'BSIT-2026',
         'effective_year' => 2026,
+        'tuition_per_unit' => 375,
+        'laboratory_fee_per_subject' => 2000,
     ]);
     $subject = Subject::query()->create([
         'institution_id' => $institution->id,

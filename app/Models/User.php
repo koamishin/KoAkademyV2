@@ -81,6 +81,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return ! $this->hasAnyRole(['super_admin', 'school_admin']);
     }
 
+    public function isSuperAdministrator(?Campus $campus = null): bool
+    {
+        return $this->campusMemberships()
+            ->where('active', true)
+            ->where('role', RoleEnums::SUPER_ADMIN)
+            ->when($campus, fn ($query) => $query->whereBelongsTo($campus))
+            ->exists();
+    }
+
     /**
      * The attributes that are mass assignable.
      *

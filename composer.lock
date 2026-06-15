@@ -4,8 +4,79 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5701d461fbc4325758bec74f3b20e1f4",
+    "content-hash": "7f056b93449cab88e4f1db37f50984c6",
     "packages": [
+        {
+            "name": "agroezinger/filament-shield-enhanced",
+            "version": "v0.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/agroezinger/filament-shield-enhanced.git",
+                "reference": "b3b1d970795a3f21c28bbf1fbd010c82167b1c3b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/agroezinger/filament-shield-enhanced/zipball/b3b1d970795a3f21c28bbf1fbd010c82167b1c3b",
+                "reference": "b3b1d970795a3f21c28bbf1fbd010c82167b1c3b",
+                "shasum": ""
+            },
+            "require": {
+                "bezhansalleh/filament-shield": "4.2.0",
+                "filament/filament": "^4.0|^5.0",
+                "illuminate/contracts": "^11.28|^12.0|^13.0",
+                "illuminate/support": "^11.28|^12.0|^13.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.92"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.26",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^10.8|^11.0",
+                "pestphp/pest": "^3.8|^4.0",
+                "pestphp/pest-plugin-laravel": "^3.2|^4.0",
+                "pestphp/pest-plugin-livewire": "^3.0|^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Agroezinger\\FilamentShieldEnhanced\\FilamentShieldEnhancedServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Agroezinger\\FilamentShieldEnhanced\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alexander Groezinger",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Fine-grained page permissions & structured UI addon for bezhansalleh/filament-shield.",
+            "homepage": "https://github.com/agroezinger/filament-shield-enhanced",
+            "keywords": [
+                "agroezinger",
+                "filament",
+                "filament-shield",
+                "filament-shield-enhanced",
+                "laravel",
+                "page-permissions",
+                "permission",
+                "rbac"
+            ],
+            "support": {
+                "issues": "https://github.com/agroezinger/filament-shield-enhanced/issues",
+                "source": "https://github.com/agroezinger/filament-shield-enhanced/tree/v0.0.5"
+            },
+            "time": "2026-06-10T20:26:53+00:00"
+        },
         {
             "name": "alizharb/filament-activity-log",
             "version": "v1.3.2",

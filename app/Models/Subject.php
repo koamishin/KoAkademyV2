@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Subject extends Model
 {
@@ -29,5 +30,10 @@ final class Subject extends Model
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function curriculumItems(): HasMany
+    {
+        return $this->hasMany(CurriculumItem::class);
     }
 }

@@ -20,7 +20,6 @@ final class CampusMembershipProvisioner
     {
         if ($membership = $user->campusMemberships()->where('active', true)->orderByDesc('is_default')->first()) {
             $this->ensureCampusRole($membership->campus()->firstOrFail(), $membership->role);
-            $membership->save();
 
             return $membership->campus;
         }

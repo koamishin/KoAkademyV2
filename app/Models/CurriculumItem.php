@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class CurriculumItem extends Model
 {
     protected $fillable = [
-        'curriculum_id', 'subject_id', 'year_level', 'term_sequence', 'elective_group',
+        'curriculum_id', 'subject_id', 'year_level', 'term_sequence', 'position', 'elective_group',
+        'elective_group_id',
         'credit_units', 'contact_hours', 'lab_hours', 'competency_hours', 'is_required',
     ];
 
@@ -29,5 +30,10 @@ final class CurriculumItem extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    public function electiveGroup(): BelongsTo
+    {
+        return $this->belongsTo(CurriculumElectiveGroup::class);
     }
 }

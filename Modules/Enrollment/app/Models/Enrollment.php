@@ -11,6 +11,7 @@ use App\Models\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\Enrollment\Enums\EnrollmentClassification;
 use Modules\Enrollment\Enums\EnrollmentStatus;
 
@@ -62,5 +63,10 @@ final class Enrollment extends Model
     public function subjects(): HasMany
     {
         return $this->hasMany(EnrollmentSubject::class);
+    }
+
+    public function assessment(): HasOne
+    {
+        return $this->hasOne(EnrollmentAssessment::class);
     }
 }

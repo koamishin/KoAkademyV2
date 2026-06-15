@@ -2,12 +2,15 @@
 
 use AlizHarb\ActivityLog\Resources\ActivityLogs\ActivityLogResource;
 use App\Enums\RoleEnums;
+use App\Filament\Resources\Campuses\CampusResource;
+use App\Filament\Resources\Subjects\SubjectResource;
 use App\Models\Campus;
 use App\Models\Institution;
 use App\Models\Role as CampusRole;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 function assignLegacyRole(User $user, RoleEnums $role): void
@@ -124,4 +127,97 @@ test('institution activity logs are not tenant scoped', function (): void {
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
     expect(ActivityLogResource::isScopedToTenant())->toBeFalse();
+});
+
+test('super administrators may open the campus creation page when scoped permissions are missing', function (): void {
+    $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
+    $campus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $user = User::factory()->create();
+
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::SUPER_ADMIN,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Filament::setTenant($campus);
+
+    $this->get(CampusResource::getUrl('create', tenant: $campus))
+        ->assertSuccessful();
+});
+
+test('super administrators may open all resource pages when scoped permissions are missing', function (): void {
+    $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
+    $campus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $user = User::factory()->create();
+
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::SUPER_ADMIN,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Filament::setTenant($campus);
+
+    $this->get(SubjectResource::getUrl('index', tenant: $campus))
+        ->assertSuccessful();
+});
+
+test('administrators without subject permissions remain forbidden', function (): void {
+    $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
+    $campus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $user = User::factory()->create();
+
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::SCHOOL_ADMIN,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Filament::setTenant($campus);
+
+    $this->get(SubjectResource::getUrl('index', tenant: $campus))
+        ->assertForbidden();
+});
+
+test('repeated panel access does not duplicate the campus shield role assignment', function (): void {
+    $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
+    $campus = Campus::query()->create([
+        'institution_id' => $institution->id,
+        'name' => 'Main Campus',
+        'code' => 'MAIN',
+    ]);
+    $user = User::factory()->create();
+
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::SUPER_ADMIN,
+        'is_default' => true,
+    ]);
+
+    expect($user->canAccessPanel(Filament::getPanel('admin')))->toBeTrue()
+        ->and($user->canAccessPanel(Filament::getPanel('admin')))->toBeTrue()
+        ->and(DB::table(config('permission.table_names.model_has_roles'))
+            ->where('campus_id', $campus->id)
+            ->where('model_type', User::class)
+            ->where('model_id', $user->id)
+            ->count())->toBe(1);
 });

@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Academic\AcademicModuleRegistry;
 use App\Features\FeatureRegistry;
+use App\Models\User;
 use App\Support\CurrentCampus;
 use Carbon\CarbonImmutable;
 use Filament\Panel;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Pennant\FeatureManager;
@@ -31,8 +33,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureAuthorization();
         $this->configureDefaults();
         $this->configureFeatures();
+    }
+
+    protected function configureAuthorization(): void
+    {
+        Gate::before(function (User $user): ?bool {
+            $currentCampus = app(CurrentCampus::class)->get();
+
+            return $user->isSuperAdministrator($currentCampus) ? true : null;
+        });
     }
 
     protected function configureDefaults(): void

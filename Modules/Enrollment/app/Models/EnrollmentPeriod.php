@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Enrollment\Models;
 
 use App\Models\Campus;
+use App\Models\Term;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,5 +23,10 @@ final class EnrollmentPeriod extends Model
     public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
+    }
+
+    public function term(): BelongsTo
+    {
+        return $this->belongsTo(Term::class);
     }
 }

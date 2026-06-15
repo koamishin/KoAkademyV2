@@ -243,7 +243,7 @@ test('student academic history contains only the assigned campus', function (): 
     }
 
     $this->actingAs($user)
-        ->get(route('academic-history', ['campus' => $assignedCampus]))
+        ->get(route('academic-history.show', ['campus' => $assignedCampus]))
         ->assertSuccessful()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->has('enrollments', 1)
