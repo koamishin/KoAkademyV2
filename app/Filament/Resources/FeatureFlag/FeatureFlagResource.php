@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class FeatureFlagResource extends Resource
 {
@@ -49,7 +50,9 @@ class FeatureFlagResource extends Resource
                     ->sortable(),
                 TextColumn::make('features_count')
                     ->label('Active Features')
-                    ->counts('features')
+                    ->counts([
+                        'features' => fn (Builder $query): Builder => $query->where('active', true),
+                    ])
                     ->badge()
                     ->color('success'),
             ])

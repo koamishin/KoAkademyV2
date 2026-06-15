@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 final class Role extends SpatieRole
@@ -17,5 +18,10 @@ final class Role extends SpatieRole
     public function team(): BelongsTo
     {
         return $this->campus();
+    }
+
+    public function features(): HasMany
+    {
+        return $this->hasMany(RoleFeature::class);
     }
 }

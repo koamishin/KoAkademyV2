@@ -1,0 +1,113 @@
+---
+title: Tech Stack
+description: The full set of packages and versions that power KoAkademyV2.
+sidebar:
+  order: 2
+---
+
+## Runtime
+
+| Tool                | Version  |
+| :------------------ | :------- |
+| PHP                 | `^8.3`   |
+| Node.js             | `>=20`   |
+| Composer            | `>=2`    |
+
+## Backend (Composer)
+
+### Production
+
+| Package                                | Version  | Purpose                              |
+| :------------------------------------- | :------- | :----------------------------------- |
+| `laravel/framework`                    | `^13.0`  | Application framework                |
+| `inertiajs/inertia-laravel`            | `^2.0`   | SPA adapter                          |
+| `laravel/fortify`                      | `^1.30`  | Headless auth (2FA, passkeys)        |
+| `filament/filament`                    | `^5.0`   | Admin panel                          |
+| `bezhansalleh/filament-shield`         | `^4.1`   | RBAC permission generator            |
+| `agroezinger/filament-shield-enhanced` | `^0.0.5` | Shield UX improvements               |
+| `alizharb/filament-activity-log`       | `^1.3`   | Activity log for Filament            |
+| `robertboes/filament-passkeys`         | `^0.1.0` | WebAuthn passkeys for Filament       |
+| `openplain/filament-shadcn-theme`      | `^1.1`   | Shadcn UI theme for Filament         |
+| `laravel/octane`                       | `^2.13`  | Long-running PHP server (FrankenPHP) |
+| `laravel/pennant`                      | `^1.20`  | Feature flags                        |
+| `laravel/socialite`                    | `^5.27`  | OAuth social login                   |
+| `laravel/wayfinder`                    | `^0.1.9` | TypeScript route generation          |
+| `nwidart/laravel-modules`              | `^13.0`  | Modular package system               |
+| `lab404/laravel-impersonate`           | `^1.7`   | User impersonation                   |
+| `spatie/laravel-permission`            | `^6.24`  | Roles & permissions                  |
+| `spatie/laravel-activitylog`           | `^4.10`  | Activity log                         |
+| `spatie/laravel-settings`              | `^3.7`   | Typed application settings           |
+| `tightenco/ziggy`                      | `^2.6`   | Server → client route bridge         |
+| `robertboes/blade-selfhst-icons`       | `^0.3.2` | Self-hosted Blade icons              |
+| `yukazakiri/shadcthemes-tools`         | `^0.1.6` | Shadcn theme CLI tooling             |
+
+### Development
+
+| Package                          | Version  | Purpose                  |
+| :------------------------------- | :------- | :----------------------- |
+| `laravel/boost`                  | `^2.0`   | MCP server for the app   |
+| `laravel/pail`                   | `^1.2.2` | Real-time log tailer     |
+| `laravel/pint`                   | `^1.24`  | Code style fixer         |
+| `laravel/sail`                   | `^1.41`  | Docker dev environment   |
+| `pestphp/pest`                   | `^4.3`   | Test runner              |
+| `pestphp/pest-plugin-laravel`    | `^4.0`   | Pest Laravel helpers     |
+| `phpstan/phpstan`                | `^2.1`   | Static analysis          |
+| `rector/rector`                  | `^2.3`   | Automated refactoring    |
+| `nunomaduro/collision`           | `^8.6`   | Pretty CLI errors        |
+| `mockery/mockery`                | `^1.6`   | Mocking library          |
+| `fakerphp/faker`                 | `^1.23`  | Fake data generator      |
+
+## Frontend (npm)
+
+### Production
+
+| Package                       | Version   | Purpose                                |
+| :---------------------------- | :-------- | :------------------------------------- |
+| `vue`                         | `^3.5.13` | UI framework                           |
+| `@inertiajs/vue3`             | `^2.3.7`  | Inertia Vue 3 client                   |
+| `@laravel/passkeys`           | `^0.2.0`  | WebAuthn passkeys client               |
+| `@tanstack/vue-table`         | `^8.21.3` | Headless table for Vue                 |
+| `@vee-validate/zod`           | `^4.15.1` | Form validation                        |
+| `vee-validate`                | `^4.15.1` | Form validation core                   |
+| `@vueuse/core`                | `^12.8.2` | Vue composables                        |
+| `class-variance-authority`    | `^0.7.1`  | CVA-style variants                     |
+| `clsx`                        | `^2.1.1`  | Class name composition                 |
+| `embla-carousel-vue`          | `^8.6.0`  | Carousels                              |
+| `laravel-vite-plugin`         | `^2.0.0`  | Laravel Vite plugin                    |
+| `lucide-vue-next`             | `^0.468.0`| Icon set                               |
+| `reka-ui`                     | `^2.8.0`  | Headless UI primitives (Shadcn for Vue)|
+| `tailwind-merge`              | `^3.2.0`  | Tailwind class merging                 |
+| `tw-animate-css`              | `^1.2.5`  | Tailwind animation utilities           |
+| `vaul-vue`                    | `^0.4.1`  | Drawer component                       |
+| `vue-input-otp`               | `^0.3.2`  | OTP input                              |
+| `vue-sonner`                  | `^2.0.9`  | Toast notifications                    |
+| `zod`                         | `^3.25.76`| TypeScript schema validation           |
+
+### Development
+
+| Package                          | Version     | Purpose                          |
+| :------------------------------- | :---------- | :------------------------------- |
+| `vite`                           | `^7.0.4`    | Frontend dev server & bundler    |
+| `@vitejs/plugin-vue`             | `^6.0.0`    | Vue SFC support                  |
+| `tailwindcss`                    | `^4.1.18`   | Utility-first CSS                |
+| `@tailwindcss/vite`              | `^4.1.18`   | Tailwind Vite plugin             |
+| `@laravel/vite-plugin-wayfinder` | `^0.1.3`    | Wayfinder Vite integration       |
+| `typescript`                     | `^5.2.2`    | Static types for JS              |
+| `vue-tsc`                        | `^2.2.4`    | Vue type checker                 |
+| `eslint`                         | `^9.17.0`   | JS/Vue linter                    |
+| `@eslint/js`                     | `^9.19.0`   | ESLint JS rules                  |
+| `typescript-eslint`              | `^8.23.0`   | TypeScript ESLint rules          |
+| `eslint-plugin-vue`              | `^9.32.0`   | Vue ESLint rules                 |
+| `eslint-config-prettier`         | `^10.0.1`   | Disable conflicting ESLint rules|
+| `eslint-import-resolver-typescript`| `^4.4.4`  | TS-aware import resolver         |
+| `eslint-plugin-import`           | `^2.32.0`   | Import/export linting            |
+| `prettier`                       | `^3.4.2`    | Code formatter                   |
+| `prettier-plugin-tailwindcss`    | `^0.6.11`   | Prettier Tailwind plugin         |
+| `concurrently`                   | `^9.0.1`    | Run multiple dev commands        |
+
+## Container
+
+- **Base image:** `dunglas/frankenphp`
+- **Build image:** `oven/bun`
+- **Process manager:** Supervisor (FrankenPHP, Horizon, Scheduler, Pulse)
+- **Supported architectures:** `linux/amd64`, `linux/arm64`

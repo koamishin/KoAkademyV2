@@ -1,0 +1,140 @@
+---
+title: Local Development
+description: How to set up and run your local development environment efficiently.
+sidebar:
+  order: 3
+---
+
+KoAkademyV2 is optimised for a seamless local development experience. Once installed, getting up and running is a single command.
+
+## The "One Command" Start
+
+Instead of running separate terminal tabs for backend, frontend, queues, and logs, we provide a unified command using `concurrently`:
+
+```bash
+composer run dev
+```
+
+This single command automatically starts the following services in parallel:
+
+1. **Laravel Server:** `php artisan serve` (Backend)
+2. **Vite:** `npm run dev` (Frontend with HMR)
+3. **Queue Worker:** `php artisan queue:listen` (Background jobs)
+4. **Pail:** `php artisan pail` (Real-time application logs)
+
+> **Note:** Access your application at `http://localhost:8000`.
+
+## Database Management
+
+### Default: SQLite
+
+By default, the starter kit is configured to use **SQLite**.
+
+- **Zero Config:** No external database server required.
+- **File Location:** `database/database.sqlite`.
+- **GUI:** We recommend **TablePlus** or **DB Browser for SQLite** to inspect your data.
+
+### Switching to MySQL/PostgreSQL
+
+If you prefer a more robust database for development:
+
+1. **Update `.env`:**
+   ```ini title=".env"
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=my_app
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+2. **Laravel Sail (Docker):**
+   Since `laravel/sail` is included in dev dependencies:
+   ```bash
+   php artisan sail:install
+   ./vendor/bin/sail up -d
+   ./vendor/bin/sail artisan migrate
+   ```
+
+## Tooling & IDE Setup
+
+To get the best experience with Vue 3, Tailwind, and PHP, we recommend **VS Code** with the following extensions:
+
+- **Vue - Official (Volar):** Essential for Vue 3 SFC support.
+- **Tailwind CSS IntelliSense:** Autocomplete for Tailwind classes.
+- **PHP Intelephense:** Better PHP code intelligence.
+- **ESLint:** Real-time linting for JavaScript/TypeScript.
+- **Prettier:** Automatic code formatting.
+- **Laravel Boost:** MCP tools for this project (preferred over manual alternatives).
+
+### Recommended VS Code Settings
+
+Create a `.vscode/settings.json` file to ensure consistent formatting on save:
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[php]": {
+    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+  }
+}
+```
+
+## Debugging
+
+### Real-time Logs (Pail)
+
+Because `composer run dev` starts **Laravel Pail**, you will see application logs (errors, exceptions, `Log::info()`) streaming directly in your terminal — no need to `tail -f storage/logs/laravel.log`.
+
+### Tinker
+
+For interacting with your application's data and classes via the command line:
+
+```bash
+php artisan tinker
+```
+
+Example usage:
+
+```php
+> User::factory()->create();
+> $user = User::first();
+> $user->notify(new WelcomeNotification());
+```
+
+### Wayfinder Type Errors
+
+If TypeScript complains about missing routes, regenerate the Wayfinder types:
+
+```bash
+php artisan wayfinder:generate --with-form
+```
+
+## Code Quality Checks
+
+Before pushing code, run the quality suite:
+
+```bash
+# Fix code style (PHP)
+composer lint
+
+# Analyze types (PHP)
+composer phpstan
+
+# Refactor check (dry-run)
+composer rector
+
+# Run tests
+composer test
+```
+
+Or run the entire CI pipeline locally:
+
+```bash
+composer ci
+```

@@ -1,0 +1,61 @@
+---
+title: Configuration
+description: Environment variables, config files, and defaults.
+sidebar:
+  order: 2
+---
+
+Configuration is handled via `.env` environment variables and the files in `config/`.
+
+## Key `.env` Variables
+
+| Variable          | Description                                  | Default          |
+| :---------------- | :------------------------------------------- | :--------------- |
+| `APP_NAME`        | Project name (used in titles/emails)         | `Laravel`        |
+| `APP_URL`         | Base URL (critical for asset generation)     | `http://localhost` |
+| `DB_CONNECTION`   | Database driver                              | `sqlite`         |
+| `VITE_APP_NAME`   | Exposed to the frontend                      | `${APP_NAME}`    |
+| `CACHE_STORE`     | Cache backend (`array` is fine for testing)  | `database`       |
+| `QUEUE_CONNECTION`| Queue backend (use `redis` in production)    | `database`       |
+| `MAIL_MAILER`     | Mail driver                                  | `log`            |
+
+## Config Files
+
+The most important config files you'll interact with:
+
+- **`config/fortify.php`** — Authentication settings (features enabled/disabled, 2FA, passkeys).
+- **`config/permission.php`** — Role-Based Access Control (RBAC) settings.
+- **`config/ziggy.php`** — Routing configuration for frontend integration.
+- **`config/filament.php`** — Admin panel registration and per-panel providers.
+- **`config/activitylog.php`** — Spatie activity log channels.
+- **`config/impersonate.php`** — User impersonation rules.
+
+## Filament Admin Panel
+
+The project ships with one Filament panel (`admin`) registered in `app/Providers/Filament/AdminPanelProvider.php`.
+To customise the URL, branding, or middleware of the panel, edit that file.
+
+```php
+// app/Providers/Filament/AdminPanelProvider.php
+return $panel
+    ->default()
+    ->id('admin')
+    ->path('admin')
+    ->login()
+    ->colors([
+        'primary' => Color::Indigo,
+    ])
+    // ...
+    ;
+```
+
+## Modules
+
+Modules are powered by `nwidart/laravel-modules` and are listed in `modules_statuses.json`. To enable a module:
+
+```bash
+php artisan module:enable Admissions
+php artisan module:disable Blog
+```
+
+See [Module System](/architecture/modules/) for a full overview.

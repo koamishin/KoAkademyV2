@@ -1,0 +1,80 @@
+---
+title: Security Considerations
+description: Authentication, authorization, and sensitive operations.
+sidebar:
+  order: 5
+---
+
+## Authentication
+
+Strictly handled by **Laravel Fortify**. Do not manually implement login controllers unless absolutely necessary — Fortify wires up:
+
+- Login & Registration
+- Password reset
+- Email verification
+- Two-factor authentication (TOTP)
+- Passkeys (WebAuthn)
+- Profile updates
+- Password confirmation
+
+Custom logic lives in `app/Actions/Fortify/`.
+
+## Authorization
+
+Use **Spatie Laravel Permission** for RBAC.
+
+```php
+// In a controller
+if (! $request->user()->can('edit posts')) {
+    abort(403);
+}
+```
+
+```blade
+{{-- In Blade --}}
+@can('edit posts')
+    <a href="{{ route('posts.edit', $post) }}">Edit</a>
+@endcan
+```
+
+```vue
+<!-- In Vue (via shared props) -->
+<Button v-if="$page.props.auth.permissions.includes('edit posts')">
+    Edit
+</Button>
+```
+
+## Policies vs. Shield Permissions
+
+Two parallel mechanisms are at play:
+
+1. **Policies** — traditional Laravel `PostPolicy` for per-record checks (`update`, `delete`).
+2. **Shield Permissions** — Filament-generated permission strings (`view_any_post`, `create_post`, …) registered as Spatie permissions.
+
+Filament resources typically use Shield. For module-specific business rules, use policies.
+
+## Impersonation Risks
+
+Impersonation is a sensitive feature. It is restricted to users with the `super_admin` role (or equivalent permission) within the `UserResource`.
+
+- Always log out of impersonation from the dedicated banner — never via the regular logout flow.
+- Audit the `activity_log` table for impersonation events (`lab404/laravel-impersonate` writes an entry on `impersonate()` and `stopImpersonating()`).
+- Consider rate-limiting impersonation starts per admin user.
+
+## Filament Shield
+
+Filament Shield generates and registers permissions for every resource and page. After adding a new resource, regenerate:
+
+```bash
+php artisan shield:generate --all
+```
+
+## CSRF, Sessions, Cookies
+
+- All forms are CSRF-protected by Laravel's `VerifyCsrfToken` middleware.
+- Sessions use database/redis drivers in production; the dev default is `file`.
+- The `HandleInertiaRequests` middleware shares auth state with the frontend, but never includes password hashes or tokens.
+
+## Reporting a Vulnerability
+
+Email security issues to **info@koamishin.com** (PGP key on request) — please do not file public GitHub issues for security problems.

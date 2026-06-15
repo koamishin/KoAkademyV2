@@ -1,0 +1,135 @@
+---
+title: CI/CD & Containers
+description: Learn about the automated CI/CD pipelines, Docker container generation, and how to self-host the application.
+sidebar:
+  order: 7
+---
+
+KoAkademyV2 comes with a robust, enterprise-grade CI/CD pipeline built on **GitHub Actions**. It automatically handles testing, linting, Docker image building, and releasing.
+
+## Automated Setup
+
+You don't need to manually edit YAML files to get started. The project includes a setup wizard that configures everything for you.
+
+```bash
+php artisan setup:starter-kit
+```
+
+This command will:
+
+1. **Configure your Registry** — choose between Docker Hub (`docker.io`) or GitHub Container Registry (`ghcr.io`).
+2. **Update Workflows** — automatically replaces placeholders in `.github/workflows/` with your repository and registry details.
+3. **Set Permissions** — configures the necessary tokens and secrets usage.
+
+## Workflow Overview
+
+The project includes four main workflows:
+
+### 1. `ci.yml` — Continuous Integration
+
+Runs on every push and pull request to `develop`, `main`, `master`, and `workos`.
+
+Three parallel jobs:
+
+- **`php-quality`** — runs Pint, PHPStan, and Rector (dry-run).
+- **`tests`** — boots SQLite, runs migrations, executes the Pest test suite.
+- **`frontend`** — installs npm dependencies, runs ESLint and Prettier, builds production assets.
+
+### 2. `auto-release.yml` — Continuous Delivery
+
+Runs when you push to `develop` or `main`.
+
+- **Semantic Versioning:** Analyzes your commit messages (e.g. `feat:`, `fix:`) to determine the next version number.
+- **Docker Build:** Builds a multi-arch Docker image using **FrankenPHP**.
+- **Registry Push:** Pushes the image to your configured registry (GHCR / DockerHub).
+- **Pre-release:** Creates a GitHub Pre-release with auto-generated changelogs.
+- **Notifications:** Sends a summary to Discord (if configured).
+
+### 3. `manual-official-release.yml`
+
+Triggered manually from the Actions tab for stable production releases.
+
+- Promotes a pre-release to "Official".
+- Tags the Docker image as `:latest`.
+- Updates `version.json`.
+
+### 4. `docker-latest.yml`
+
+Periodically rebuilds the `:latest` image to pick up base-image security updates without a code change.
+
+## Docker Architecture
+
+The project uses a **Multi-Stage Build** to ensure small, secure, and optimized images.
+
+- **Base:** `dunglas/frankenphp` (high-performance application server).
+- **Build Stage:** Uses `oven/bun` to compile frontend assets (Vite).
+- **Runtime:** minimal production image containing only necessary artifacts.
+
+### Included Services
+
+The Docker container is a "Single Container" solution managed by **Supervisor**. It runs:
+
+- **FrankenPHP** — the web server.
+- **Horizon** — queue worker for background jobs.
+- **Scheduler** — runs scheduled tasks (CRON).
+- **Pulse** — server monitoring.
+
+## Self-Hosting Guide
+
+Because the container includes the web server, workers, and scheduler, self-hosting is incredibly simple. You can run the entire application with a single Docker command.
+
+### Prerequisites
+
+- Docker installed on your server.
+- A database (managed RDS, or a separate Postgres/MySQL container).
+- Redis (for queues/cache).
+
+### Running the Image
+
+```bash
+# 1. Login to your registry
+echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+
+# 2. Run the application
+docker run -d \
+  --name my-app \
+  -p 80:8000 \
+  -e APP_KEY="base64:..." \
+  -e DB_CONNECTION=pgsql \
+  -e DB_HOST=10.0.0.2 \
+  -e REDIS_HOST=10.0.0.3 \
+  ghcr.io/your-username/my-app:latest
+```
+
+### Docker Compose Example
+
+For a full stack setup (App + DB + Redis):
+
+```yaml
+services:
+  app:
+    image: ghcr.io/your-username/my-app:latest
+    ports:
+      - '80:8000'
+    environment:
+      APP_KEY: '${APP_KEY}'
+      DB_HOST: db
+      REDIS_HOST: redis
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+
+  redis:
+    image: redis:alpine
+```
+
+## Continuous Deployment of this Documentation Site
+
+The docs site itself ships with its own GitHub Actions workflow at `docs-site/.github/workflows/deploy.yml`. Every push to `master` that touches `docs-site/**` rebuilds the site and deploys it to **GitHub Pages** at `https://koamishin.github.io/KoAkademyV2/`.
+
+To enable it on your fork, go to **Settings → Pages → Source** and select **GitHub Actions**.

@@ -1,0 +1,71 @@
+---
+title: Workflows
+description: Typical execution flow, startup process, and request lifecycle.
+sidebar:
+  order: 2
+---
+
+## Development Loop
+
+The project uses `concurrently` (via `composer run dev`) to manage the dev stack:
+
+1. **Laravel Server** — Serves the backend and API.
+2. **Vite** — Hot Module Replacement (HMR) for Vue components.
+3. **Queue Worker** — Processes background jobs (emails, notifications, media conversions).
+4. **Pail** — Streams application logs to your terminal.
+
+## Authentication Flow (Fortify)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Fortify
+    participant S as Session
+    participant App
+
+    U->>F: POST /login
+    F->>F: Validate credentials
+    alt 2FA enabled
+        F-->>U: 2FA challenge
+        U->>F: POST /two-factor-challenge
+    end
+    F->>S: Authenticate session
+    S-->>App: Subsequent requests authenticated
+    App-->>U: Redirect to dashboard
+```
+
+1. **Login** — Request to `/login` → Fortify Action → Authenticate Session.
+2. **2FA** — If enabled, Fortify interrupts the flow → user enters OTP → session fully authenticated.
+3. **Passkeys** — Optional WebAuthn-based passwordless login via `robertboes/filament-passkeys`.
+4. **Redirect** — User is sent to `RouteServiceProvider::HOME` (usually `/dashboard`).
+
+## Admissions Workflow
+
+```mermaid
+flowchart LR
+    A[Applicant visits site] --> B[Chooses Admission Period]
+    B --> C[Fills Application Form]
+    C --> D[Uploads Documents]
+    D --> E[Submits Application]
+    E --> F{Admin reviews}
+    F -->|Accept| G[ApplicationStatus: Accepted]
+    F -->|Reject| H[ApplicationStatus: Rejected]
+    F -->|Request more info| I[ApplicationStatus: Needs Info]
+```
+
+Each transition is recorded in `application_status_histories` (see `Modules/Admissions/app/Models/ApplicationStatusHistory.php`).
+
+## Deployment Workflow
+
+```mermaid
+flowchart LR
+    Dev[Push to develop] --> CI[CI: lint + phpstan + rector + pest]
+    CI -->|pass| AR[auto-release.yml]
+    AR --> Docker[Build multi-arch FrankenPHP image]
+    Docker --> Registry[Push to GHCR / Docker Hub]
+    Registry --> Pre[GitHub Pre-release]
+    Pre --> Manual[manual-official-release.yml]
+    Manual --> Stable[Tag :latest + update version.json]
+```
+
+See [CI/CD & Containers](/guides/ci-cd/) for the full pipeline reference.

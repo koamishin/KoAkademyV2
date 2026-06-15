@@ -1,0 +1,111 @@
+---
+title: Directory Structure
+description: Explanation of the project's folder organisation.
+sidebar:
+  order: 2
+---
+
+The project follows standard Laravel conventions with specific enhancements for Inertia, TypeScript, and modular packages.
+
+## Top-level Layout
+
+```text
+.
+├── app/                      # Application core (Actions, Models, Http, Filament)
+├── bootstrap/                # Framework bootstrap & cached config
+├── config/                   # All Laravel config files
+├── database/                 # Migrations, factories, seeders, sqlite file
+├── docker/                   # FrankenPHP + Supervisor configs for the container image
+├── docs/                     # Legacy MDX docs (use docs-site/ for the new site)
+├── docs-site/                # Astro Starlight documentation site (this site!)
+├── Modules/                  # First-party Laravel modules
+│   ├── Admissions/
+│   ├── Blog/
+│   ├── Classroom/
+│   └── Enrollment/
+├── public/                   # Public assets (favicon, build output)
+├── resources/
+│   ├── css/                  # Filament custom themes + Tailwind
+│   ├── js/                   # Vue 3 Frontend source
+│   └── views/                # Blade templates (app.blade.php, emails)
+├── routes/                   # web.php, auth.php, console.php
+├── storage/                  # Logs, cache, framework files
+├── tests/                    # Pest test suite (Feature + Unit)
+├── .github/workflows/        # CI/CD pipelines
+├── composer.json
+├── package.json
+└── vite.config.ts
+```
+
+## `app/` — Application Core
+
+```text
+app/
+├── Actions/                  # Business logic (Fortify actions, custom actions)
+│   └── Fortify/              # CreateNewUser, UpdateUserProfileInformation, ...
+├── Console/                  # Custom Artisan commands (e.g. SetupStarterKit, theme:import)
+├── Filament/                 # Admin Panel resources, pages, widgets, plugins
+│   ├── Resources/            # UserResource, Settings, etc.
+│   ├── Pages/                # Dashboard, custom pages
+│   └── Widgets/              # Stats, charts
+├── Http/
+│   ├── Controllers/          # Standard controllers (rare; mostly Inertia closures)
+│   ├── Middleware/           # HandleInertiaRequests, HandleAppearance
+│   └── Requests/             # Form Requests for validation
+└── Models/                   # Eloquent models (User, etc.)
+```
+
+## `resources/js/` — Frontend
+
+```text
+resources/js/
+├── actions/                  # Auto-generated Wayfinder actions (do not edit)
+├── routes/                   # Auto-generated Wayfinder route helpers (do not edit)
+├── components/               # Global Vue components
+│   └── ui/                   # Reka UI / Shadcn Vue components
+├── composables/              # Shared Vue composables (useTheme, useImpersonation, ...)
+├── layouts/                  # Page layouts (AppShell, AuthLayout, ...)
+├── pages/                    # Inertia page components
+├── wayfinder/                # Route definition helpers
+├── conf/                     # Frontend config (themes.ts, ...)
+├── app.ts                    # Frontend entry point
+└── ssr.ts                    # Server-Side Rendering entry point
+```
+
+## `Modules/<Name>/`
+
+Each first-party module follows the `nwidart/laravel-modules` structure:
+
+```text
+Modules/Admissions/
+├── AdmissionsPlugin.php      # Filament plugin registration
+├── composer.json             # PSR-4 autoload + Laravel providers
+├── module.json               # Name, alias, providers
+├── app/
+│   ├── Enums/                # PHP enums (e.g. ApplicationStatus)
+│   ├── Events/               # Domain events
+│   ├── Actions/              # Application business logic
+│   ├── Http/                 # Controllers, Middleware, Requests
+│   ├── Models/               # Eloquent models
+│   ├── Policies/             # Authorization policies
+│   └── Providers/            # Service providers
+├── database/
+│   ├── migrations/
+│   ├── factories/
+│   └── seeders/
+├── resources/
+│   ├── views/                # Blade views (Filament pages)
+│   └── assets/               # Module-specific JS/CSS (optional)
+├── routes/
+│   ├── web.php
+│   └── api.php
+├── tests/
+└── Filament/                 # Module-specific Filament resources & pages
+```
+
+## Routing
+
+- **`routes/web.php`** — application routes (inertia pages, closures).
+- **`routes/auth.php`** — Fortify authentication routes (login, register, 2FA, passkeys).
+- **`routes/console.php`** — scheduled tasks and Artisan closures.
+- **`Modules/<Name>/routes/web.php`** — module-specific web routes (auto-loaded when the module is enabled).

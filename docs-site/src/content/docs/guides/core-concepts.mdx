@@ -1,0 +1,133 @@
+---
+title: Core Concepts
+description: Deep dive into the hybrid frontend, Wayfinder, and impersonation.
+sidebar:
+  order: 1
+---
+
+## Hybrid Frontend
+
+The application runs two distinct frontends side by side:
+
+- **User-facing:** `resources/js` (Vue 3). Single-page experience rendered by Inertia.
+- **Admin-facing:** `app/Filament` (Blade + Livewire). Server-driven admin interface rendered by Filament v5.
+
+They share the **same database**, the **same auth system**, and the **same Eloquent models**, but present completely different UX patterns to each audience.
+
+## Wayfinder
+
+[Wayfinder](https://github.com/laravel/wayfinder) generates TypeScript definitions for your Laravel routes and controllers, so your Vue components can link to backend URLs with full type-safety.
+
+### Generating Types
+
+```bash
+php artisan wayfinder:generate --with-form
+```
+
+This produces:
+
+- `resources/js/routes/` — typed route helpers (e.g. `dashboard()`).
+- `resources/js/actions/` — typed controller actions with typed form data.
+
+### Usage in Vue
+
+```ts
+import { dashboard } from '@/routes';
+
+// As a string URL
+const url = dashboard().url;
+
+// With route model binding
+const editUrl = edit({ post: 1 }).url; // → /posts/1/edit
+```
+
+Inertia `<Link>` accepts the full route object:
+
+```vue
+<script setup lang="ts">
+import { dashboard } from '@/routes';
+import { edit as editPost } from '@/actions/App/Http/Controllers/PostController';
+</script>
+
+<template>
+    <Link :href="dashboard()">Dashboard</Link>
+    <Link :href="editPost({ post: post.id })">Edit</Link>
+</template>
+```
+
+### Forms
+
+With `--with-form`, Wayfinder also generates form helpers, so `<Form>` submissions get typed props:
+
+```ts
+import { store as storePost } from '@/actions/App/Http/Controllers/PostController';
+
+const form = storePost.form();
+form.title = 'Hello';
+form.body = 'World';
+form.post('/posts');
+```
+
+:::tip
+Run `php artisan wayfinder:generate` whenever you add, rename, or change a route. It's automatically wired into `npm run build` and `npm run dev`.
+:::
+
+## User Impersonation
+
+A critical support feature that allows admins to view the app as a specific user.
+
+- **Backend:** managed by `lab404/laravel-impersonate`.
+- **Admin UI:** button in the Filament `UserResource` row actions (visible only to `super_admin`).
+- **Frontend:** the `ImpersonateBanner` Vue component listens for `page.props.impersonating` and shows a dismissible "you are impersonating X" banner.
+- **Middleware:** `HandleInertiaRequests` injects the impersonation state into global Inertia props so it's available on every page.
+
+```php
+// In a Filament action
+$action->action(function (User $record) {
+    auth()->user()->impersonate($record);
+    return redirect('/dashboard');
+});
+```
+
+## Theming
+
+The platform ships with a **tweakcn-compatible** theme system: themes are CSS files in `resources/css/themes/`, registered in `resources/js/conf/themes.ts`, and switchable at runtime via the `useTheme()` composable.
+
+```bash
+# Import from tweakcn
+php artisan theme:import https://tweakcn.com/api/themes/your-theme-id
+
+# Add manually
+php artisan theme:add my-custom-theme
+
+# Remove
+php artisan theme:remove ocean
+```
+
+See [Branding & Customization](/guides/customization/) for the full theming guide.
+
+## RBAC with Spatie Permission
+
+Permissions are seeded by **Filament Shield** and exposed globally via Inertia props:
+
+```php
+// In HandleInertiaRequests::share()
+'auth' => [
+    'user'        => $request->user(),
+    'permissions' => $request->user()?->getAllPermissions()->pluck('name') ?? [],
+],
+```
+
+Then in Vue:
+
+```vue
+<template>
+    <Button v-if="$page.props.auth.permissions.includes('edit posts')">
+        Edit
+    </Button>
+</template>
+```
+
+## Activity Logging
+
+Spatie's `laravel-activitylog` is wired into models via the `LogsActivity` trait. Every change is recorded in the `activity_log` table and surfaced in the Filament admin via `filament-activity-log`.

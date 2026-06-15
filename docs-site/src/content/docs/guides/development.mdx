@@ -1,0 +1,67 @@
+---
+title: Development Guide
+description: Coding conventions, testing, and debugging.
+sidebar:
+  order: 6
+---
+
+## Coding Conventions
+
+- **Linting (PHP):** Run `composer lint` (uses Laravel Pint) before committing.
+- **Static Analysis:** Run `composer phpstan` to catch type errors.
+- **Refactoring:** Run `composer rector` (dry-run) to see automated modernisations, then `composer rector:fix` to apply.
+- **Linting (JS/Vue):** Run `npm run lint` (ESLint) and `npm run format:check` (Prettier).
+- **Formatting (JS/Vue):** `npm run format` to auto-format with Prettier.
+
+## Testing
+
+The project uses **Pest 4** for testing. Tests live in `tests/` and inside each module in `Modules/<Name>/tests/`.
+
+```bash
+# Run the full suite
+composer test
+
+# Run only unit tests
+php artisan test --unit
+
+# Run only feature tests
+php artisan test
+
+# Run a single test file
+php artisan test --compact tests/Feature/Auth/LoginTest.php
+
+# Run with a filter
+php artisan test --compact --filter=test_user_can_login
+```
+
+### Test Conventions
+
+- Use the project's factories (`User::factory()`) instead of manually constructing models.
+- For HTTP tests, prefer `getJson`, `postJson`, `actingAs($user)`.
+- For Filament resources, use `pestphp/pest-plugin-livewire`'s `livewire()` helper.
+- For browser/E2E, see `tests/Browser/` (when present).
+
+## Debugging
+
+- **Tinker:** `php artisan tinker` for REPL access to your models.
+- **Browser Logs:** `php artisan pail` streams logs to your CLI during `composer run dev`.
+- **Xdebug:** Run `./vendor/bin/xdebug-toggle on` (provided by Laravel Sail) to step-debug PHP.
+- **Inertia Devtools:** Install the [Vue Devtools](https://devtools.vuejs.org) browser extension to inspect Inertia page props.
+
+## Pre-commit Checklist
+
+Before opening a PR, make sure:
+
+- [ ] `composer lint` is clean.
+- [ ] `composer phpstan` is clean (or explicitly accepted in the baseline).
+- [ ] `composer rector` shows no diff.
+- [ ] `composer test` passes.
+- [ ] `npm run lint` and `npm run format:check` are clean.
+- [ ] `npm run build` succeeds.
+- [ ] You've added or updated tests for any new behaviour.
+
+Or run everything at once:
+
+```bash
+composer ci
+```

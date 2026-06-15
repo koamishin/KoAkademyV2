@@ -1,0 +1,140 @@
+---
+title: Installation
+description: Comprehensive installation guide for KoAkademyV2 using the Laravel Installer, Composer, or manual setup.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+KoAkademyV2 is designed to be flexible. You can install it using the method that best fits your workflow.
+
+## Prerequisites
+
+Before you begin, ensure your development environment meets the following requirements:
+
+- **PHP 8.3+** (with extensions: `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `hash`, `mbstring`, `openssl`, `pcre`, `pdo`, `session`, `tokenizer`, `xml`)
+- **Composer** (Dependency Manager for PHP)
+- **Node.js & NPM** (LTS version recommended — Node 22+ for the frontend toolchain)
+- **Docker** *(Optional, but recommended for local services like Redis/Postgres)*
+
+## Method 1: The Laravel Installer (Recommended)
+
+The easiest way to start is using the official Laravel CLI. This feels native to the ecosystem.
+
+<Steps>
+
+1. **Install the Laravel Installer** (skip if you already have it)
+
+   ```bash
+   composer global require laravel/installer
+   ```
+
+2. **Create a New Project**
+
+   Use the `--using` flag to scaffold your app directly from the GitHub repository:
+
+   ```bash
+   laravel new my-app --using=koamishin/KoAkademyV2
+   ```
+
+3. **Enter the Directory**
+
+   ```bash
+   cd my-app
+   ```
+
+4. **Run the Setup Wizard**
+
+   We have a custom Artisan command to personalise the kit for you:
+
+   ```bash
+   php artisan setup:starter-kit
+   ```
+
+</Steps>
+
+## Method 2: Composer Create-Project
+
+If you prefer using Composer directly without the global Laravel installer:
+
+```bash
+composer create-project koamishin/KoAkademyV2 my-app
+cd my-app
+php artisan setup:starter-kit
+```
+
+## Method 3: Manual Installation (Git Clone)
+
+For contributors or those who want full control over the initialization process.
+
+<Steps>
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/koamishin/KoAkademyV2.git my-app
+   cd my-app
+   ```
+
+2. **Install PHP Dependencies**
+
+   ```bash
+   composer install
+   ```
+
+3. **Environment Setup**
+
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+4. **Database Setup**
+
+   By default the project is configured for **SQLite**. Create the database file:
+
+   ```bash
+   touch database/database.sqlite
+   ```
+
+   If you prefer MySQL or PostgreSQL, update `DB_CONNECTION` in your `.env` file. Then run migrations:
+
+   ```bash
+   php artisan migrate
+   ```
+
+5. **Install Node Dependencies**
+
+   ```bash
+   npm install
+   ```
+
+6. **Run the Setup Wizard**
+
+   ```bash
+   php artisan setup:starter-kit
+   ```
+
+</Steps>
+
+## Post-Installation
+
+Regardless of the method you chose, once installed, start the development server:
+
+```bash
+composer run dev
+```
+
+This command starts Laravel, Vite, the queue worker, and Pail in parallel.
+Visit `http://localhost:8000` in your browser.
+
+## Verify Installation
+
+To ensure everything is working correctly, run the test suite:
+
+```bash
+composer test
+```
+
+This runs Pint (lint check), PHPStan, Rector (dry-run), and Pest.

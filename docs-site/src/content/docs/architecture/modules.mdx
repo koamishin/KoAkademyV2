@@ -1,0 +1,157 @@
+---
+title: Module System
+description: How KoAkademyV2 packages features into composable Laravel modules.
+sidebar:
+  order: 3
+---
+
+KoAkademyV2 is organised around **first-party modules** powered by [`nwidart/laravel-modules`](https://github.com/nWidart/laravel-modules). Each module is a self-contained Laravel package with its own routes, migrations, factories, Filament resources, and tests.
+
+## Why Modules?
+
+- **Isolation** — features have their own namespace (`Modules\Admissions\…`) and folder, keeping the core `app/` lean.
+- **Composability** — turn a module off via `php artisan module:disable` and the platform still boots.
+- **Reusability** — modules can theoretically be lifted into other Laravel apps.
+- **Clear ownership** — a team can own a module end-to-end (frontend routes, admin resources, tests).
+
+## First-Party Modules
+
+| Module         | Purpose                                                              | Status   |
+| :------------- | :------------------------------------------------------------------- | :------- |
+| `Admissions`   | Application periods, dynamic forms, document uploads, status flow    | Enabled  |
+| `Enrollment`   | Enrollment periods, subjects, assessments                            | Enabled  |
+| `Classroom`    | Class offerings, meetings, assignments, submissions                  | Enabled  |
+| `Blog`         | Content publishing, posts, categories                                | Enabled  |
+
+The state of each module is recorded in `modules_statuses.json` at the project root.
+
+## Anatomy of a Module
+
+Each module ships:
+
+- A **Filament plugin** (`AdmissionsPlugin.php`) — registers the module's Filament resources/pages with the admin panel.
+- A **service provider** (`Providers/AdmissionsServiceProvider.php`) — bootstraps routes, views, migrations, and translations.
+- A **module manifest** (`module.json`) — name, alias, providers.
+- A **composer.json** — autoloads `Modules\Admissions\` → `app/`.
+
+## Enabling / Disabling Modules
+
+```bash
+# Enable a module (runs migrations, publishes assets, loads routes)
+php artisan module:enable Admissions
+
+# Disable a module
+php artisan module:disable Blog
+
+# List all modules and their status
+php artisan module:list
+```
+
+## Creating a New Module
+
+Use the bundled `module:make` command (provided by `nwidart/laravel-modules`):
+
+```bash
+php artisan module:make Library
+```
+
+This scaffolds:
+
+```text
+Modules/Library/
+├── LibraryPlugin.php
+├── composer.json
+├── module.json
+├── app/
+│   ├── Http/Controllers/
+│   ├── Models/
+│   ├── Providers/LibraryServiceProvider.php
+│   └── …
+├── database/
+│   ├── migrations/
+│   ├── factories/
+│   └── seeders/
+├── resources/views/
+├── routes/web.php
+└── tests/
+```
+
+After scaffolding:
+
+1. Add models in `Modules/Library/app/Models/`.
+2. Register Filament resources in `LibraryPlugin.php`.
+3. Add tests in `Modules/Library/tests/`.
+4. Enable the module: `php artisan module:enable Library`.
+
+## Filament Plugin Pattern
+
+Each module registers itself as a Filament plugin so its resources can appear in the admin panel:
+
+```php
+namespace Modules\Admissions;
+
+use Filament\Contracts\Plugin;
+use Filament\Panel;
+
+class AdmissionsPlugin implements Plugin
+{
+    public function getId(): string
+    {
+        return 'admissions';
+    }
+
+    public static function make(): static
+    {
+        return app(static::class);
+    }
+
+    public function register(Panel $panel): void
+    {
+        $panel
+            ->resources([
+                // Resources\ApplicationResource::class,
+                // Resources\AdmissionPeriodResource::class,
+            ])
+            ->pages([
+                // Pages\ManageAdmissions::class,
+            ]);
+    }
+
+    public function boot(Panel $panel): void
+    {
+        //
+    }
+}
+```
+
+Then register the plugin in `AdminPanelProvider`:
+
+```php
+->plugins([
+    \Modules\Admissions\AdmissionsPlugin::make(),
+    \Modules\Enrollment\EnrollmentPlugin::make(),
+    \Modules\Classroom\ClassroomPlugin::make(),
+    \Modules\Blog\BlogPlugin::make(),
+])
+```
+
+## Routes & Views
+
+Module routes are auto-loaded only when the module is enabled, via the module's service provider:
+
+```php
+// Modules/Admissions/app/Providers/AdmissionsServiceProvider.php
+public function boot(): void
+{
+    $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');
+    $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+    $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'admissions');
+    $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'admissions');
+}
+```
+
+Reference module views from a controller with the `admissions::` namespace:
+
+```blade
+return view('admissions::emails.accepted', ['applicant' => $applicant]);
+```

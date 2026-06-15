@@ -1,0 +1,83 @@
+---
+title: Welcome to KoAkademyV2
+description: A modern Laravel + Vue 3 educational platform — modular, type-safe, and production-ready.
+template: splash
+hero:
+  tagline: A modular Laravel 13 + Inertia.js + Filament v5 platform for admissions, enrollment, classroom, and blog workflows.
+  actions:
+    - text: Get started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/koamishin/KoAkademyV2
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What is KoAkademyV2?
+
+**KoAkademyV2** is an opinionated, production-ready platform that powers the day-to-day operations of a school or training institute. It bundles a hybrid Vue 3 + Inertia.js user app, a Filament v5 admin panel, and four first-party modules — **Admissions**, **Enrollment**, **Classroom**, and **Blog** — into a single, cohesive Laravel 13 codebase.
+
+It eliminates the repetitive setup phase of integrating a modern frontend (Vue 3, Inertia, Tailwind) with a robust backend (Laravel, Fortify, Filament), so you can ship features immediately.
+
+<CardGrid stagger>
+	<Card title="Hybrid Frontend" icon="laptop">
+		Vue 3 + Inertia.js for end-users, Filament v5 for admins. Two specialised experiences sharing one backend.
+
+		[Read more →](/architecture/overview/)
+
+	</Card>
+	<Card title="Modular by Design" icon="puzzle">
+		Four first-party modules powered by `nwidart/laravel-modules` — Admissions, Enrollment, Classroom, and Blog.
+
+		[Browse modules →](/architecture/modules/)
+
+	</Card>
+	<Card title="Type-Safe Routing" icon="seti:typescript">
+		Wayfinder generates TypeScript route functions from your Laravel controllers, end-to-end.
+
+		[See it in action →](/guides/core-concepts/#wayfinder)
+
+	</Card>
+	<Card title="Production-Ready Tooling" icon="rocket">
+		FrankenPHP multi-arch Docker images, GitHub Actions CI/CD, Pest, PHPStan, Rector, and Pint.
+
+		[CI/CD pipeline →](/guides/ci-cd/)
+
+	</Card>
+</CardGrid>
+
+## Quick Links
+
+<LinkCard
+	title="Installation"
+	description="Three install methods — Laravel installer, Composer, or manual Git clone."
+	href="/getting-started/installation/"
+/>
+<LinkCard
+	title="Architecture overview"
+	description="High-level system design, request lifecycle, and module map."
+	href="/architecture/overview/"
+/>
+<LinkCard
+	title="Admissions module"
+	description="Application periods, forms, document uploads, and status workflows."
+	href="/modules/admissions/"
+/>
+<LinkCard
+	title="CI/CD & Containers"
+	description="GitHub Actions workflows, FrankenPHP images, and self-hosting guide."
+	href="/guides/ci-cd/"
+/>
+
+## Tech Stack at a Glance
+
+- **Backend:** PHP 8.5, Laravel 13, Laravel Octane (FrankenPHP)
+- **Frontend:** Vue 3, Inertia.js v2, Tailwind CSS v4, Vite 7
+- **Admin:** Filament v5 with `filament-shield`, `filament-passkeys`, `filament-activity-log`
+- **Auth & Security:** Laravel Fortify (2FA, passkeys), Spatie Permission, Laravel Impersonate
+- **Modules:** nwidart/laravel-modules 13
+- **Tooling:** Pest 4, PHPStan 2, Rector 2, Pint 1, Wayfinder

@@ -1,0 +1,115 @@
+---
+title: Extensibility
+description: How to add new features, components, and admin resources.
+sidebar:
+  order: 4
+---
+
+## Adding UI Components
+
+The project uses **Reka UI** (a Shadcn-compatible Vue 3 component library). To add new components:
+
+1. Copy a component from the [Reka UI docs](https://reka-ui.com/docs) into `resources/js/components/ui/`.
+2. Export it from the folder's `index.ts`.
+3. Import it in your pages:
+
+```ts
+import { Button } from '@/components/ui/button';
+```
+
+If the component relies on a composable (e.g. `useForwardProps`), create a local `composables/` file too.
+
+## Adding Admin Resources
+
+To add a new CRUD section to the admin panel:
+
+```bash
+php artisan make:filament-resource Post
+```
+
+This generates the Resource, Table, and Form classes in `app/Filament/Resources`. To generate a Filament resource inside a module:
+
+```bash
+php artisan make:filament-resource Post --module=Admissions
+```
+
+The new resource will be placed in `Modules/Admissions/app/Filament/Resources` and you'll need to register it in `AdmissionsPlugin.php`.
+
+## Adding a Filament Page
+
+```bash
+php artisan make:filament-page ManageSettings
+# Inside a module:
+php artisan make:filament-page ManageSettings --module=Admissions
+```
+
+Register the page in your module's plugin:
+
+```php
+->pages([
+    Pages\ManageSettings::class,
+])
+```
+
+## Adding a New Module
+
+```bash
+php artisan module:make Library
+php artisan module:enable Library
+```
+
+Then follow the [Module System](/architecture/modules/) guide to add models, migrations, Filament resources, and tests.
+
+## Adding Routes
+
+For application-wide routes, edit `routes/web.php`:
+
+```php
+use Inertia\Inertia;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/library', function () {
+        return Inertia::render('Library/Index');
+    })->name('library.index');
+});
+```
+
+For module-scoped routes, add them to `Modules/<Name>/routes/web.php` (auto-loaded only when the module is enabled).
+
+## Adding Settings
+
+The platform uses **Spatie Laravel Settings** for typed application settings.
+
+```php
+// app/Settings/GeneralSettings.php
+namespace App\Settings;
+
+use Spatie\LaravelSettings\Settings;
+
+class GeneralSettings extends Settings
+{
+    public string $site_name;
+    public string $contact_email;
+    public bool $maintenance_mode = false;
+
+    public static function group(): string
+    {
+        return 'general';
+    }
+}
+```
+
+Register in a service provider:
+
+```php
+use Spatie\LaravelSettings\SettingsRegistrar;
+
+SettingsRegistrar::register(GeneralSettings::class);
+```
+
+Then in code:
+
+```php
+settings('general.site_name'); // accessor
+app(GeneralSettings::class)->site_name; // typed
+```
