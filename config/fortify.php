@@ -2,6 +2,9 @@
 
 use Laravel\Fortify\Features;
 
+$passkeyOrigin = strtolower((string) config('app.url'));
+$passkeyRelyingPartyId = strtolower((string) parse_url($passkeyOrigin, PHP_URL_HOST));
+
 return [
 
     /*
@@ -116,6 +119,26 @@ return [
 
     'limiters' => [
         'login' => 'login',
+        'passkeys' => 'passkeys',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passkeys
+    |--------------------------------------------------------------------------
+    |
+    | These options configure Fortify's passkey endpoints. They mirror the
+    | standalone passkeys configuration because Fortify owns those routes.
+    |
+    */
+
+    'passkeys' => [
+        'relying_party_id' => $passkeyRelyingPartyId,
+        'allowed_origins' => [
+            $passkeyOrigin,
+        ],
+        'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
+        'timeout' => 60000,
     ],
 
     /*
@@ -147,6 +170,9 @@ return [
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication(),
+        Features::passkeys([
+            'confirmPassword' => true,
+        ]),
     ],
 
 ];

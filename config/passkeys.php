@@ -1,5 +1,8 @@
 <?php
 
+$passkeyOrigin = strtolower((string) config('app.url'));
+$passkeyRelyingPartyId = strtolower((string) parse_url($passkeyOrigin, PHP_URL_HOST));
+
 return [
 
     /*
@@ -13,7 +16,7 @@ return [
     |
     */
 
-    'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
+    'relying_party_id' => $passkeyRelyingPartyId,
 
     /*
     |--------------------------------------------------------------------------
@@ -27,7 +30,7 @@ return [
     */
 
     'allowed_origins' => [
-        config('app.url'),
+        $passkeyOrigin,
     ],
 
     /*
