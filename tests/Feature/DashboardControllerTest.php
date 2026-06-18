@@ -41,7 +41,7 @@ it('renders the dashboard page for authenticated users', function (): void {
         ->get(route('campus.dashboard', ['campus' => $campus]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('Dashboard')
+            ->component('portal/StudentDashboard')
             ->has('student')
             ->has('academicContext')
             ->has('enrollment')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Classroom\Models;
 
+use App\Models\Room;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -21,5 +22,10 @@ final class ClassMeeting extends Model
     public function classOffering(): BelongsTo
     {
         return $this->belongsTo(ClassOffering::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
     }
 }

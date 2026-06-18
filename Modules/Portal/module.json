@@ -1,0 +1,14 @@
+{
+    "name": "Portal",
+    "alias": "portal",
+    "description": "Role-aware Inertia portal shell for students, faculty, and general admins.",
+    "keywords": [
+        "portal",
+        "inertia"
+    ],
+    "priority": 100,
+    "providers": [
+        "Modules\\Portal\\Providers\\PortalServiceProvider"
+    ],
+    "files": []
+}

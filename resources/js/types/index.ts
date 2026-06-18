@@ -3,6 +3,7 @@ export * from './navigation';
 export * from './ui';
 
 import type { Auth } from './auth';
+import type { NavGroup } from './navigation';
 
 export type AppPageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
@@ -12,6 +13,12 @@ export type AppPageProps<
     academic?: {
         enabledModules: string[];
         person: Record<string, unknown> | null;
+    };
+    portal: {
+        role: 'admin' | 'faculty' | 'student' | 'applicant' | 'guardian' | 'unknown';
+        home: string;
+        navigation: NavGroup[];
+        canAccessAdminPortal: boolean;
     };
     currentCampus: {
         id: number;

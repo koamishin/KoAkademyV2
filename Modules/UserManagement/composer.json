@@ -1,0 +1,8 @@
+{
+    "name": "koakademy/user-management",
+    "autoload": {
+        "psr-4": {
+            "Modules\\UserManagement\\": "app/"
+        }
+    }
+}

@@ -8,11 +8,24 @@ type Classroom = {
     name: string;
     code: string;
     status: string;
+    students?: number;
     teacher?: { first_name: string; last_name: string };
 };
 
-defineProps<{ classes: Classroom[] }>();
+defineProps<{ classes: Classroom[]; portalRole?: string }>();
 const page = usePage<AppPageProps>();
+
+const statusColor = (status: string) => {
+    switch (status) {
+        case 'active':
+        case 'published':
+            return 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/20';
+        case 'draft':
+            return 'bg-amber-500/10 text-amber-500 ring-amber-500/20';
+        default:
+            return 'bg-white/5 text-zinc-400 ring-white/10';
+    }
+};
 </script>
 
 <template>
@@ -44,14 +57,13 @@ const page = usePage<AppPageProps>();
                     <h1
                         class="mt-2 text-4xl font-medium tracking-tighter text-zinc-100 sm:text-5xl"
                     >
-                        My Classes
+                        {{ portalRole === 'admin' ? 'Classes' : 'My Classes' }}
                     </h1>
                     <p
                         class="mt-4 max-w-2xl text-sm font-medium tracking-wide text-zinc-400"
                     >
                         Schedules, announcements, learning materials,
-                        assignments, and submissions in one beautifully
-                        organized place.
+                        assignments, and submissions in one organized place.
                     </p>
                 </div>
             </header>
@@ -90,7 +102,7 @@ const page = usePage<AppPageProps>();
                         </span>
                     </div>
 
-                    <div class="mt-8 flex items-center gap-3">
+                    <div class="mt-8 flex flex-wrap items-center gap-3">
                         <span
                             v-if="item.teacher"
                             class="flex items-center gap-2 text-xs font-medium tracking-wide text-zinc-400"
@@ -100,6 +112,15 @@ const page = usePage<AppPageProps>();
                             ></span>
                             {{ item.teacher.first_name }}
                             {{ item.teacher.last_name }}
+                        </span>
+                        <span
+                            v-if="item.students !== undefined"
+                            class="flex items-center gap-2 text-xs font-medium tracking-wide text-zinc-400"
+                        >
+                            <span
+                                class="h-1.5 w-1.5 rounded-full bg-zinc-600"
+                            ></span>
+                            {{ item.students }} students
                         </span>
                     </div>
                 </Link>

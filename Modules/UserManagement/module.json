@@ -1,0 +1,15 @@
+{
+    "name": "UserManagement",
+    "alias": "usermanagement",
+    "description": "Operational Inertia user management for campus administrators.",
+    "keywords": [
+        "portal",
+        "users",
+        "admin"
+    ],
+    "priority": 60,
+    "providers": [
+        "Modules\\UserManagement\\Providers\\UserManagementServiceProvider"
+    ],
+    "files": []
+}

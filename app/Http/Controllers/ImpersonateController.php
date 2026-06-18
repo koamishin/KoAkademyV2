@@ -10,8 +10,8 @@ class ImpersonateController extends Controller
 {
     public function takeRedirect(): RedirectResponse
     {
-        if (($user = Auth::user()) instanceof User && $user->hasAnyRole(['super_admin', 'school_admin'])) {
-            return redirect()->to('/admin');
+        if (($user = Auth::user()) instanceof User && $campus = $user->assignedCampus()) {
+            return redirect()->route('campus.dashboard', ['campus' => $campus]);
         }
 
         return redirect()->to('/dashboard');
@@ -19,8 +19,8 @@ class ImpersonateController extends Controller
 
     public function leaveRedirect(): RedirectResponse
     {
-        if (($user = Auth::user()) instanceof User && $user->hasAnyRole(['super_admin', 'school_admin'])) {
-            return redirect()->to('/admin');
+        if (($user = Auth::user()) instanceof User && $campus = $user->assignedCampus()) {
+            return redirect()->route('campus.dashboard', ['campus' => $campus]);
         }
 
         return redirect()->to('/');

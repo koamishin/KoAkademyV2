@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BookOpen,
+    Bell,
+    ClipboardCheck,
     ClipboardList,
-    Folder,
+    ExternalLink,
     GraduationCap,
     History,
     LayoutGrid,
+    ListChecks,
+    Palette,
+    School,
+    ShieldCheck,
+    UserCog,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -21,76 +27,45 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard as dashboardRedirect } from '@/routes';
-import { show as academicHistory } from '@/routes/academic-history';
-import { index as applicationsIndex } from '@/routes/applications';
-import { dashboard } from '@/routes/campus';
-import { index as classroomIndex } from '@/routes/classroom';
-import { type NavItem } from '@/types';
+import { edit as appearanceEdit } from '@/routes/appearance';
+import { type NavGroup, type NavItem } from '@/types';
 import type { AppPageProps } from '@/types';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage<AppPageProps>();
-const currentCampus = page.props.currentCampus;
-const roles = page.props.auth.roles ?? [];
-const hasAnyRole = (...allowedRoles: string[]) =>
-    roles.some((role) => allowedRoles.includes(role));
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: currentCampus
-            ? dashboard({ campus: currentCampus.slug })
-            : dashboardRedirect(),
-        icon: LayoutGrid,
-    },
-];
+const iconMap = {
+    Bell,
+    ClipboardCheck,
+    ClipboardList,
+    ExternalLink,
+    GraduationCap,
+    History,
+    LayoutGrid,
+    ListChecks,
+    School,
+    ShieldCheck,
+    UserCog,
+};
 
-if (
-    currentCampus &&
-    page.props.academic?.enabledModules.includes('admissions') &&
-    hasAnyRole('applicant', 'super_admin', 'school_admin', 'admissions_officer')
-) {
-    mainNavItems.push({
-        title: 'Applications',
-        href: applicationsIndex({ campus: currentCampus!.slug }),
-        icon: ClipboardList,
-    });
-}
-
-if (
-    currentCampus &&
-    page.props.academic?.enabledModules.includes('enrollment') &&
-    hasAnyRole('student')
-) {
-    mainNavItems.push({
-        title: 'Academic History',
-        href: academicHistory({ campus: currentCampus!.slug }),
-        icon: History,
-    });
-}
-
-if (
-    currentCampus &&
-    page.props.academic?.enabledModules.includes('classroom') &&
-    hasAnyRole('teacher', 'student', 'super_admin', 'school_admin')
-) {
-    mainNavItems.push({
-        title: 'My Classes',
-        href: classroomIndex({ campus: currentCampus!.slug }),
-        icon: GraduationCap,
-    });
-}
+const portalNavigation: NavGroup[] = (page.props.portal?.navigation ?? []).map(
+    (group) => ({
+        ...group,
+        items: group.items.map((item) => ({
+            ...item,
+            icon:
+                typeof item.icon === 'string'
+                    ? iconMap[item.icon as keyof typeof iconMap]
+                    : item.icon,
+        })),
+    }),
+);
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Appearance',
+        href: appearanceEdit(),
+        icon: Palette,
     },
 ];
 </script>
@@ -103,11 +78,7 @@ const footerNavItems: NavItem[] = [
                     <SidebarMenuButton size="lg" as-child>
                         <Link
                             :href="
-                                currentCampus
-                                    ? dashboard({
-                                          campus: currentCampus.slug,
-                                      })
-                                    : dashboardRedirect()
+                                page.props.portal?.home ?? dashboardRedirect()
                             "
                         >
                             <AppLogo />
@@ -118,7 +89,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :groups="portalNavigation" />
         </SidebarContent>
 
         <SidebarFooter>

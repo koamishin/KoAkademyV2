@@ -11,6 +11,9 @@ use App\Settings\SocialLoginSettings;
 use App\Support\CurrentCampus;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Modules\Portal\Enums\PortalRole;
+use Modules\Portal\Support\PortalNavigationRegistry;
+use Modules\Portal\Support\PortalRoleResolver;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -30,6 +33,20 @@ class HandleInertiaRequests extends Middleware
 
         $user = $request->user();
         $currentCampus = $this->resolveCurrentCampus($request);
+        $portalRole = $user ? app(PortalRoleResolver::class)->resolve($user, $currentCampus)->value : null;
+        $portalHome = $currentCampus instanceof Campus
+            ? route('campus.dashboard', ['campus' => $currentCampus])
+            : route('dashboard');
+        $canAccessAdminPortal = $user
+            ? app(PortalRoleResolver::class)->canAccessAdminPortal($user, $currentCampus)
+            : false;
+        $enabledAcademicModules = app(AcademicModuleRegistry::class)->enabledKeys();
+        $portalCampus = $currentCampus instanceof Campus ? [
+            'id' => $currentCampus->getKey(),
+            'name' => $currentCampus->name,
+            'code' => $currentCampus->code,
+            'slug' => $currentCampus->slug,
+        ] : null;
         $campusMembership = $user && $currentCampus instanceof Campus
             ? $user->campusMemberships()->where('campus_id', $currentCampus->getKey())->first()
             : null;
@@ -66,14 +83,20 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->getRoleNames()->values()->all() ?? [],
                 'campusRole' => $campusMembership?->role->value,
             ],
-            'currentCampus' => $currentCampus instanceof Campus ? [
-                'id' => $currentCampus->getKey(),
-                'name' => $currentCampus->name,
-                'code' => $currentCampus->code,
-                'slug' => $currentCampus->slug,
-            ] : null,
+            'portal' => [
+                'role' => $portalRole ?? PortalRole::Unknown->value,
+                'home' => $portalHome,
+                'navigation' => app(PortalNavigationRegistry::class)->forRequest($request, [
+                    'role' => $portalRole ?? PortalRole::Unknown->value,
+                    'campus' => $portalCampus,
+                    'canAccessAdminPortal' => $canAccessAdminPortal,
+                    'enabledModules' => $enabledAcademicModules,
+                ]),
+                'canAccessAdminPortal' => $canAccessAdminPortal,
+            ],
+            'currentCampus' => $portalCampus,
             'academic' => [
-                'enabledModules' => app(AcademicModuleRegistry::class)->enabledKeys(),
+                'enabledModules' => $enabledAcademicModules,
                 'person' => $request->user()?->person,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

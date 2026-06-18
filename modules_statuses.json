@@ -2,5 +2,7 @@
     "Admissions": true,
     "Enrollment": true,
     "Classroom": true,
-    "Blog": true
+    "Blog": true,
+    "Portal": true,
+    "UserManagement": true
 }
