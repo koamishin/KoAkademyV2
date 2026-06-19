@@ -4,25 +4,77 @@ import {
     Activity,
     BarChart3,
     CheckCircle2,
-    Circle,
-    Clock3,
     KeyRound,
     LogOut,
     MailCheck,
     MailQuestion,
     MonitorDot,
-    Search,
+    Plus,
     ShieldCheck,
     UserPlus,
     UsersRound,
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { index, store, update, verifyEmail, unverifyEmail, sendPasswordReset, impersonate, forceLogout } from '@/routes/admin/users';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
+import AppLayout from '@/layouts/AppLayout.vue';
+import {
+    store,
+    update,
+    verifyEmail,
+    unverifyEmail,
+    sendPasswordReset,
+    impersonate,
+    forceLogout,
+} from '@/routes/admin/users';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
+import UserDataTable from '../../components/UserDataTable.vue';
 
 type Membership = {
     id?: number;
@@ -63,19 +115,17 @@ type ManagedUser = {
     };
 };
 
-type PaginatedUsers = {
-    data: ManagedUser[];
-    links: { url: string | null; label: string; active: boolean }[];
-    meta?: Record<string, unknown>;
-    current_page: number;
-    last_page: number;
-    from: number | null;
-    to: number | null;
-    total: number;
-};
-
 const props = defineProps<{
-    users: PaginatedUsers;
+    users: {
+        data: ManagedUser[];
+        links: { url: string | null; label: string; active: boolean }[];
+        meta?: Record<string, unknown>;
+        current_page: number;
+        last_page: number;
+        from: number | null;
+        to: number | null;
+        total: number;
+    };
     filters: Record<string, string | null>;
     analytics: {
         cards: Record<string, number>;
@@ -114,18 +164,8 @@ const page = usePage<AppPageProps>();
 const campusSlug = computed(() => page.props.currentCampus!.slug);
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Users' }];
 
-const filterForm = ref({
-    search: props.filters.search ?? '',
-    role: props.filters.role ?? '',
-    campus: props.filters.campus ?? '',
-    verified: props.filters.verified ?? '',
-    online: props.filters.online ?? '',
-    mfa: props.filters.mfa ?? '',
-    age: props.filters.age ?? '',
-});
-
 const selectedUser = ref<ManagedUser | null>(null);
-const createOpen = ref(false);
+const createDialogOpen = ref(false);
 const confirming = ref<{ action: string; user: ManagedUser } | null>(null);
 
 const createForm = useForm({
@@ -134,8 +174,12 @@ const createForm = useForm({
     email_verified: true,
     memberships: [
         {
-            campus_id: props.can.manageableCampusIds[0] ?? page.props.currentCampus!.id,
-            role: props.can.manageableRoles.includes('student') ? 'student' : (props.can.manageableRoles[0] ?? 'student'),
+            campus_id:
+                props.can.manageableCampusIds[0] ??
+                page.props.currentCampus!.id,
+            role: props.can.manageableRoles.includes('student')
+                ? 'student'
+                : (props.can.manageableRoles[0] ?? 'student'),
             active: true,
             is_default: true,
         },
@@ -166,7 +210,9 @@ watch(selectedUser, (user) => {
     }
 
     const editableMemberships = user.memberships
-        .filter((membership) => props.can.manageableCampusIds.includes(membership.campusId))
+        .filter((membership) =>
+            props.can.manageableCampusIds.includes(membership.campusId),
+        )
         .map((membership) => ({
             campus_id: membership.campusId,
             role: membership.role,
@@ -183,8 +229,12 @@ watch(selectedUser, (user) => {
                 ? editableMemberships
                 : [
                       {
-                          campus_id: props.can.manageableCampusIds[0] ?? page.props.currentCampus!.id,
-                          role: props.can.manageableRoles.includes('student') ? 'student' : (props.can.manageableRoles[0] ?? 'student'),
+                          campus_id:
+                              props.can.manageableCampusIds[0] ??
+                              page.props.currentCampus!.id,
+                          role: props.can.manageableRoles.includes('student')
+                              ? 'student'
+                              : (props.can.manageableRoles[0] ?? 'student'),
                           active: true,
                           is_default: true,
                       },
@@ -194,41 +244,63 @@ watch(selectedUser, (user) => {
     editForm.reset();
 });
 
+const selectedUserVisible = computed({
+    get: () => selectedUser.value !== null,
+    set: (value) => {
+        if (!value) {
+            selectedUser.value = null;
+        }
+    },
+});
+
 const analyticsCards = computed(() => [
-    { label: 'Total users', value: props.analytics.cards.totalUsers, icon: UsersRound },
-    { label: 'Online now', value: props.analytics.cards.onlineNow, icon: MonitorDot },
-    { label: 'Students', value: props.analytics.cards.students, icon: UsersRound },
-    { label: 'Teachers', value: props.analytics.cards.teachers, icon: ShieldCheck },
+    {
+        label: 'Total users',
+        value: props.analytics.cards.totalUsers,
+        icon: UsersRound,
+    },
+    {
+        label: 'Online now',
+        value: props.analytics.cards.onlineNow,
+        icon: MonitorDot,
+    },
+    {
+        label: 'Students',
+        value: props.analytics.cards.students,
+        icon: UsersRound,
+    },
+    {
+        label: 'Teachers',
+        value: props.analytics.cards.teachers,
+        icon: ShieldCheck,
+    },
     { label: 'Admins', value: props.analytics.cards.admins, icon: KeyRound },
-    { label: 'Unverified', value: props.analytics.cards.unverified, icon: MailQuestion },
-    { label: 'MFA enabled', value: props.analytics.cards.mfaEnabled, icon: CheckCircle2 },
-    { label: 'Inactive 30d', value: props.analytics.cards.inactive30Days, icon: Clock3 },
+    {
+        label: 'Unverified',
+        value: props.analytics.cards.unverified,
+        icon: MailQuestion,
+    },
+    {
+        label: 'MFA enabled',
+        value: props.analytics.cards.mfaEnabled,
+        icon: CheckCircle2,
+    },
+    {
+        label: 'Inactive 30d',
+        value: props.analytics.cards.inactive30Days,
+        icon: Activity,
+    },
 ]);
 
-function applyFilters() {
-    const query = Object.fromEntries(Object.entries(filterForm.value).filter(([, value]) => value !== ''));
-
-    router.get(index.url({ campus: campusSlug.value }, { query }), {}, { preserveState: true, replace: true });
-}
-
-function resetFilters() {
-    filterForm.value = {
-        search: '',
-        role: '',
-        campus: props.can.viewGlobal ? '' : campusSlug.value,
-        verified: '',
-        online: '',
-        mfa: '',
-        age: '',
-    };
-    applyFilters();
-}
+const visibleRoleBreakdown = computed(() =>
+    props.analytics.roleBreakdown.filter((item) => item.count > 0),
+);
 
 function submitCreate() {
     createForm.post(store.url({ campus: campusSlug.value }), {
         preserveScroll: true,
         onSuccess: () => {
-            createOpen.value = false;
+            createDialogOpen.value = false;
             createForm.reset();
         },
     });
@@ -239,12 +311,15 @@ function submitUpdate() {
         return;
     }
 
-    editForm.patch(update.url({ campus: campusSlug.value, user: selectedUser.value.id }), {
-        preserveScroll: true,
-        onSuccess: () => {
-            selectedUser.value = null;
+    editForm.patch(
+        update.url({ campus: campusSlug.value, user: selectedUser.value.id }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedUser.value = null;
+            },
         },
-    });
+    );
 }
 
 function runConfirmedAction() {
@@ -261,32 +336,75 @@ function runConfirmedAction() {
     };
 
     if (confirming.value.action === 'verify') {
-        router.post(verifyEmail.url({ campus: campusSlug.value, user: user.id }), {}, options);
+        router.post(
+            verifyEmail.url({ campus: campusSlug.value, user: user.id }),
+            {},
+            options,
+        );
     }
 
     if (confirming.value.action === 'unverify') {
-        router.post(unverifyEmail.url({ campus: campusSlug.value, user: user.id }), {}, options);
+        router.post(
+            unverifyEmail.url({ campus: campusSlug.value, user: user.id }),
+            {},
+            options,
+        );
     }
 
     if (confirming.value.action === 'reset') {
-        router.post(sendPasswordReset.url({ campus: campusSlug.value, user: user.id }), {}, options);
+        router.post(
+            sendPasswordReset.url({ campus: campusSlug.value, user: user.id }),
+            {},
+            options,
+        );
     }
 
     if (confirming.value.action === 'impersonate') {
-        router.post(impersonate.url({ campus: campusSlug.value, user: user.id }), {}, options);
+        router.post(
+            impersonate.url({ campus: campusSlug.value, user: user.id }),
+            {},
+            options,
+        );
     }
 
     if (confirming.value.action === 'logout') {
-        router.delete(forceLogout.url({ campus: campusSlug.value, user: user.id }), options);
+        router.delete(
+            forceLogout.url({ campus: campusSlug.value, user: user.id }),
+            options,
+        );
     }
+}
+
+function addMembership() {
+    editForm.memberships.push({
+        campus_id:
+            props.can.manageableCampusIds[0] ?? page.props.currentCampus!.id,
+        role: props.can.manageableRoles[0] ?? 'student',
+        active: true,
+        is_default: false,
+    });
+}
+
+function addCreateMembership() {
+    createForm.memberships.push({
+        campus_id:
+            props.can.manageableCampusIds[0] ?? page.props.currentCampus!.id,
+        role: props.can.manageableRoles[0] ?? 'student',
+        active: true,
+        is_default: false,
+    });
+}
+
+function removeMembership(index: number) {
+    editForm.memberships.splice(index, 1);
+}
+
+function removeCreateMembership(index: number) {
+    createForm.memberships.splice(index, 1);
 }
 
 function roleLabel(role: string) {
     return props.roles.find((item) => item.value === role)?.label ?? role;
-}
-
-function campusName(id: number) {
-    return props.campuses.find((campus) => campus.id === id)?.name ?? 'Campus';
 }
 
 function formatDate(value?: string | null) {
@@ -296,13 +414,35 @@ function formatDate(value?: string | null) {
 function confirmationTitle() {
     const action = confirming.value?.action;
 
-    return {
-        verify: 'Verify email',
-        unverify: 'Unverify email',
-        reset: 'Send password reset',
-        impersonate: 'Start impersonation',
-        logout: 'Force logout',
-    }[action ?? ''] ?? 'Confirm action';
+    return (
+        {
+            verify: 'Verify email',
+            unverify: 'Unverify email',
+            reset: 'Send password reset',
+            impersonate: 'Start impersonation',
+            logout: 'Force logout',
+        }[action ?? ''] ?? 'Confirm action'
+    );
+}
+
+function confirmationDescription() {
+    const action = confirming.value?.action;
+    const user = confirming.value?.user;
+
+    if (!user) {
+        return '';
+    }
+
+    return (
+        {
+            verify: `Mark ${user.name}'s email address as verified?`,
+            unverify: `Mark ${user.name}'s email address as unverified?`,
+            reset: `Send a password reset link to ${user.email}?`,
+            impersonate: `You will be logged in as ${user.name}. Use this only for support or debugging.`,
+            logout: `End all active sessions for ${user.name}? They will need to sign in again.`,
+        }[action ?? ''] ??
+        `Are you sure you want to perform this action on ${user.name}?`
+    );
 }
 </script>
 
@@ -310,371 +450,893 @@ function confirmationTitle() {
     <Head title="User Management" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto flex w-full max-w-[1500px] flex-col gap-5 p-4 sm:p-6 lg:p-8">
-            <header class="flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div
+            class="mx-auto flex w-full max-w-[1500px] flex-col gap-6 p-4 sm:p-6 lg:p-8"
+        >
+            <header
+                class="flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-end lg:justify-between"
+            >
                 <div>
-                    <p class="text-sm font-medium text-primary">Admin operations</p>
-                    <h1 class="mt-1 text-2xl font-semibold tracking-tight">User management</h1>
-                    <p class="mt-1 text-sm text-muted-foreground">{{ users.total }} accounts in view</p>
+                    <p class="text-sm font-medium text-primary">
+                        Admin operations
+                    </p>
+                    <h1
+                        class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl"
+                    >
+                        User management
+                    </h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ users.total }} accounts in view
+                    </p>
                 </div>
-                <Button v-if="can.create" class="gap-2" @click="createOpen = true">
-                    <UserPlus class="size-4" />
-                    New user
-                </Button>
-            </header>
 
-            <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <article v-for="card in analyticsCards" :key="card.label" class="rounded-lg border bg-card p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="text-sm text-muted-foreground">{{ card.label }}</p>
-                        <component :is="card.icon" class="size-4 text-primary" />
-                    </div>
-                    <p class="mt-3 text-2xl font-semibold">{{ card.value ?? 0 }}</p>
-                </article>
-            </section>
+                <Dialog v-model:open="createDialogOpen">
+                    <DialogTrigger as-child>
+                        <Button v-if="can.create" class="gap-2">
+                            <UserPlus class="size-4" />
+                            New user
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent
+                        class="max-h-[90vh] overflow-y-auto sm:max-w-lg"
+                    >
+                        <DialogHeader>
+                            <DialogTitle>Create user account</DialogTitle>
+                            <DialogDescription
+                                >A password setup link will be emailed to the
+                                new user automatically.</DialogDescription
+                            >
+                        </DialogHeader>
 
-            <section class="grid gap-5 xl:grid-cols-[1fr_360px]">
-                <div class="min-w-0 rounded-lg border bg-card">
-                    <div class="grid gap-3 border-b p-4 lg:grid-cols-[minmax(220px,1fr)_repeat(6,minmax(130px,160px))_auto]">
-                        <div class="relative">
-                            <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input v-model="filterForm.search" class="pl-9" placeholder="Search users" @keyup.enter="applyFilters" />
-                        </div>
-                        <select v-model="filterForm.role" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option value="">Any role</option>
-                            <option v-for="role in roles" :key="role.value" :value="role.value">{{ role.label }}</option>
-                        </select>
-                        <select v-model="filterForm.campus" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option v-if="can.viewGlobal" value="">All campuses</option>
-                            <option v-for="campus in campuses" :key="campus.id" :value="campus.slug">{{ campus.name }}</option>
-                        </select>
-                        <select v-model="filterForm.verified" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option value="">Verification</option>
-                            <option value="verified">Verified</option>
-                            <option value="unverified">Unverified</option>
-                        </select>
-                        <select v-model="filterForm.online" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option value="">Presence</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                        </select>
-                        <select v-model="filterForm.mfa" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option value="">MFA</option>
-                            <option value="enabled">Enabled</option>
-                            <option value="disabled">Disabled</option>
-                        </select>
-                        <select v-model="filterForm.age" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option value="">Created</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="older">Older</option>
-                        </select>
-                        <div class="flex gap-2">
-                            <Button size="sm" @click="applyFilters">Apply</Button>
-                            <Button size="sm" variant="outline" @click="resetFilters">Reset</Button>
-                        </div>
-                    </div>
+                        <form
+                            class="grid gap-5 py-4"
+                            @submit.prevent="submitCreate"
+                        >
+                            <div class="grid gap-2">
+                                <Label for="create-name">Full name</Label>
+                                <Input
+                                    id="create-name"
+                                    v-model="createForm.name"
+                                    placeholder="Full name"
+                                    :disabled="createForm.processing"
+                                />
+                                <p
+                                    v-if="createForm.errors.name"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ createForm.errors.name }}
+                                </p>
+                            </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[980px] text-sm">
-                            <thead class="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
-                                <tr>
-                                    <th class="px-4 py-3 font-medium">Account</th>
-                                    <th class="px-4 py-3 font-medium">Roles</th>
-                                    <th class="px-4 py-3 font-medium">Status</th>
-                                    <th class="px-4 py-3 font-medium">Sessions</th>
-                                    <th class="px-4 py-3 font-medium">Last seen</th>
-                                    <th class="px-4 py-3 text-right font-medium">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="user in users.data" :key="user.id" class="border-b last:border-0 hover:bg-muted/30">
-                                    <td class="px-4 py-3">
-                                        <button class="text-left" @click="selectedUser = user">
-                                            <span class="font-medium">{{ user.name }}</span>
-                                            <span class="block text-xs text-muted-foreground">{{ user.email }}</span>
-                                        </button>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-1">
-                                            <Badge v-for="membership in user.memberships" :key="membership.id ?? membership.campusId" variant="secondary">
-                                                {{ membership.roleLabel ?? roleLabel(membership.role) }}
-                                            </Badge>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-1">
-                                            <Badge :variant="user.verified ? 'default' : 'secondary'">
-                                                {{ user.verified ? 'Verified' : 'Unverified' }}
-                                            </Badge>
-                                            <Badge :variant="user.mfaEnabled ? 'default' : 'outline'">
-                                                {{ user.mfaEnabled ? 'MFA' : 'No MFA' }}
-                                            </Badge>
-                                            <Badge :variant="user.online ? 'default' : 'outline'" class="gap-1">
-                                                <Circle class="size-2" :class="user.online ? 'fill-emerald-500 text-emerald-500' : 'fill-muted text-muted'" />
-                                                {{ user.online ? 'Online' : 'Offline' }}
-                                            </Badge>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3">{{ user.activeSessions }}</td>
-                                    <td class="px-4 py-3 text-muted-foreground">{{ formatDate(user.lastSeenAt) }}</td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex justify-end gap-2">
-                                            <Button size="sm" variant="outline" @click="selectedUser = user">Open</Button>
-                                            <Button
-                                                v-if="user.can.impersonate"
-                                                size="sm"
-                                                variant="outline"
-                                                @click="confirming = { action: 'impersonate', user }"
+                            <div class="grid gap-2">
+                                <Label for="create-email">Email address</Label>
+                                <Input
+                                    id="create-email"
+                                    v-model="createForm.email"
+                                    type="email"
+                                    placeholder="Email address"
+                                    :disabled="createForm.processing"
+                                />
+                                <p
+                                    v-if="createForm.errors.email"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ createForm.errors.email }}
+                                </p>
+                            </div>
+
+                            <div
+                                class="flex items-center gap-3 rounded-md border p-3"
+                            >
+                                <Switch
+                                    id="create-verified"
+                                    v-model:checked="createForm.email_verified"
+                                    :disabled="createForm.processing"
+                                />
+                                <Label
+                                    for="create-verified"
+                                    class="cursor-pointer"
+                                    >Email verified</Label
+                                >
+                            </div>
+
+                            <div class="grid gap-3">
+                                <div
+                                    class="flex items-center justify-between gap-3"
+                                >
+                                    <Label>Campus access</Label>
+                                    <Button
+                                        v-if="can.viewGlobal"
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        class="gap-1"
+                                        @click="addCreateMembership"
+                                    >
+                                        <Plus class="size-3.5" />
+                                        Add campus
+                                    </Button>
+                                </div>
+
+                                <div
+                                    v-for="(
+                                        membership, idx
+                                    ) in createForm.memberships"
+                                    :key="idx"
+                                    class="grid gap-3 rounded-md border p-3"
+                                >
+                                    <div class="grid gap-2">
+                                        <Label :for="`create-campus-${idx}`"
+                                            >Campus</Label
+                                        >
+                                        <Select
+                                            v-model="membership.campus_id"
+                                            :disabled="createForm.processing"
+                                        >
+                                            <SelectTrigger
+                                                :id="`create-campus-${idx}`"
                                             >
-                                                Impersonate
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="users.data.length === 0">
-                                    <td colspan="6" class="px-4 py-10 text-center text-muted-foreground">No users match the current filters.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="text-sm text-muted-foreground">Showing {{ users.from ?? 0 }}-{{ users.to ?? 0 }} of {{ users.total }}</p>
-                        <div class="flex flex-wrap gap-2">
-                            <Button
-                                v-for="link in users.links"
-                                :key="link.label"
-                                size="sm"
-                                :variant="link.active ? 'default' : 'outline'"
-                                :disabled="!link.url"
-                                @click="link.url && router.get(link.url, {}, { preserveScroll: true, preserveState: true })"
-                                v-html="link.label"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <aside class="grid gap-5">
-                    <section class="rounded-lg border bg-card p-4">
-                        <div class="mb-4 flex items-center justify-between gap-3">
-                            <h2 class="font-semibold">Online now</h2>
-                            <MonitorDot class="size-4 text-primary" />
-                        </div>
-                        <div class="grid gap-3">
-                            <article v-for="user in onlineUsers" :key="user.id" class="rounded-md bg-muted/40 p-3">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p class="font-medium">{{ user.name }}</p>
-                                        <p class="text-xs text-muted-foreground">{{ user.userAgent ?? 'Active session' }}</p>
+                                                <SelectValue
+                                                    placeholder="Select campus"
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem
+                                                    v-for="campus in campuses.filter(
+                                                        (item) =>
+                                                            can.manageableCampusIds.includes(
+                                                                item.id,
+                                                            ),
+                                                    )"
+                                                    :key="campus.id"
+                                                    :value="campus.id"
+                                                >
+                                                    {{ campus.name }}
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
-                                    <Badge>{{ user.activeSessions }}</Badge>
-                                </div>
-                            </article>
-                            <p v-if="onlineUsers.length === 0" class="text-sm text-muted-foreground">No active sessions.</p>
-                        </div>
-                    </section>
 
-                    <section class="rounded-lg border bg-card p-4">
-                        <div class="mb-4 flex items-center justify-between gap-3">
-                            <h2 class="font-semibold">Role mix</h2>
-                            <BarChart3 class="size-4 text-primary" />
-                        </div>
-                        <div class="grid gap-3">
-                            <div v-for="role in analytics.roleBreakdown.filter((item) => item.count > 0)" :key="role.role">
-                                <div class="flex justify-between text-sm">
-                                    <span>{{ role.label }}</span>
-                                    <span class="font-medium">{{ role.count }}</span>
-                                </div>
-                                <div class="mt-1 h-2 overflow-hidden rounded-full bg-muted">
-                                    <div class="h-full bg-primary" :style="{ width: `${Math.min(100, (role.count / Math.max(1, analytics.cards.totalUsers)) * 100)}%` }" />
+                                    <div class="grid gap-2">
+                                        <Label :for="`create-role-${idx}`"
+                                            >Role</Label
+                                        >
+                                        <Select
+                                            v-model="membership.role"
+                                            :disabled="createForm.processing"
+                                        >
+                                            <SelectTrigger
+                                                :id="`create-role-${idx}`"
+                                            >
+                                                <SelectValue
+                                                    placeholder="Select role"
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem
+                                                    v-for="role in roles.filter(
+                                                        (item) =>
+                                                            can.manageableRoles.includes(
+                                                                item.value,
+                                                            ),
+                                                    )"
+                                                    :key="role.value"
+                                                    :value="role.value"
+                                                >
+                                                    {{ role.label }}
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-3 pt-1"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <Checkbox
+                                                :id="`create-active-${idx}`"
+                                                v-model:checked="
+                                                    membership.active
+                                                "
+                                                :disabled="
+                                                    createForm.processing
+                                                "
+                                            />
+                                            <Label
+                                                :for="`create-active-${idx}`"
+                                                class="cursor-pointer text-sm"
+                                                >Active</Label
+                                            >
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <Checkbox
+                                                :id="`create-default-${idx}`"
+                                                v-model:checked="
+                                                    membership.is_default
+                                                "
+                                                :disabled="
+                                                    createForm.processing
+                                                "
+                                            />
+                                            <Label
+                                                :for="`create-default-${idx}`"
+                                                class="cursor-pointer text-sm"
+                                                >Default</Label
+                                            >
+                                        </div>
+                                        <Button
+                                            v-if="
+                                                createForm.memberships.length >
+                                                1
+                                            "
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            class="text-destructive hover:text-destructive"
+                                            @click="removeCreateMembership(idx)"
+                                        >
+                                            Remove
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </form>
 
-                    <section class="rounded-lg border bg-card p-4">
-                        <div class="mb-4 flex items-center justify-between gap-3">
-                            <h2 class="font-semibold">Recent activity</h2>
-                            <Activity class="size-4 text-primary" />
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                :disabled="createForm.processing"
+                                @click="createDialogOpen = false"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                :disabled="createForm.processing"
+                                @click="submitCreate"
+                            >
+                                {{
+                                    createForm.processing
+                                        ? 'Creating...'
+                                        : 'Create account'
+                                }}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </header>
+
+            <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Card v-for="card in analyticsCards" :key="card.label">
+                    <CardContent class="flex items-center justify-between p-5">
+                        <div>
+                            <p class="text-sm text-muted-foreground">
+                                {{ card.label }}
+                            </p>
+                            <p class="mt-1 text-2xl font-semibold">
+                                {{ card.value ?? 0 }}
+                            </p>
                         </div>
-                        <div class="grid gap-3">
-                            <article v-for="item in recentActivity" :key="item.id" class="rounded-md bg-muted/40 p-3">
-                                <p class="text-sm font-medium capitalize">{{ item.description }}</p>
-                                <p class="text-xs text-muted-foreground">{{ formatDate(item.createdAt) }}</p>
-                            </article>
-                            <p v-if="recentActivity.length === 0" class="text-sm text-muted-foreground">No account activity yet.</p>
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10"
+                        >
+                            <component
+                                :is="card.icon"
+                                class="size-5 text-primary"
+                            />
                         </div>
-                    </section>
+                    </CardContent>
+                </Card>
+            </section>
+
+            <section class="grid gap-6 xl:grid-cols-[1fr_360px]">
+                <UserDataTable
+                    :users="users"
+                    :filters="filters"
+                    :campuses="campuses"
+                    :roles="roles"
+                    :can="can"
+                    @select-user="selectedUser = $event"
+                    @confirm-action="confirming = $event"
+                />
+
+                <aside class="grid gap-5">
+                    <Card>
+                        <CardHeader class="pb-3">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <CardTitle class="text-base"
+                                    >Online now</CardTitle
+                                >
+                                <MonitorDot class="size-4 text-primary" />
+                            </div>
+                            <CardDescription
+                                >Active sessions across visible
+                                users</CardDescription
+                            >
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea class="h-[260px] pr-3">
+                                <div class="grid gap-3">
+                                    <div
+                                        v-for="user in onlineUsers"
+                                        :key="user.id"
+                                        class="flex items-start justify-between gap-3 rounded-md bg-muted/50 p-3"
+                                    >
+                                        <div class="min-w-0">
+                                            <p
+                                                class="truncate text-sm font-medium"
+                                            >
+                                                {{ user.name }}
+                                            </p>
+                                            <p
+                                                class="truncate text-xs text-muted-foreground"
+                                            >
+                                                {{
+                                                    user.userAgent ??
+                                                    'Active session'
+                                                }}
+                                            </p>
+                                        </div>
+                                        <Badge
+                                            variant="secondary"
+                                            class="shrink-0"
+                                            >{{ user.activeSessions }}</Badge
+                                        >
+                                    </div>
+                                    <div
+                                        v-if="onlineUsers.length === 0"
+                                        class="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground"
+                                    >
+                                        <MonitorDot class="size-8 opacity-40" />
+                                        <p class="text-sm">
+                                            No active sessions.
+                                        </p>
+                                    </div>
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader class="pb-3">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <CardTitle class="text-base"
+                                    >Role mix</CardTitle
+                                >
+                                <BarChart3 class="size-4 text-primary" />
+                            </div>
+                            <CardDescription
+                                >Distribution by assigned role</CardDescription
+                            >
+                        </CardHeader>
+                        <CardContent>
+                            <div class="grid gap-4">
+                                <div
+                                    v-for="role in visibleRoleBreakdown"
+                                    :key="role.role"
+                                >
+                                    <div class="flex justify-between text-sm">
+                                        <span>{{ role.label }}</span>
+                                        <span class="font-medium">{{
+                                            role.count
+                                        }}</span>
+                                    </div>
+                                    <div
+                                        class="mt-1.5 h-2 overflow-hidden rounded-full bg-muted"
+                                    >
+                                        <div
+                                            class="h-full bg-primary transition-all"
+                                            :style="{
+                                                width: `${Math.min(100, (role.count / Math.max(1, analytics.cards.totalUsers)) * 100)}%`,
+                                            }"
+                                        />
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="visibleRoleBreakdown.length === 0"
+                                    class="py-4 text-center text-sm text-muted-foreground"
+                                >
+                                    No role data available.
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader class="pb-3">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <CardTitle class="text-base"
+                                    >Recent activity</CardTitle
+                                >
+                                <Activity class="size-4 text-primary" />
+                            </div>
+                            <CardDescription
+                                >Latest account events</CardDescription
+                            >
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea class="h-[260px] pr-3">
+                                <div class="grid gap-3">
+                                    <div
+                                        v-for="item in recentActivity"
+                                        :key="item.id"
+                                        class="rounded-md bg-muted/50 p-3"
+                                    >
+                                        <p
+                                            class="text-sm font-medium capitalize"
+                                        >
+                                            {{ item.description }}
+                                        </p>
+                                        <p
+                                            class="mt-1 text-xs text-muted-foreground"
+                                        >
+                                            {{ formatDate(item.createdAt) }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-if="recentActivity.length === 0"
+                                        class="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground"
+                                    >
+                                        <Activity class="size-8 opacity-40" />
+                                        <p class="text-sm">
+                                            No account activity yet.
+                                        </p>
+                                    </div>
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
                 </aside>
             </section>
         </div>
 
-        <div v-if="selectedUser" class="fixed inset-0 z-50 bg-black/30" @click.self="selectedUser = null">
-            <aside class="ml-auto flex h-full w-full max-w-xl flex-col overflow-y-auto border-l bg-background shadow-xl">
-                <header class="border-b p-5">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h2 class="text-xl font-semibold">{{ selectedUser.name }}</h2>
-                            <p class="text-sm text-muted-foreground">{{ selectedUser.email }}</p>
+        <Sheet
+            v-model:open="selectedUserVisible"
+            @update:open="(open) => !open && (selectedUser = null)"
+        >
+            <SheetContent class="w-full sm:max-w-md">
+                <SheetHeader v-if="selectedUser" class="pb-4 text-left">
+                    <SheetTitle>{{ selectedUser.name }}</SheetTitle>
+                    <SheetDescription>{{
+                        selectedUser.email
+                    }}</SheetDescription>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <Badge
+                            :variant="
+                                selectedUser.online ? 'default' : 'outline'
+                            "
+                            >{{
+                                selectedUser.online ? 'Online' : 'Offline'
+                            }}</Badge
+                        >
+                        <Badge
+                            :variant="
+                                selectedUser.verified ? 'default' : 'secondary'
+                            "
+                            >{{
+                                selectedUser.verified
+                                    ? 'Verified'
+                                    : 'Unverified'
+                            }}</Badge
+                        >
+                        <Badge
+                            :variant="
+                                selectedUser.mfaEnabled ? 'default' : 'outline'
+                            "
+                            >{{
+                                selectedUser.mfaEnabled
+                                    ? 'MFA enabled'
+                                    : 'MFA disabled'
+                            }}</Badge
+                        >
+                    </div>
+                </SheetHeader>
+
+                <form
+                    v-if="selectedUser"
+                    class="grid gap-6 py-4"
+                    @submit.prevent="submitUpdate"
+                >
+                    <div class="grid gap-3">
+                        <h3
+                            class="text-sm font-semibold tracking-wide text-muted-foreground uppercase"
+                        >
+                            Account
+                        </h3>
+                        <div class="grid gap-2">
+                            <Label for="edit-name">Full name</Label>
+                            <Input
+                                id="edit-name"
+                                v-model="editForm.name"
+                                :disabled="
+                                    !selectedUser.can.manage ||
+                                    editForm.processing
+                                "
+                            />
+                            <p
+                                v-if="editForm.errors.name"
+                                class="text-sm text-destructive"
+                            >
+                                {{ editForm.errors.name }}
+                            </p>
                         </div>
-                        <Button variant="outline" size="sm" @click="selectedUser = null">Close</Button>
+                        <div class="grid gap-2">
+                            <Label for="edit-email">Email address</Label>
+                            <Input
+                                id="edit-email"
+                                v-model="editForm.email"
+                                type="email"
+                                :disabled="
+                                    !selectedUser.can.manage ||
+                                    editForm.processing
+                                "
+                            />
+                            <p
+                                v-if="editForm.errors.email"
+                                class="text-sm text-destructive"
+                            >
+                                {{ editForm.errors.email }}
+                            </p>
+                        </div>
+                        <div
+                            class="flex items-center gap-3 rounded-md border p-3"
+                        >
+                            <Switch
+                                id="edit-verified"
+                                v-model:checked="editForm.email_verified"
+                                :disabled="
+                                    !selectedUser.can.manage ||
+                                    editForm.processing
+                                "
+                            />
+                            <Label for="edit-verified" class="cursor-pointer"
+                                >Email verified</Label
+                            >
+                        </div>
                     </div>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <Badge :variant="selectedUser.online ? 'default' : 'outline'">{{ selectedUser.online ? 'Online' : 'Offline' }}</Badge>
-                        <Badge :variant="selectedUser.verified ? 'default' : 'secondary'">{{ selectedUser.verified ? 'Verified' : 'Unverified' }}</Badge>
-                        <Badge :variant="selectedUser.mfaEnabled ? 'default' : 'outline'">{{ selectedUser.mfaEnabled ? 'MFA enabled' : 'MFA disabled' }}</Badge>
-                    </div>
-                </header>
 
-                <form class="grid gap-5 p-5" @submit.prevent="submitUpdate">
-                    <section class="grid gap-3">
-                        <h3 class="font-semibold">Account</h3>
-                        <Input v-model="editForm.name" :disabled="!selectedUser.can.manage" />
-                        <Input v-model="editForm.email" type="email" :disabled="!selectedUser.can.manage" />
-                        <label class="flex items-center gap-2 text-sm">
-                            <input v-model="editForm.email_verified" type="checkbox" :disabled="!selectedUser.can.manage" />
-                            Email verified
-                        </label>
-                    </section>
-
-                    <section class="grid gap-3">
+                    <div class="grid gap-3">
                         <div class="flex items-center justify-between gap-3">
-                            <h3 class="font-semibold">Campus access</h3>
+                            <h3
+                                class="text-sm font-semibold tracking-wide text-muted-foreground uppercase"
+                            >
+                                Campus access
+                            </h3>
                             <Button
                                 v-if="selectedUser.can.manage && can.viewGlobal"
                                 type="button"
                                 size="sm"
                                 variant="outline"
-                                @click="
-                                    editForm.memberships.push({
-                                        campus_id: can.manageableCampusIds[0] ?? page.props.currentCampus!.id,
-                                        role: can.manageableRoles[0] ?? 'student',
-                                        active: true,
-                                        is_default: false,
-                                    })
-                                "
+                                class="gap-1"
+                                @click="addMembership"
                             >
+                                <Plus class="size-3.5" />
                                 Add
                             </Button>
                         </div>
-                        <article v-for="(membership, index) in editForm.memberships" :key="`${membership.campus_id}-${index}`" class="grid gap-2 rounded-md border p-3">
-                            <select v-model.number="membership.campus_id" class="h-9 rounded-md border bg-background px-3 text-sm" :disabled="!selectedUser.can.manage">
-                                <option v-for="campus in campuses.filter((item) => can.manageableCampusIds.includes(item.id))" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
-                            <select v-model="membership.role" class="h-9 rounded-md border bg-background px-3 text-sm" :disabled="!selectedUser.can.manage">
-                                <option v-for="role in roles.filter((item) => can.manageableRoles.includes(item.value))" :key="role.value" :value="role.value">
-                                    {{ role.label }}
-                                </option>
-                            </select>
-                            <div class="flex flex-wrap gap-4 text-sm">
-                                <label class="flex items-center gap-2">
-                                    <input v-model="membership.active" type="checkbox" :disabled="!selectedUser.can.manage" />
-                                    Active
-                                </label>
-                                <label class="flex items-center gap-2">
-                                    <input v-model="membership.is_default" type="checkbox" :disabled="!selectedUser.can.manage" />
-                                    Default
-                                </label>
+
+                        <div
+                            v-for="(membership, idx) in editForm.memberships"
+                            :key="`${membership.campus_id}-${idx}`"
+                            class="grid gap-3 rounded-md border p-3"
+                        >
+                            <div class="grid gap-2">
+                                <Label :for="`edit-campus-${idx}`"
+                                    >Campus</Label
+                                >
+                                <Select
+                                    v-model="membership.campus_id"
+                                    :disabled="
+                                        !selectedUser.can.manage ||
+                                        editForm.processing
+                                    "
+                                >
+                                    <SelectTrigger :id="`edit-campus-${idx}`">
+                                        <SelectValue
+                                            placeholder="Select campus"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="campus in campuses.filter(
+                                                (item) =>
+                                                    can.manageableCampusIds.includes(
+                                                        item.id,
+                                                    ),
+                                            )"
+                                            :key="campus.id"
+                                            :value="campus.id"
+                                        >
+                                            {{ campus.name }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                        </article>
-                        <div v-if="selectedUser.memberships.some((membership) => !can.manageableCampusIds.includes(membership.campusId))" class="grid gap-2">
-                            <article
-                                v-for="membership in selectedUser.memberships.filter((item) => !can.manageableCampusIds.includes(item.campusId))"
-                                :key="membership.id"
-                                class="rounded-md bg-muted/40 p-3 text-sm"
+
+                            <div class="grid gap-2">
+                                <Label :for="`edit-role-${idx}`">Role</Label>
+                                <Select
+                                    v-model="membership.role"
+                                    :disabled="
+                                        !selectedUser.can.manage ||
+                                        editForm.processing
+                                    "
+                                >
+                                    <SelectTrigger :id="`edit-role-${idx}`">
+                                        <SelectValue
+                                            placeholder="Select role"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="role in roles.filter(
+                                                (item) =>
+                                                    can.manageableRoles.includes(
+                                                        item.value,
+                                                    ),
+                                            )"
+                                            :key="role.value"
+                                            :value="role.value"
+                                        >
+                                            {{ role.label }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div
+                                class="flex flex-wrap items-center justify-between gap-3 pt-1"
                             >
-                                {{ membership.campusName }} · {{ membership.roleLabel ?? roleLabel(membership.role) }}
+                                <div class="flex items-center gap-2">
+                                    <Checkbox
+                                        :id="`edit-active-${idx}`"
+                                        v-model:checked="membership.active"
+                                        :disabled="
+                                            !selectedUser.can.manage ||
+                                            editForm.processing
+                                        "
+                                    />
+                                    <Label
+                                        :for="`edit-active-${idx}`"
+                                        class="cursor-pointer text-sm"
+                                        >Active</Label
+                                    >
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <Checkbox
+                                        :id="`edit-default-${idx}`"
+                                        v-model:checked="membership.is_default"
+                                        :disabled="
+                                            !selectedUser.can.manage ||
+                                            editForm.processing
+                                        "
+                                    />
+                                    <Label
+                                        :for="`edit-default-${idx}`"
+                                        class="cursor-pointer text-sm"
+                                        >Default</Label
+                                    >
+                                </div>
+                                <Button
+                                    v-if="
+                                        editForm.memberships.length > 1 &&
+                                        selectedUser.can.manage
+                                    "
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    class="text-destructive hover:text-destructive"
+                                    @click="removeMembership(idx)"
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="
+                                selectedUser.memberships.some(
+                                    (membership) =>
+                                        !can.manageableCampusIds.includes(
+                                            membership.campusId,
+                                        ),
+                                )
+                            "
+                            class="grid gap-2"
+                        >
+                            <p class="text-xs text-muted-foreground">
+                                Other campuses (read-only)
+                            </p>
+                            <article
+                                v-for="membership in selectedUser.memberships.filter(
+                                    (item) =>
+                                        !can.manageableCampusIds.includes(
+                                            item.campusId,
+                                        ),
+                                )"
+                                :key="membership.id"
+                                class="rounded-md bg-muted/50 p-3 text-sm"
+                            >
+                                {{ membership.campusName }} ·
+                                {{
+                                    membership.roleLabel ??
+                                    roleLabel(membership.role)
+                                }}
                             </article>
                         </div>
-                    </section>
+                    </div>
 
-                    <section class="grid gap-3">
-                        <h3 class="font-semibold">Sessions</h3>
-                        <article v-for="session in selectedUser.sessions" :key="session.id" class="rounded-md bg-muted/40 p-3">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="text-sm font-medium">{{ session.userAgent }}</p>
-                                    <p class="text-xs text-muted-foreground">{{ session.ipAddress }} · {{ formatDate(session.lastSeenAt) }}</p>
-                                </div>
-                                <Badge :variant="session.online ? 'default' : 'outline'">{{ session.online ? 'Online' : 'Stale' }}</Badge>
+                    <div class="grid gap-3">
+                        <h3
+                            class="text-sm font-semibold tracking-wide text-muted-foreground uppercase"
+                        >
+                            Sessions
+                        </h3>
+                        <ScrollArea class="h-[180px] pr-3">
+                            <div class="grid gap-2">
+                                <article
+                                    v-for="session in selectedUser.sessions"
+                                    :key="session.id"
+                                    class="rounded-md bg-muted/50 p-3"
+                                >
+                                    <div
+                                        class="flex items-start justify-between gap-3"
+                                    >
+                                        <div class="min-w-0">
+                                            <p
+                                                class="truncate text-sm font-medium"
+                                            >
+                                                {{ session.userAgent }}
+                                            </p>
+                                            <p
+                                                class="mt-0.5 text-xs text-muted-foreground"
+                                            >
+                                                {{ session.ipAddress }} ·
+                                                {{
+                                                    formatDate(
+                                                        session.lastSeenAt,
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
+                                        <Badge
+                                            :variant="
+                                                session.online
+                                                    ? 'default'
+                                                    : 'outline'
+                                            "
+                                            class="shrink-0"
+                                            >{{
+                                                session.online
+                                                    ? 'Online'
+                                                    : 'Stale'
+                                            }}</Badge
+                                        >
+                                    </div>
+                                </article>
+                                <p
+                                    v-if="selectedUser.sessions.length === 0"
+                                    class="py-4 text-center text-sm text-muted-foreground"
+                                >
+                                    No sessions recorded.
+                                </p>
                             </div>
-                        </article>
-                        <p v-if="selectedUser.sessions.length === 0" class="text-sm text-muted-foreground">No sessions recorded.</p>
-                    </section>
+                        </ScrollArea>
+                    </div>
 
-                    <footer class="grid gap-3 border-t pt-5">
-                        <Button v-if="selectedUser.can.manage" type="submit" :disabled="editForm.processing">Save changes</Button>
+                    <SheetFooter class="flex-col gap-2 sm:flex-col">
+                        <Button
+                            v-if="selectedUser.can.manage"
+                            type="submit"
+                            class="w-full"
+                            :disabled="editForm.processing"
+                            >Save changes</Button
+                        >
                         <div class="grid grid-cols-2 gap-2">
                             <Button
                                 v-if="selectedUser.can.manage"
                                 type="button"
                                 variant="outline"
                                 class="gap-2"
-                                @click="confirming = { action: selectedUser.verified ? 'unverify' : 'verify', user: selectedUser }"
+                                :disabled="editForm.processing"
+                                @click="
+                                    confirming = {
+                                        action: selectedUser.verified
+                                            ? 'unverify'
+                                            : 'verify',
+                                        user: selectedUser,
+                                    }
+                                "
                             >
                                 <MailCheck class="size-4" />
-                                {{ selectedUser.verified ? 'Unverify' : 'Verify' }}
+                                {{
+                                    selectedUser.verified
+                                        ? 'Unverify'
+                                        : 'Verify'
+                                }}
                             </Button>
-                            <Button v-if="selectedUser.can.manage" type="button" variant="outline" class="gap-2" @click="confirming = { action: 'reset', user: selectedUser }">
+                            <Button
+                                v-if="selectedUser.can.manage"
+                                type="button"
+                                variant="outline"
+                                class="gap-2"
+                                :disabled="editForm.processing"
+                                @click="
+                                    confirming = {
+                                        action: 'reset',
+                                        user: selectedUser,
+                                    }
+                                "
+                            >
                                 <KeyRound class="size-4" />
                                 Reset
                             </Button>
-                            <Button v-if="selectedUser.can.impersonate" type="button" variant="outline" class="gap-2" @click="confirming = { action: 'impersonate', user: selectedUser }">
+                            <Button
+                                v-if="selectedUser.can.impersonate"
+                                type="button"
+                                variant="outline"
+                                class="gap-2"
+                                :disabled="editForm.processing"
+                                @click="
+                                    confirming = {
+                                        action: 'impersonate',
+                                        user: selectedUser,
+                                    }
+                                "
+                            >
                                 <ShieldCheck class="size-4" />
                                 Impersonate
                             </Button>
-                            <Button v-if="selectedUser.can.manage" type="button" variant="outline" class="gap-2" @click="confirming = { action: 'logout', user: selectedUser }">
+                            <Button
+                                v-if="selectedUser.can.manage"
+                                type="button"
+                                variant="outline"
+                                class="gap-2 text-destructive hover:text-destructive"
+                                :disabled="editForm.processing"
+                                @click="
+                                    confirming = {
+                                        action: 'logout',
+                                        user: selectedUser,
+                                    }
+                                "
+                            >
                                 <LogOut class="size-4" />
                                 Log out
                             </Button>
                         </div>
-                    </footer>
+                    </SheetFooter>
                 </form>
-            </aside>
-        </div>
+            </SheetContent>
+        </Sheet>
 
-        <div v-if="createOpen" class="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" @click.self="createOpen = false">
-            <form class="w-full max-w-lg rounded-lg border bg-background p-5 shadow-xl" @submit.prevent="submitCreate">
-                <h2 class="text-lg font-semibold">New user</h2>
-                <div class="mt-5 grid gap-3">
-                    <Input v-model="createForm.name" placeholder="Full name" />
-                    <Input v-model="createForm.email" type="email" placeholder="Email address" />
-                    <label class="flex items-center gap-2 text-sm">
-                        <input v-model="createForm.email_verified" type="checkbox" />
-                        Email verified
-                    </label>
-                    <article v-for="(membership, index) in createForm.memberships" :key="index" class="grid gap-2 rounded-md border p-3">
-                        <select v-model.number="membership.campus_id" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option v-for="campus in campuses.filter((item) => can.manageableCampusIds.includes(item.id))" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
-                        <select v-model="membership.role" class="h-9 rounded-md border bg-background px-3 text-sm">
-                            <option v-for="role in roles.filter((item) => can.manageableRoles.includes(item.value))" :key="role.value" :value="role.value">
-                                {{ role.label }}
-                            </option>
-                        </select>
-                    </article>
-                </div>
-                <div class="mt-5 flex justify-end gap-2">
-                    <Button type="button" variant="outline" @click="createOpen = false">Cancel</Button>
-                    <Button type="submit" :disabled="createForm.processing">Create</Button>
-                </div>
-            </form>
-        </div>
-
-        <div v-if="confirming" class="fixed inset-0 z-[60] grid place-items-center bg-black/30 p-4" @click.self="confirming = null">
-            <div class="w-full max-w-md rounded-lg border bg-background p-5 shadow-xl">
-                <h2 class="text-lg font-semibold">{{ confirmationTitle() }}</h2>
-                <p class="mt-2 text-sm text-muted-foreground">{{ confirming.user.name }} · {{ confirming.user.email }}</p>
-                <div class="mt-5 flex justify-end gap-2">
-                    <Button variant="outline" @click="confirming = null">Cancel</Button>
-                    <Button @click="runConfirmedAction">Confirm</Button>
-                </div>
-            </div>
-        </div>
+        <AlertDialog
+            :open="confirming !== null"
+            @update:open="(open) => !open && (confirming = null)"
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{{
+                        confirmationTitle()
+                    }}</AlertDialogTitle>
+                    <AlertDialogDescription>{{
+                        confirmationDescription()
+                    }}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel @click="confirming = null"
+                        >Cancel</AlertDialogCancel
+                    >
+                    <AlertDialogAction @click="runConfirmedAction"
+                        >Confirm</AlertDialogAction
+                    >
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </AppLayout>
 </template>
