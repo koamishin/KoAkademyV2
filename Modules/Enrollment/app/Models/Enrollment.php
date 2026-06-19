@@ -65,6 +65,11 @@ final class Enrollment extends Model
         return $this->hasMany(EnrollmentSubject::class);
     }
 
+    public function enrollmentSubjects(): HasMany
+    {
+        return $this->subjects();
+    }
+
     public function assessment(): HasOne
     {
         return $this->hasOne(EnrollmentAssessment::class);

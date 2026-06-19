@@ -89,6 +89,15 @@ final class Campus extends Model
             ->withTimestamps();
     }
 
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, 'person_roles', 'campus_id', 'person_id')
+            ->wherePivot('role', 'student')
+            ->wherePivot('active', true)
+            ->withPivot(['reference_number', 'role', 'active'])
+            ->withTimestamps();
+    }
+
     private static function uniqueSlug(string $value): string
     {
         $baseSlug = Str::slug($value);

@@ -13,6 +13,7 @@ import {
     School,
     ShieldCheck,
     UserCog,
+    UsersRound,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -46,6 +47,7 @@ const iconMap = {
     School,
     ShieldCheck,
     UserCog,
+    UsersRound,
 };
 
 const portalNavigation: NavGroup[] = (page.props.portal?.navigation ?? []).map(

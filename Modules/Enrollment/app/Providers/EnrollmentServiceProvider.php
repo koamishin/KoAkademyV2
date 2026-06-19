@@ -31,6 +31,12 @@ final class EnrollmentServiceProvider extends ModuleServiceProvider
                 'section' => 'Academics',
             ] : null)
             ->add(fn ($request, $context): ?array => $context['campus'] && in_array('enrollment', $context['enabledModules'], true) && $context['role'] === PortalRole::Admin->value ? [
+                'title' => 'Student Records',
+                'href' => route('admin.students.index', ['campus' => $context['campus']['slug']]),
+                'icon' => 'UsersRound',
+                'section' => 'Operations',
+            ] : null)
+            ->add(fn ($request, $context): ?array => $context['campus'] && in_array('enrollment', $context['enabledModules'], true) && $context['role'] === PortalRole::Admin->value ? [
                 'title' => 'Enrollment Queue',
                 'href' => route('admin.enrollments.index', ['campus' => $context['campus']['slug']]),
                 'icon' => 'ListChecks',

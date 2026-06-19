@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Enrollment\Models\Enrollment;
 
 final class Person extends Model
 {
@@ -31,6 +32,11 @@ final class Person extends Model
     public function roles(): HasMany
     {
         return $this->hasMany(PersonRoleAssignment::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class, 'student_id');
     }
 
     public function students(): BelongsToMany

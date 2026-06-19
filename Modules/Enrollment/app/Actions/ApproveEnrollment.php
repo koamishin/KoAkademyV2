@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Enrollment\Actions;
 
+use App\Enums\PersonRole;
+use App\Models\PersonRoleAssignment;
 use App\Models\User;
 use App\Notifications\AcademicStatusNotification;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +37,11 @@ final class ApproveEnrollment
                 'approved_by' => $actor->id,
                 'approved_at' => now(),
             ]);
+            $enrollment->refresh();
+            PersonRoleAssignment::query()->updateOrCreate(
+                ['person_id' => $enrollment->student_id, 'campus_id' => $enrollment->campus_id, 'role' => PersonRole::Student],
+                ['reference_number' => $enrollment->student_number, 'active' => true],
+            );
             DB::table('enrollment_status_histories')->insert(['enrollment_id' => $enrollment->id, 'from_status' => $from->value, 'to_status' => EnrollmentStatus::Approved->value, 'changed_by' => $actor->id, 'created_at' => now(), 'updated_at' => now()]);
             EnrollmentApproved::dispatch($enrollment);
             $enrollment->student->user?->notify((new AcademicStatusNotification([
