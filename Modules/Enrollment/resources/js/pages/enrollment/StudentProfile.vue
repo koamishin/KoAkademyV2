@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { CheckCircle2, ClipboardList, FileCheck2, Plus, Save, UserRound } from 'lucide-vue-next';
+import { CheckCircle2, ClipboardList, FileCheck2, FileUp, GraduationCap, Plus, Save, ShieldCheck, UserRound } from 'lucide-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, update } from '@/routes/admin/students';
+import { store as storeDocument, update as updateDocument } from '@/routes/admin/students/documents';
 import { approve, cancel, store as storeEnrollment } from '@/routes/admin/students/enrollments';
 import { update as updateEnrollmentSubject } from '@/routes/admin/students/enrollment-subjects';
+import { store as storeTransferCredit } from '@/routes/admin/students/transfer-credits';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 
 type Guardian = {
@@ -39,7 +42,56 @@ type Student = {
     status: string;
     studentNumber?: string | null;
     metadata: Record<string, string | null>;
+    profile: Record<string, string | number | boolean | Record<string, string> | null>;
+    documentSummary: {
+        missing: string[];
+        verifiedCount: number;
+        requiredCount: number;
+        ready: boolean;
+    };
     guardians: Guardian[];
+};
+
+type StudentDocument = {
+    id: number;
+    type: string;
+    label: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    status: string;
+    issuedOn?: string | null;
+    expiresOn?: string | null;
+    reviewedAt?: string | null;
+    notes?: string | null;
+};
+
+type TransferCredit = {
+    id: number;
+    sourceSchoolName: string;
+    sourceSchoolAddress?: string | null;
+    previousProgram?: string | null;
+    status: string;
+    curriculum?: string | null;
+    program?: string | null;
+    evaluator?: string | null;
+    evaluatedAt?: string | null;
+    creditedUnits: number;
+    subjects: {
+        id: number;
+        curriculumItemId?: number | null;
+        previousSubjectCode?: string | null;
+        previousSubjectName: string;
+        previousUnits?: string | null;
+        previousGrade?: string | null;
+        schoolYear?: string | null;
+        term?: string | null;
+        status: string;
+        creditedUnits?: string | null;
+        remarks?: string | null;
+        matchedSubject?: string | null;
+        matchedSubjectCode?: string | null;
+    }[];
 };
 
 type EnrollmentSubject = {
@@ -106,6 +158,10 @@ type Options = {
     programs: { id: number; name: string; code?: string | null; curricula: { id: number; name: string; code?: string | null }[] }[];
     sections: { id: number; programId: number; termId: number; name: string; code?: string | null; yearLevel?: number | null }[];
     classOfferings: { id: number; termId: number; subjectId: number; name: string; code: string; teacher?: string | null; section?: string | null }[];
+    documentTypes: { value: string; label: string; required?: boolean }[];
+    documentStatuses: { value: string; label: string }[];
+    transferStatuses: { value: string; label: string }[];
+    transferSubjectStatuses: { value: string; label: string }[];
     curriculumItems: {
         id: number;
         curriculumId: number;
@@ -123,6 +179,8 @@ type Options = {
 
 const props = defineProps<{
     student: Student;
+    documents: StudentDocument[];
+    transferCredits: TransferCredit[];
     enrollments: Enrollment[];
     options: Options;
 }>();
@@ -175,6 +233,35 @@ const enrollmentForm = useForm({
 
 const subjectForms = reactive<Record<number, { class_offering_id: string; status: string; final_result: string }>>({});
 const showingProfileForm = ref(false);
+const documentForm = useForm({
+    document_type: props.options.documentTypes[0]?.value ?? 'custom',
+    file: null as File | null,
+    issued_on: '',
+    expires_on: '',
+    notes: '',
+});
+const transferForm = useForm({
+    curriculum_id: props.options.programs[0]?.curricula[0]?.id ?? '',
+    source_school_name: '',
+    source_school_address: '',
+    previous_program: '',
+    status: 'in_review',
+    notes: '',
+    subjects: [
+        {
+            curriculum_item_id: '',
+            previous_subject_code: '',
+            previous_subject_name: '',
+            previous_units: '',
+            previous_grade: '',
+            school_year: '',
+            term: '',
+            status: 'pending',
+            credited_units: '',
+            remarks: '',
+        },
+    ],
+});
 
 for (const enrollment of props.enrollments) {
     for (const subject of enrollment.subjects) {
@@ -198,6 +285,10 @@ const requiredPreview = computed(() =>
 
 const electivePreview = computed(() =>
     selectedCurriculumItems.value.filter((item) => !item.isRequired),
+);
+
+const selectedTransferCurriculumItems = computed(() =>
+    props.options.curriculumItems.filter((item) => item.curriculumId === Number(transferForm.curriculum_id)),
 );
 
 const matchingSections = computed(() => {
@@ -271,6 +362,53 @@ function submitEnrollment() {
     enrollmentForm.post(storeEnrollment.url({ campus: campusSlug.value, student: props.student.id }), {
         preserveScroll: true,
         onSuccess: () => enrollmentForm.reset('notes', 'selected_elective_item_ids'),
+    });
+}
+
+function setDocumentUploadFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    documentForm.file = input.files?.[0] ?? null;
+}
+
+function submitDocument() {
+    documentForm.post(storeDocument.url({ campus: campusSlug.value, student: props.student.id }), {
+        preserveScroll: true,
+        forceFormData: true,
+        onSuccess: () => documentForm.reset(),
+    });
+}
+
+function reviewDocument(document: StudentDocument, status: string) {
+    router.patch(
+        updateDocument.url({ campus: campusSlug.value, student: props.student.id, document: document.id }),
+        { status, notes: document.notes ?? null },
+        { preserveScroll: true },
+    );
+}
+
+function addTransferSubject() {
+    transferForm.subjects.push({
+        curriculum_item_id: '',
+        previous_subject_code: '',
+        previous_subject_name: '',
+        previous_units: '',
+        previous_grade: '',
+        school_year: '',
+        term: '',
+        status: 'pending',
+        credited_units: '',
+        remarks: '',
+    });
+}
+
+function removeTransferSubject(index: number) {
+    transferForm.subjects.splice(index, 1);
+}
+
+function submitTransferCredit() {
+    transferForm.post(storeTransferCredit.url({ campus: campusSlug.value, student: props.student.id }), {
+        preserveScroll: true,
+        onSuccess: () => transferForm.reset('source_school_name', 'source_school_address', 'previous_program', 'notes', 'subjects'),
     });
 }
 
@@ -443,7 +581,15 @@ function updateSubject(enrollment: Enrollment, subject: EnrollmentSubject) {
                             </div>
                             <div class="flex justify-between gap-4">
                                 <dt class="text-muted-foreground">LRN</dt>
-                                <dd>{{ student.metadata?.learner_reference_number ?? 'Not recorded' }}</dd>
+                                <dd>{{ student.profile?.learnerReferenceNumber ?? student.metadata?.learner_reference_number ?? 'Not recorded' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-muted-foreground">Income bracket</dt>
+                                <dd>{{ student.profile?.annualFamilyIncomeBracket ?? 'Not recorded' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-muted-foreground">4Ps</dt>
+                                <dd>{{ student.profile?.is4psBeneficiary ? 'Yes' : 'No' }}</dd>
                             </div>
                             <div class="grid gap-1">
                                 <dt class="text-muted-foreground">Address</dt>
@@ -468,6 +614,60 @@ function updateSubject(enrollment: Enrollment, subject: EnrollmentSubject) {
                             <p v-if="student.guardians.length === 0" class="text-sm text-muted-foreground">
                                 No guardians recorded.
                             </p>
+                        </div>
+                    </article>
+
+                    <article class="rounded-lg border bg-card p-5 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <ShieldCheck class="size-5 text-primary" />
+                            <h2 class="font-semibold">Document readiness</h2>
+                        </div>
+                        <div class="mt-4 grid gap-3 text-sm">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-muted-foreground">Required verified</span>
+                                <span class="font-semibold">{{ student.documentSummary.verifiedCount }}/{{ student.documentSummary.requiredCount }}</span>
+                            </div>
+                            <p v-if="student.documentSummary.missing.length > 0" class="rounded-md bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+                                Missing: {{ student.documentSummary.missing.join(', ').replaceAll('_', ' ') }}
+                            </p>
+                            <p v-else class="rounded-md bg-emerald-500/10 p-3 text-emerald-700 dark:text-emerald-300">
+                                Required credentials are verified.
+                            </p>
+                        </div>
+
+                        <form class="mt-5 grid gap-3" @submit.prevent="submitDocument">
+                            <select v-model="documentForm.document_type" class="h-9 rounded-md border bg-background px-3 text-sm">
+                                <option v-for="type in options.documentTypes" :key="type.value" :value="type.value">
+                                    {{ type.label }}{{ type.required ? ' *' : '' }}
+                                </option>
+                            </select>
+                            <Input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="setDocumentUploadFile" />
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <Input v-model="documentForm.issued_on" type="date" />
+                                <Input v-model="documentForm.expires_on" type="date" />
+                            </div>
+                            <Textarea v-model="documentForm.notes" placeholder="Notes" />
+                            <Button type="submit" class="gap-2" :disabled="documentForm.processing">
+                                <FileUp class="size-4" />
+                                Upload document
+                            </Button>
+                        </form>
+
+                        <div class="mt-5 grid gap-3">
+                            <article v-for="document in documents" :key="document.id" class="rounded-md border bg-background p-3">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="font-medium">{{ document.label }}</p>
+                                        <p class="text-xs text-muted-foreground">{{ document.originalName }}</p>
+                                    </div>
+                                    <Badge :class="statusClass(document.status)" class="capitalize">{{ document.status }}</Badge>
+                                </div>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <Button type="button" size="sm" variant="outline" @click="reviewDocument(document, 'verified')">Verify</Button>
+                                    <Button type="button" size="sm" variant="ghost" @click="reviewDocument(document, 'rejected')">Reject</Button>
+                                </div>
+                            </article>
+                            <p v-if="documents.length === 0" class="text-sm text-muted-foreground">No documents uploaded yet.</p>
                         </div>
                     </article>
 
@@ -543,6 +743,136 @@ function updateSubject(enrollment: Enrollment, subject: EnrollmentSubject) {
                 </aside>
 
                 <main class="grid gap-5">
+                    <article class="rounded-lg border bg-card shadow-sm">
+                        <header class="border-b p-5">
+                            <div class="flex items-center gap-2">
+                                <GraduationCap class="size-5 text-primary" />
+                                <h2 class="font-semibold">Transfer credit evaluation</h2>
+                            </div>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                Map previous-school subjects to this campus curriculum without creating current-term class enrollments.
+                            </p>
+                        </header>
+
+                        <form class="grid gap-5 p-5" @submit.prevent="submitTransferCredit">
+                            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div class="grid gap-2">
+                                    <Label>Curriculum</Label>
+                                    <select v-model="transferForm.curriculum_id" class="h-9 rounded-md border bg-background px-3 text-sm">
+                                        <optgroup v-for="program in options.programs" :key="program.id" :label="program.name">
+                                            <option v-for="curriculum in program.curricula" :key="curriculum.id" :value="curriculum.id">
+                                                {{ curriculum.code ?? curriculum.name }}
+                                            </option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label>Source school</Label>
+                                    <Input v-model="transferForm.source_school_name" />
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label>Previous program</Label>
+                                    <Input v-model="transferForm.previous_program" />
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label>Status</Label>
+                                    <select v-model="transferForm.status" class="h-9 rounded-md border bg-background px-3 text-sm">
+                                        <option v-for="status in options.transferStatuses" :key="status.value" :value="status.value">{{ status.label }}</option>
+                                    </select>
+                                </div>
+                                <div class="grid gap-2 md:col-span-2 xl:col-span-4">
+                                    <Label>Source school address</Label>
+                                    <Input v-model="transferForm.source_school_address" />
+                                </div>
+                            </div>
+
+                            <div class="grid gap-3">
+                                <div class="flex items-center justify-between gap-4">
+                                    <h3 class="text-sm font-semibold">Subject equivalencies</h3>
+                                    <Button type="button" size="sm" variant="outline" class="gap-2" @click="addTransferSubject">
+                                        <Plus class="size-4" />
+                                        Add subject
+                                    </Button>
+                                </div>
+
+                                <article
+                                    v-for="(subject, subjectIndex) in transferForm.subjects"
+                                    :key="subjectIndex"
+                                    class="grid gap-3 rounded-md border bg-background p-4 xl:grid-cols-[0.8fr_1fr_0.7fr_0.7fr_1fr_auto]"
+                                >
+                                    <Input v-model="subject.previous_subject_code" placeholder="Previous code" />
+                                    <Input v-model="subject.previous_subject_name" placeholder="Previous subject" />
+                                    <Input v-model="subject.previous_units" type="number" min="0" step="0.01" placeholder="Units" />
+                                    <Input v-model="subject.previous_grade" placeholder="Grade" />
+                                    <select v-model="subject.curriculum_item_id" class="h-9 rounded-md border bg-background px-3 text-sm">
+                                        <option value="">No equivalent</option>
+                                        <option v-for="item in selectedTransferCurriculumItems" :key="item.id" :value="item.id">
+                                            {{ item.subjectCode }} / {{ item.subjectName }}
+                                        </option>
+                                    </select>
+                                    <Button type="button" variant="ghost" size="sm" @click="removeTransferSubject(subjectIndex)">Remove</Button>
+                                    <div class="grid gap-3 xl:col-span-6 md:grid-cols-4">
+                                        <Input v-model="subject.school_year" placeholder="School year" />
+                                        <Input v-model="subject.term" placeholder="Term" />
+                                        <select v-model="subject.status" class="h-9 rounded-md border bg-background px-3 text-sm">
+                                            <option v-for="status in options.transferSubjectStatuses" :key="status.value" :value="status.value">{{ status.label }}</option>
+                                        </select>
+                                        <Input v-model="subject.credited_units" type="number" min="0" step="0.01" placeholder="Credited units" />
+                                    </div>
+                                    <Textarea v-model="subject.remarks" class="xl:col-span-6" placeholder="Evaluator remarks" />
+                                </article>
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label>Evaluation notes</Label>
+                                <Textarea v-model="transferForm.notes" />
+                            </div>
+
+                            <div class="flex justify-end">
+                                <Button type="submit" :disabled="transferForm.processing">Save credit evaluation</Button>
+                            </div>
+                        </form>
+                    </article>
+
+                    <article v-if="transferCredits.length > 0" class="rounded-lg border bg-card shadow-sm">
+                        <header class="border-b p-5">
+                            <h2 class="font-semibold">Credited academic history</h2>
+                        </header>
+                        <div class="grid gap-4 p-5">
+                            <article v-for="evaluation in transferCredits" :key="evaluation.id" class="rounded-md border bg-background p-4">
+                                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                    <div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <p class="font-medium">{{ evaluation.sourceSchoolName }}</p>
+                                            <Badge :class="statusClass(evaluation.status)" class="capitalize">{{ evaluation.status.replace('_', ' ') }}</Badge>
+                                        </div>
+                                        <p class="mt-1 text-sm text-muted-foreground">
+                                            {{ evaluation.program ?? 'Program' }} / {{ evaluation.curriculum ?? 'Curriculum' }}
+                                        </p>
+                                    </div>
+                                    <p class="text-sm font-semibold">{{ evaluation.creditedUnits }} credited units</p>
+                                </div>
+                                <div class="mt-4 grid gap-2">
+                                    <div
+                                        v-for="subject in evaluation.subjects"
+                                        :key="subject.id"
+                                        class="grid gap-2 rounded-md bg-muted/40 p-3 text-sm md:grid-cols-[1fr_1fr_auto]"
+                                    >
+                                        <div>
+                                            <p class="font-medium">{{ subject.previousSubjectCode }} / {{ subject.previousSubjectName }}</p>
+                                            <p class="text-muted-foreground">{{ subject.previousGrade ?? 'No grade' }} / {{ subject.previousUnits ?? '0.00' }} units</p>
+                                        </div>
+                                        <p class="text-muted-foreground">
+                                            {{ subject.matchedSubjectCode ?? 'No match' }}
+                                            <span v-if="subject.matchedSubject"> / {{ subject.matchedSubject }}</span>
+                                        </p>
+                                        <Badge :class="statusClass(subject.status)" class="capitalize">{{ subject.status }}</Badge>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </article>
+
                     <article
                         v-for="enrollment in enrollments"
                         :key="enrollment.id"

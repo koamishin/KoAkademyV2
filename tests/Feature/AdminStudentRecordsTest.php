@@ -16,10 +16,15 @@ use App\Models\Section;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Modules\Classroom\Models\ClassOffering;
 use Modules\Enrollment\Enums\EnrollmentStatus;
 use Modules\Enrollment\Models\Enrollment;
 use Modules\Enrollment\Models\EnrollmentPeriod;
+use Modules\Enrollment\Models\StudentDocument;
+use Modules\Enrollment\Models\StudentProfile;
+use Modules\Enrollment\Models\TransferCreditEvaluation;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
@@ -34,6 +39,9 @@ test('admin can list and view campus scoped student records', function (): void 
         ->assertInertia(fn ($page) => $page
             ->component('enrollment/StudentRecords')
             ->has('students.data', 1)
+            ->has('students.data.0.documentSummary')
+            ->has('summary.documentGaps')
+            ->has('summary.transferReviews')
             ->where('students.data.0.fullName', $student->full_name)
         );
 
@@ -43,6 +51,9 @@ test('admin can list and view campus scoped student records', function (): void 
         ->assertInertia(fn ($page) => $page
             ->component('enrollment/StudentProfile')
             ->where('student.fullName', $student->full_name)
+            ->has('student.documentSummary')
+            ->has('documents')
+            ->has('transferCredits')
             ->has('enrollments')
             ->has('options.periods')
         );
@@ -65,6 +76,7 @@ test('non admin users cannot access student records', function (): void {
 
 test('admin can create and update a student profile with guardians', function (): void {
     $context = adminStudentContext();
+    Storage::fake('local');
 
     actingAs($context['admin'])
         ->post(route('admin.students.store', ['campus' => $context['campus']]), [
@@ -82,6 +94,36 @@ test('admin can create and update a student profile with guardians', function ()
                 'previous_school' => 'Old School',
                 'emergency_contact' => '09171111111',
             ],
+            'profile' => [
+                'psa_birth_certificate_number' => 'PSA-100',
+                'learner_reference_number' => 'LRN-100',
+                'nationality' => 'Filipino',
+                'mother_tongue' => 'Cebuano',
+                'is_4ps_beneficiary' => true,
+                'four_ps_household_id' => '4PS-100',
+                'annual_family_income_bracket' => '250001_400000',
+                'household_gross_income' => 320000,
+                'current_address' => [
+                    'house' => '12 Main Street',
+                    'barangay' => 'Centro',
+                    'city' => 'Dumaguete',
+                    'province' => 'Negros Oriental',
+                    'country' => 'Philippines',
+                    'zip_code' => '6200',
+                ],
+                'permanent_address' => [
+                    'house' => '12 Main Street',
+                    'barangay' => 'Centro',
+                    'city' => 'Dumaguete',
+                    'province' => 'Negros Oriental',
+                    'country' => 'Philippines',
+                    'zip_code' => '6200',
+                ],
+                'previous_school_name' => 'Old School',
+                'previous_school_type' => 'private',
+                'college_year_level' => 1,
+                'reporting_flags' => ['intake_classification' => 'transferee'],
+            ],
             'guardians' => [
                 [
                     'first_name' => 'Maria',
@@ -92,10 +134,23 @@ test('admin can create and update a student profile with guardians', function ()
                     'has_portal_access' => true,
                 ],
             ],
+            'documents' => [
+                [
+                    'document_type' => 'student_photo',
+                    'file' => UploadedFile::fake()->create('photo.jpg', 120, 'image/jpeg'),
+                    'notes' => 'Registrar intake photo.',
+                ],
+                [
+                    'document_type' => 'psa_birth_certificate',
+                    'file' => UploadedFile::fake()->create('psa.pdf', 240, 'application/pdf'),
+                ],
+            ],
         ])
         ->assertRedirect();
 
     $student = Person::query()->where('email', 'mika@example.test')->firstOrFail();
+    $profile = StudentProfile::query()->where('person_id', $student->id)->firstOrFail();
+    $document = StudentDocument::query()->where('student_id', $student->id)->where('document_type', 'student_photo')->firstOrFail();
 
     assertDatabaseHas('person_roles', [
         'person_id' => $student->id,
@@ -103,7 +158,13 @@ test('admin can create and update a student profile with guardians', function ()
         'role' => PersonRole::Student->value,
         'reference_number' => 'STU-LOCAL-1',
     ]);
-    expect($student->guardians()->count())->toBe(1);
+    expect($student->guardians()->count())->toBe(1)
+        ->and($profile->learner_reference_number)->toBe('LRN-100')
+        ->and($profile->is_4ps_beneficiary)->toBeTrue()
+        ->and($profile->annual_family_income_bracket)->toBe('250001_400000')
+        ->and($document->status)->toBe('pending');
+
+    Storage::disk('local')->assertExists($document->path);
 
     actingAs($context['admin'])
         ->patch(route('admin.students.update', ['campus' => $context['campus'], 'student' => $student]), [
@@ -119,6 +180,10 @@ test('admin can create and update a student profile with guardians', function ()
             'metadata' => [
                 'learner_reference_number' => 'LRN-101',
             ],
+            'profile' => [
+                'learner_reference_number' => 'LRN-101',
+                'annual_family_income_bracket' => '100000_250000',
+            ],
             'guardians' => [],
         ])
         ->assertRedirect();
@@ -126,12 +191,45 @@ test('admin can create and update a student profile with guardians', function ()
     $student->refresh();
 
     expect($student->full_name)->toBe('Mikaela Santos')
-        ->and($student->guardians()->count())->toBe(0);
+        ->and($student->guardians()->count())->toBe(0)
+        ->and($student->studentProfile()->first()?->learner_reference_number)->toBe('LRN-101');
 
     assertDatabaseHas('person_roles', [
         'person_id' => $student->id,
         'reference_number' => 'STU-LOCAL-2',
     ]);
+});
+
+test('admin can upload and review student documents with campus scoping', function (): void {
+    $context = adminStudentContext();
+    Storage::fake('local');
+    $student = createCampusStudent($context['campus'], 'Ana', 'Reyes');
+
+    actingAs($context['admin'])
+        ->post(route('admin.students.documents.store', ['campus' => $context['campus'], 'student' => $student]), [
+            'document_type' => 'form_137',
+            'file' => UploadedFile::fake()->create('form-137.pdf', 200, 'application/pdf'),
+            'notes' => 'Certified true copy.',
+        ])
+        ->assertRedirect();
+
+    $document = StudentDocument::query()->where('student_id', $student->id)->firstOrFail();
+
+    Storage::disk('local')->assertExists($document->path);
+
+    actingAs($context['admin'])
+        ->patch(route('admin.students.documents.update', [
+            'campus' => $context['campus'],
+            'student' => $student,
+            'document' => $document,
+        ]), [
+            'status' => 'verified',
+            'notes' => 'Reviewed by registrar.',
+        ])
+        ->assertRedirect();
+
+    expect($document->refresh()->status)->toBe('verified')
+        ->and($document->reviewed_by)->toBe($context['admin']->id);
 });
 
 test('admin can create enrollment with curriculum subjects and duplicate periods are rejected', function (): void {
@@ -161,6 +259,80 @@ test('admin can create enrollment with curriculum subjects and duplicate periods
             'classification' => 'new',
         ])
         ->assertSessionHasErrors('student');
+});
+
+test('admin can record transfer credits and reject curriculum mismatches', function (): void {
+    $context = adminStudentContext();
+    $student = createCampusStudent($context['campus'], 'Tala', 'Garcia');
+
+    actingAs($context['admin'])
+        ->post(route('admin.students.transfer-credits.store', ['campus' => $context['campus'], 'student' => $student]), [
+            'curriculum_id' => $context['curriculum']->id,
+            'source_school_name' => 'Previous College',
+            'source_school_address' => 'Old City',
+            'previous_program' => 'BS Computer Science',
+            'status' => 'approved',
+            'subjects' => [
+                [
+                    'curriculum_item_id' => $context['curriculumItem']->id,
+                    'previous_subject_code' => 'CS101',
+                    'previous_subject_name' => 'Intro to Programming',
+                    'previous_units' => 3,
+                    'previous_grade' => '1.75',
+                    'school_year' => '2025-2026',
+                    'term' => 'First Term',
+                    'status' => 'credited',
+                    'credited_units' => 3,
+                    'remarks' => 'Equivalent syllabus.',
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    $evaluation = TransferCreditEvaluation::query()
+        ->where('student_id', $student->id)
+        ->with('subjects')
+        ->firstOrFail();
+
+    expect($evaluation->status)->toBe('approved')
+        ->and($evaluation->subjects)->toHaveCount(1)
+        ->and($evaluation->subjects->first()->status)->toBe('credited')
+        ->and($evaluation->subjects->first()->credited_units)->toBe('3.00');
+
+    $otherCurriculum = Curriculum::query()->create([
+        'program_id' => $context['program']->id,
+        'name' => 'Other Curriculum',
+        'code' => fake()->unique()->lexify('OTH???'),
+        'effective_year' => 2027,
+    ]);
+    $otherSubject = Subject::query()->create([
+        'institution_id' => $context['institution']->id,
+        'name' => 'Other Subject',
+        'code' => fake()->unique()->lexify('OTH???'),
+    ]);
+    $otherItem = CurriculumItem::query()->create([
+        'curriculum_id' => $otherCurriculum->id,
+        'subject_id' => $otherSubject->id,
+        'year_level' => 1,
+        'term_sequence' => 1,
+        'credit_units' => 3,
+    ]);
+
+    actingAs($context['admin'])
+        ->post(route('admin.students.transfer-credits.store', ['campus' => $context['campus'], 'student' => $student]), [
+            'curriculum_id' => $context['curriculum']->id,
+            'source_school_name' => 'Previous College',
+            'status' => 'in_review',
+            'subjects' => [
+                [
+                    'curriculum_item_id' => $otherItem->id,
+                    'previous_subject_name' => 'Wrong Curriculum Subject',
+                    'status' => 'credited',
+                    'credited_units' => 3,
+                ],
+            ],
+        ])
+        ->assertSessionHasErrors('subjects');
 });
 
 test('approval syncs student number and class roster while capacity waitlists overflow', function (): void {

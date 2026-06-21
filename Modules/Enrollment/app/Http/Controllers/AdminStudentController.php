@@ -11,11 +11,14 @@ use App\Models\Person;
 use App\Models\PersonRoleAssignment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Enrollment\Http\Requests\StoreStudentRequest;
 use Modules\Enrollment\Http\Requests\UpdateStudentRequest;
+use Modules\Enrollment\Models\StudentDocument;
+use Modules\Enrollment\Models\StudentProfile;
 use Modules\Enrollment\Support\AdminStudentAuthorizer;
 use Modules\Enrollment\Support\StudentRecordData;
 
@@ -41,6 +44,8 @@ final class AdminStudentController extends Controller
             );
 
             $this->syncGuardians($student, $validated['guardians'] ?? []);
+            $this->syncProfile($student, $campus, $validated['profile'] ?? [], $validated['metadata'] ?? []);
+            $this->storeDocuments($student, $campus, $validated['documents'] ?? []);
 
             return $student;
         });
@@ -72,6 +77,8 @@ final class AdminStudentController extends Controller
             );
 
             $this->syncGuardians($student, $validated['guardians'] ?? []);
+            $this->syncProfile($student, $campus, $validated['profile'] ?? [], $validated['metadata'] ?? []);
+            $this->storeDocuments($student, $campus, $validated['documents'] ?? []);
         });
 
         return back()->with('status', 'Student record updated.');
@@ -96,6 +103,85 @@ final class AdminStudentController extends Controller
             'status' => $validated['status'],
             'metadata' => array_filter($validated['metadata'] ?? [], fn (mixed $value): bool => filled($value)),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $profile
+     * @param  array<string, mixed>  $metadata
+     */
+    private function syncProfile(Person $student, Campus $campus, array $profile, array $metadata): void
+    {
+        if ($profile === [] && $metadata === []) {
+            return;
+        }
+
+        $profile['learner_reference_number'] ??= $metadata['learner_reference_number'] ?? null;
+        $profile['previous_school_name'] ??= $metadata['previous_school'] ?? null;
+        $profile['emergency_contact_phone'] ??= $metadata['emergency_contact'] ?? null;
+
+        StudentProfile::query()->updateOrCreate(
+            ['person_id' => $student->id],
+            array_merge(
+                ['campus_id' => $campus->id],
+                $this->removeBlankValues($profile),
+            ),
+        );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $documents
+     */
+    private function storeDocuments(Person $student, Campus $campus, array $documents): void
+    {
+        foreach ($documents as $documentData) {
+            if (! ($documentData['file'] ?? null) instanceof UploadedFile) {
+                continue;
+            }
+
+            $file = $documentData['file'];
+            $path = $file->store("student-documents/{$campus->id}/{$student->id}", 'local');
+
+            StudentDocument::query()->create([
+                'campus_id' => $campus->id,
+                'student_id' => $student->id,
+                'document_type' => $documentData['document_type'],
+                'disk' => 'local',
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+                'size' => $file->getSize(),
+                'issued_on' => $documentData['issued_on'] ?? null,
+                'expires_on' => $documentData['expires_on'] ?? null,
+                'notes' => $documentData['notes'] ?? null,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return array<string, mixed>
+     */
+    private function removeBlankValues(array $values): array
+    {
+        $filtered = [];
+
+        foreach ($values as $key => $value) {
+            if (is_array($value)) {
+                $nested = $this->removeBlankValues($value);
+
+                if ($nested !== []) {
+                    $filtered[$key] = $nested;
+                }
+
+                continue;
+            }
+
+            if ($value !== null && $value !== '') {
+                $filtered[$key] = $value;
+            }
+        }
+
+        return $filtered;
     }
 
     /**

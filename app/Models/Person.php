@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\Enrollment\Models\Enrollment;
+use Modules\Enrollment\Models\StudentDocument;
+use Modules\Enrollment\Models\StudentProfile;
+use Modules\Enrollment\Models\TransferCreditEvaluation;
 
 final class Person extends Model
 {
@@ -37,6 +41,26 @@ final class Person extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class, 'student_id');
+    }
+
+    public function studentProfile(): HasOne
+    {
+        return $this->hasOne(StudentProfile::class);
+    }
+
+    public function studentDocuments(): HasMany
+    {
+        return $this->hasMany(StudentDocument::class, 'student_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->studentDocuments();
+    }
+
+    public function transferCreditEvaluations(): HasMany
+    {
+        return $this->hasMany(TransferCreditEvaluation::class, 'student_id');
     }
 
     public function students(): BelongsToMany

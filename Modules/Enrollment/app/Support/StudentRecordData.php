@@ -21,9 +21,19 @@ use Modules\Enrollment\Enums\EnrollmentStatus;
 use Modules\Enrollment\Models\Enrollment;
 use Modules\Enrollment\Models\EnrollmentPeriod;
 use Modules\Enrollment\Models\EnrollmentSubject;
+use Modules\Enrollment\Models\StudentDocument;
+use Modules\Enrollment\Models\TransferCreditEvaluation;
+use Modules\Enrollment\Models\TransferCreditSubject;
 
 final class StudentRecordData
 {
+    private const REQUIRED_DOCUMENT_TYPES = [
+        'student_photo',
+        'psa_birth_certificate',
+        'form_137',
+        'form_138',
+    ];
+
     /**
      * @return array<string, mixed>
      */
@@ -38,6 +48,9 @@ final class StudentRecordData
                 ->where('active', true))
             ->with([
                 'roles' => fn ($query) => $query->where('campus_id', $campus->getKey()),
+                'studentProfile',
+                'studentDocuments' => fn ($query) => $query->where('campus_id', $campus->getKey())->latest(),
+                'transferCreditEvaluations' => fn ($query) => $query->where('campus_id', $campus->getKey())->with('subjects')->latest(),
                 'enrollments' => fn ($query) => $query
                     ->where('campus_id', $campus->getKey())
                     ->with(['period.term.academicYear', 'curriculum.program', 'section'])
@@ -71,6 +84,11 @@ final class StudentRecordData
                     ->whereBelongsTo($campus)
                     ->whereIn('status', [EnrollmentStatus::Draft, EnrollmentStatus::Waitlisted])
                     ->count(),
+                'documentGaps' => $this->documentGapCount($campus),
+                'transferReviews' => TransferCreditEvaluation::query()
+                    ->whereBelongsTo($campus)
+                    ->whereIn('status', ['draft', 'in_review'])
+                    ->count(),
             ],
         ];
     }
@@ -82,6 +100,12 @@ final class StudentRecordData
     {
         $student->load([
             'roles' => fn ($query) => $query->where('campus_id', $campus->getKey()),
+            'studentProfile',
+            'studentDocuments' => fn ($query) => $query->where('campus_id', $campus->getKey())->latest(),
+            'transferCreditEvaluations' => fn ($query) => $query
+                ->where('campus_id', $campus->getKey())
+                ->with(['curriculum.program', 'evaluator:id,name', 'subjects.curriculumItem.subject'])
+                ->latest(),
             'guardians',
             'enrollments' => fn ($query) => $query
                 ->where('campus_id', $campus->getKey())
@@ -100,6 +124,14 @@ final class StudentRecordData
 
         return [
             'student' => $this->studentProfile($student),
+            'documents' => $student->studentDocuments
+                ->map(fn (StudentDocument $document): array => $this->studentDocument($document))
+                ->values()
+                ->all(),
+            'transferCredits' => $student->transferCreditEvaluations
+                ->map(fn (TransferCreditEvaluation $evaluation): array => $this->transferCreditEvaluation($evaluation))
+                ->values()
+                ->all(),
             'enrollments' => $student->enrollments
                 ->map(fn (Enrollment $enrollment): array => $this->enrollmentProfile($enrollment))
                 ->values()
@@ -121,6 +153,7 @@ final class StudentRecordData
             'curriculum' => $request->string('curriculum')->toString() ?: null,
             'section' => $request->string('section')->toString() ?: null,
             'enrollment_status' => $request->string('enrollment_status')->toString() ?: null,
+            'view' => $request->string('view')->toString() ?: 'all',
         ];
     }
 
@@ -161,6 +194,23 @@ final class StudentRecordData
             ->when($filters['enrollment_status'], fn (Builder $query, string $status): Builder => $query->whereHas(
                 'enrollments',
                 fn (Builder $query): Builder => $query->where('campus_id', $campus->getKey())->where('status', $status),
+            ))
+            ->when($filters['view'] === 'document_gaps', function (Builder $query) use ($campus): void {
+                $query->where(function (Builder $query) use ($campus): void {
+                    foreach (self::REQUIRED_DOCUMENT_TYPES as $documentType) {
+                        $query->orWhereDoesntHave(
+                            'studentDocuments',
+                            fn (Builder $query): Builder => $query
+                                ->where('campus_id', $campus->getKey())
+                                ->where('document_type', $documentType)
+                                ->where('status', 'verified'),
+                        );
+                    }
+                });
+            })
+            ->when($filters['view'] === 'transfer_reviews', fn (Builder $query): Builder => $query->whereHas(
+                'transferCreditEvaluations',
+                fn (Builder $query): Builder => $query->where('campus_id', $campus->getKey())->whereIn('status', ['draft', 'in_review']),
             ));
     }
 
@@ -180,6 +230,16 @@ final class StudentRecordData
             'phone' => $student->phone,
             'status' => $student->status,
             'enrollmentsCount' => (int) $student->campus_enrollments_count,
+            'documentSummary' => $this->documentSummary($student),
+            'transferSummary' => [
+                'openEvaluations' => $student->transferCreditEvaluations
+                    ->whereIn('status', ['draft', 'in_review'])
+                    ->count(),
+                'creditedSubjects' => $student->transferCreditEvaluations
+                    ->flatMap->subjects
+                    ->where('status', 'credited')
+                    ->count(),
+            ],
             'currentEnrollment' => $currentEnrollment ? [
                 'id' => $currentEnrollment->id,
                 'status' => $currentEnrollment->status->value,
@@ -216,6 +276,38 @@ final class StudentRecordData
             'status' => $student->status,
             'studentNumber' => $role?->reference_number,
             'metadata' => $student->metadata ?? [],
+            'profile' => $student->studentProfile ? [
+                'psaBirthCertificateNumber' => $student->studentProfile->psa_birth_certificate_number,
+                'learnerReferenceNumber' => $student->studentProfile->learner_reference_number,
+                'nationality' => $student->studentProfile->nationality,
+                'civilStatus' => $student->studentProfile->civil_status,
+                'religion' => $student->studentProfile->religion,
+                'motherTongue' => $student->studentProfile->mother_tongue,
+                'isIndigenousPeople' => $student->studentProfile->is_indigenous_people,
+                'indigenousCommunity' => $student->studentProfile->indigenous_community,
+                'hasDisability' => $student->studentProfile->has_disability,
+                'disabilityType' => $student->studentProfile->disability_type,
+                'is4psBeneficiary' => $student->studentProfile->is_4ps_beneficiary,
+                'fourPsHouseholdId' => $student->studentProfile->four_ps_household_id,
+                'annualFamilyIncomeBracket' => $student->studentProfile->annual_family_income_bracket,
+                'householdGrossIncome' => $student->studentProfile->household_gross_income,
+                'hasGovernmentSubsidy' => $student->studentProfile->has_government_subsidy,
+                'subsidyProgram' => $student->studentProfile->subsidy_program,
+                'emergencyContactName' => $student->studentProfile->emergency_contact_name,
+                'emergencyContactRelationship' => $student->studentProfile->emergency_contact_relationship,
+                'emergencyContactPhone' => $student->studentProfile->emergency_contact_phone,
+                'currentAddress' => $student->studentProfile->current_address ?? [],
+                'permanentAddress' => $student->studentProfile->permanent_address ?? [],
+                'previousSchoolName' => $student->studentProfile->previous_school_name,
+                'previousSchoolAddress' => $student->studentProfile->previous_school_address,
+                'previousSchoolType' => $student->studentProfile->previous_school_type,
+                'lastGradeLevelCompleted' => $student->studentProfile->last_grade_level_completed,
+                'lastSchoolYearAttended' => $student->studentProfile->last_school_year_attended,
+                'seniorHighSchoolStrand' => $student->studentProfile->senior_high_school_strand,
+                'collegeYearLevel' => $student->studentProfile->college_year_level,
+                'reportingFlags' => $student->studentProfile->reporting_flags ?? [],
+            ] : [],
+            'documentSummary' => $this->documentSummary($student),
             'guardians' => $student->guardians
                 ->map(fn (Person $guardian): array => [
                     'id' => $guardian->id,
@@ -227,6 +319,90 @@ final class StudentRecordData
                     'relationship' => $guardian->pivot->relationship,
                     'isPrimary' => (bool) $guardian->pivot->is_primary,
                     'hasPortalAccess' => (bool) $guardian->pivot->has_portal_access,
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function documentSummary(Person $student): array
+    {
+        $verified = $student->studentDocuments
+            ->where('status', 'verified')
+            ->pluck('document_type')
+            ->unique()
+            ->values();
+        $missing = collect(self::REQUIRED_DOCUMENT_TYPES)
+            ->reject(fn (string $documentType): bool => $verified->contains($documentType))
+            ->values();
+
+        return [
+            'required' => self::REQUIRED_DOCUMENT_TYPES,
+            'verified' => $verified->all(),
+            'missing' => $missing->all(),
+            'verifiedCount' => $verified->count(),
+            'requiredCount' => count(self::REQUIRED_DOCUMENT_TYPES),
+            'ready' => $missing->isEmpty(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function studentDocument(StudentDocument $document): array
+    {
+        return [
+            'id' => $document->id,
+            'type' => $document->document_type,
+            'label' => StudentDocument::TYPES[$document->document_type] ?? str($document->document_type)->replace('_', ' ')->title()->toString(),
+            'originalName' => $document->original_name,
+            'mimeType' => $document->mime_type,
+            'size' => $document->size,
+            'status' => $document->status,
+            'issuedOn' => $document->issued_on?->toDateString(),
+            'expiresOn' => $document->expires_on?->toDateString(),
+            'reviewedAt' => $document->reviewed_at?->toISOString(),
+            'notes' => $document->notes,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transferCreditEvaluation(TransferCreditEvaluation $evaluation): array
+    {
+        return [
+            'id' => $evaluation->id,
+            'sourceSchoolName' => $evaluation->source_school_name,
+            'sourceSchoolAddress' => $evaluation->source_school_address,
+            'previousProgram' => $evaluation->previous_program,
+            'status' => $evaluation->status,
+            'curriculum' => $evaluation->curriculum?->name,
+            'program' => $evaluation->curriculum?->program?->name,
+            'evaluator' => $evaluation->evaluator?->name,
+            'evaluatedAt' => $evaluation->evaluated_at?->toISOString(),
+            'notes' => $evaluation->notes,
+            'creditedUnits' => $evaluation->subjects
+                ->where('status', 'credited')
+                ->sum(fn (TransferCreditSubject $subject): float => (float) ($subject->credited_units ?? 0)),
+            'subjects' => $evaluation->subjects
+                ->map(fn (TransferCreditSubject $subject): array => [
+                    'id' => $subject->id,
+                    'curriculumItemId' => $subject->curriculum_item_id,
+                    'previousSubjectCode' => $subject->previous_subject_code,
+                    'previousSubjectName' => $subject->previous_subject_name,
+                    'previousUnits' => $subject->previous_units,
+                    'previousGrade' => $subject->previous_grade,
+                    'schoolYear' => $subject->school_year,
+                    'term' => $subject->term,
+                    'status' => $subject->status,
+                    'creditedUnits' => $subject->credited_units,
+                    'remarks' => $subject->remarks,
+                    'matchedSubject' => $subject->curriculumItem?->subject?->name,
+                    'matchedSubjectCode' => $subject->curriculumItem?->subject?->code,
                 ])
                 ->values()
                 ->all(),
@@ -325,6 +501,29 @@ final class StudentRecordData
 
         return [
             'statuses' => ['active', 'inactive', 'graduated', 'transferred'],
+            'incomeBrackets' => [
+                'below_100000' => 'Below PHP 100,000',
+                '100000_250000' => 'PHP 100,000 - 250,000',
+                '250001_400000' => 'PHP 250,001 - 400,000',
+                '400001_800000' => 'PHP 400,001 - 800,000',
+                'above_800000' => 'Above PHP 800,000',
+            ],
+            'documentTypes' => collect(StudentDocument::TYPES)
+                ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label, 'required' => in_array($value, self::REQUIRED_DOCUMENT_TYPES, true)])
+                ->values()
+                ->all(),
+            'documentStatuses' => collect(StudentDocument::STATUSES)
+                ->map(fn (string $status): array => ['value' => $status, 'label' => str($status)->replace('_', ' ')->title()->toString()])
+                ->values()
+                ->all(),
+            'transferStatuses' => collect(TransferCreditEvaluation::STATUSES)
+                ->map(fn (string $status): array => ['value' => $status, 'label' => str($status)->replace('_', ' ')->title()->toString()])
+                ->values()
+                ->all(),
+            'transferSubjectStatuses' => collect(TransferCreditSubject::STATUSES)
+                ->map(fn (string $status): array => ['value' => $status, 'label' => str($status)->replace('_', ' ')->title()->toString()])
+                ->values()
+                ->all(),
             'enrollmentStatuses' => collect(EnrollmentStatus::cases())
                 ->map(fn (EnrollmentStatus $status): array => ['value' => $status->value, 'label' => str($status->value)->replace('_', ' ')->title()->toString()])
                 ->values()
@@ -420,5 +619,26 @@ final class StudentRecordData
                 ])
                 ->all(),
         ];
+    }
+
+    private function documentGapCount(Campus $campus): int
+    {
+        return Person::query()
+            ->whereHas('roles', fn (Builder $query): Builder => $query
+                ->where('campus_id', $campus->getKey())
+                ->where('role', PersonRole::Student)
+                ->where('active', true))
+            ->where(function (Builder $query) use ($campus): void {
+                foreach (self::REQUIRED_DOCUMENT_TYPES as $documentType) {
+                    $query->orWhereDoesntHave(
+                        'studentDocuments',
+                        fn (Builder $query): Builder => $query
+                            ->where('campus_id', $campus->getKey())
+                            ->where('document_type', $documentType)
+                            ->where('status', 'verified'),
+                    );
+                }
+            })
+            ->count();
     }
 }
