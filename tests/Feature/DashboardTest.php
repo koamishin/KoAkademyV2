@@ -26,3 +26,22 @@ test('authenticated users can visit the dashboard', function (): void {
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('campus.dashboard', ['campus' => $campus]));
 });
+
+test('dashboard redirect repairs legacy campuses without slugs', function (): void {
+    $user = User::factory()->create();
+    $institution = Institution::query()->create(['name' => 'Ko Academy', 'code' => 'KO']);
+    $campus = Campus::query()->create(['institution_id' => $institution->id, 'name' => 'Main', 'code' => 'MAIN']);
+    $campus->forceFill(['slug' => null])->save();
+    Role::query()->create(['campus_id' => null, 'name' => RoleEnums::STUDENT->value, 'guard_name' => 'web']);
+    $user->campusMemberships()->create([
+        'campus_id' => $campus->id,
+        'role' => RoleEnums::STUDENT,
+        'is_default' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertRedirect(route('campus.dashboard', ['campus' => $campus->fresh()]));
+
+    expect($campus->fresh()->slug)->toBe('main');
+});

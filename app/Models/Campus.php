@@ -52,6 +52,24 @@ final class Campus extends Model
         return ['settings' => 'array'];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function ensureSlug(): self
+    {
+        if (filled($this->slug)) {
+            return $this;
+        }
+
+        $this->forceFill([
+            'slug' => self::uniqueSlug($this->code ?: $this->name, $this->getKey()),
+        ])->save();
+
+        return $this;
+    }
+
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
@@ -98,13 +116,16 @@ final class Campus extends Model
             ->withTimestamps();
     }
 
-    private static function uniqueSlug(string $value): string
+    private static function uniqueSlug(string $value, int|string|null $ignoreCampusId = null): string
     {
-        $baseSlug = Str::slug($value);
+        $baseSlug = Str::slug($value) ?: 'campus';
         $slug = $baseSlug;
         $sequence = 2;
 
-        while (self::query()->where('slug', $slug)->exists()) {
+        while (self::query()
+            ->where('slug', $slug)
+            ->when($ignoreCampusId !== null, fn ($query) => $query->whereKeyNot($ignoreCampusId))
+            ->exists()) {
             $slug = "{$baseSlug}-{$sequence}";
             $sequence++;
         }

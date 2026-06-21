@@ -23,6 +23,6 @@ final class DashboardRedirectController extends Controller
             return to_route('campus.assignment.pending');
         }
 
-        return to_route('campus.dashboard', ['campus' => $campus]);
+        return to_route('campus.dashboard', ['campus' => $campus->ensureSlug()]);
     }
 }
