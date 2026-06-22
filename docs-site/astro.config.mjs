@@ -1,6 +1,6 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { defineConfig } from 'astro/config';
 
 // Base path strategy:
 //   - Dev (`npm run dev`)  →  BASE_PATH is unset, site runs at `http://localhost:4321/`

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import RecentAnnouncements from '@/components/dashboard/RecentAnnouncements.vue';
 import GradeSummary from '@/components/dashboard/GradeSummary.vue';
+import RecentAnnouncements from '@/components/dashboard/RecentAnnouncements.vue';
 import StatCard from '@/components/dashboard/StatCard.vue';
 import TodaySchedule from '@/components/dashboard/TodaySchedule.vue';
 import UpcomingAssignments from '@/components/dashboard/UpcomingAssignments.vue';

@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, update } from '@/routes/admin/students';
 import { store as storeDocument, update as updateDocument } from '@/routes/admin/students/documents';
-import { approve, cancel, store as storeEnrollment } from '@/routes/admin/students/enrollments';
 import { update as updateEnrollmentSubject } from '@/routes/admin/students/enrollment-subjects';
+import { approve, cancel, store as storeEnrollment } from '@/routes/admin/students/enrollments';
 import { store as storeTransferCredit } from '@/routes/admin/students/transfer-credits';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 

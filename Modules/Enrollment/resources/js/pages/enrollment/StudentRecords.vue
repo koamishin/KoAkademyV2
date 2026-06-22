@@ -852,8 +852,9 @@ function submitCreate() {
                         link.active ? 'border-primary bg-primary text-primary-foreground' : 'bg-background',
                         !link.url ? 'pointer-events-none opacity-50' : '',
                     ]"
-                    v-html="link.label"
-                />
+                >
+                    <span v-html="link.label"></span>
+                </Link>
             </nav>
         </div>
     </AppLayout>
