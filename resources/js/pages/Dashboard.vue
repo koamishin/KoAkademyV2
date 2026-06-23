@@ -71,7 +71,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <GradeSummary :items="props.gradeSummary" />
                 </div>
                 <div class="flex flex-col gap-6 md:col-span-2 xl:col-span-2">
-                    <RecentAnnouncements :items="props.recentAnnouncements" />
+                    <RecentAnnouncements :items="props.recentAnnouncements" :campus="page.props.currentCampus!" />
                 </div>
             </div>
         </div>

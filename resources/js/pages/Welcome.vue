@@ -2,544 +2,1481 @@
 import { Head, Link } from '@inertiajs/vue3';
 import Lenis from 'lenis';
 import {
-  GraduationCap,
-  Calendar,
-  BookOpen,
-  Users,
-  Briefcase,
-  CheckCircle2,
-  ChevronRight,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Database,
-  Globe,
-  Smartphone,
-  BarChart3,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp,
+    ArrowRight,
+    BarChart3,
+    BookOpen,
+    Briefcase,
+    Calendar,
+    CheckCircle2,
+    ChevronDown,
+    ChevronRight,
+    Database,
+    Globe,
+    GraduationCap,
+    MessageSquare,
+    ShieldCheck,
+    Smartphone,
+    Users,
+    Zap,
 } from 'lucide-vue-next';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import KoamishinLogo from '@/components/KoamishinLogo.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
-defineProps<{
-  canRegister?: boolean;
-  laravelVersion?: string;
-  phpVersion?: string;
+const props = defineProps<{
+    canRegister?: boolean;
+    laravelVersion?: string;
+    phpVersion?: string;
 }>();
 
-// Tech stack languages/technologies for carousel
-const techStack = [
-  'Laravel 12',
-  'Vue 3',
-  'TypeScript',
-  'Tailwind CSS',
-  'Inertia.js',
-  'MySQL',
-  'PHP 8.3',
-  'Vite',
-  'Taro',
-  'React',
-  'Node.js',
-  'PostgreSQL',
+type RouteParameters =
+    | string
+    | number
+    | Array<string | number>
+    | Record<string, unknown>
+    | undefined;
+
+type RouteFunction = (
+    name: string,
+    params?: RouteParameters,
+    absolute?: boolean,
+) => string;
+
+const route = ((globalThis as typeof globalThis & { route?: RouteFunction })
+    .route ?? ((name: string) => name)) as RouteFunction;
+
+const navItems = [
+    { id: 'programs', label: 'Capabilities' },
+    { id: 'impact', label: 'Impact' },
+    { id: 'why', label: 'Why Koamishin' },
+    { id: 'faq', label: 'Support' },
+    { id: 'contact', label: 'Contact' },
+];
+
+const heroHighlights = [
+    'Admissions',
+    'Attendance',
+    'Parent communication',
+    'Billing',
+];
+
+const platformStats = [
+    {
+        value: '4 daily workflows',
+        label: 'Attendance, grading, billing, and parent notices aligned in one platform.',
+    },
+    {
+        value: '3 core roles',
+        label: 'Built for leadership teams, operational staff, and teaching teams.',
+    },
+    {
+        value: '1 source of truth',
+        label: 'Academic records, communication, and school operations stay connected.',
+    },
 ];
 
 const programs = [
-  {
-    title: 'Student Information System',
-    description:
-      'Comprehensive student management with enrollment, records, and attendance tracking.',
-    icon: BookOpen,
-    details: [
-      'Enrollment Management',
-      'Academic Records',
-      'Attendance Tracking',
-      'Gradebook',
-    ],
-  },
-  {
-    title: 'Learning Management',
-    description:
-      'Modern LMS for online and hybrid learning with assignments and assessments.',
-    icon: GraduationCap,
-    details: [
-      'Course Management',
-      'Online Assessments',
-      'Resource Library',
-      'Assignment Submission',
-    ],
-  },
-  {
-    title: 'Communication Hub',
-    description:
-      'Seamless communication between teachers, students, and parents.',
-    icon: MessageSquare,
-    details: [
-      'Parent Portals',
-      'Teacher-Student Chat',
-      'Announcements',
-      'Event Notifications',
-    ],
-  },
-  {
-    title: 'Analytics & Reporting',
-    description:
-      'Real-time data and comprehensive reports for data-driven decisions.',
-    icon: BarChart3,
-    details: [
-      'Student Performance',
-      'Attendance Reports',
-      'Enrollment Analytics',
-      'Custom Dashboards',
-    ],
-  },
+    {
+        title: 'Student records and enrollment',
+        description:
+            'Keep admissions, class placement, academic history, and attendance in one operating system for your office team.',
+        metric: 'From application to class list',
+        icon: BookOpen,
+        details: [
+            'Enrollment intake and status tracking',
+            'Class assignment and student history',
+            'Daily attendance records',
+            'Registrar-friendly student profiles',
+        ],
+        preview: [
+            'New applicants',
+            'Returned students',
+            'Class placement',
+            'Attendance alerts',
+        ],
+        layout: 'lg:col-span-2 lg:row-span-2',
+    },
+    {
+        title: 'Teaching and learning flow',
+        description:
+            'Support faculty with lesson delivery, assignment workflows, and term-based evaluation without extra admin overhead.',
+        metric: 'Teachers move faster',
+        icon: GraduationCap,
+        details: [
+            'Classroom schedules and rosters',
+            'Assignment and assessment tracking',
+            'Gradebook visibility by term',
+            'Progress snapshots for staff reviews',
+        ],
+        preview: ['Class schedule', 'Assignment queue', 'Grade review'],
+        layout: 'lg:col-span-1',
+    },
+    {
+        title: 'Parent communication and updates',
+        description:
+            'Send the right message at the right time, whether it is an announcement, attendance follow-up, or academic notice.',
+        metric: 'Fewer missed updates',
+        icon: MessageSquare,
+        details: [
+            'Parent-facing updates and reminders',
+            'Teacher notices and school announcements',
+            'Attendance and behavior follow-ups',
+            'A clearer communication trail',
+        ],
+        preview: [
+            'Absence notice sent',
+            'Event reminder',
+            'Fee due this Friday',
+        ],
+        layout: 'lg:col-span-1',
+    },
+    {
+        title: 'Billing, reporting, and oversight',
+        description:
+            'Give leadership a clearer picture of tuition activity, operational follow-up, and school-wide reporting without manual collation.',
+        metric: 'Built for school operations',
+        icon: BarChart3,
+        details: [
+            'Billing status visibility',
+            'Operational and academic summaries',
+            'Role-based dashboards',
+            'Reporting for school leadership',
+        ],
+        preview: ['Tuition status', 'Attendance trend', 'Term summary'],
+        layout: 'lg:col-span-2',
+    },
 ];
 
 const whyChoose = [
-  {
-    title: 'Modern Technology Stack',
-    description:
-      'Built on Laravel 12 and Vue 3, ensuring scalability, security, and performance.',
-    icon: Zap,
-  },
-  {
-    title: 'Enterprise-Grade Security',
-    description:
-      'Fully compliant with FERPA and other privacy regulations, keeping student data safe.',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Mobile-First Design',
-    description:
-      'Perfectly responsive on any device, from desktop to smartphones.',
-    icon: Smartphone,
-  },
-  {
-    title: 'Cloud-Ready Architecture',
-    description:
-      'Deployable anywhere with multi-tenant support for large school districts.',
-    icon: Database,
-  },
-  {
-    title: 'Multilingual Support',
-    description:
-      'Full i18n support for all major languages used in educational institutions.',
-    icon: Globe,
-  },
-  {
-    title: 'Customizable & Extensible',
-    description:
-      'Highly modular architecture allows easy customization for your specific needs.',
-    icon: CheckCircle2,
-  },
+    {
+        title: 'Less admin overhead',
+        description:
+            'Office teams stop repeating work across multiple tools because student, finance, and communication activity lives in one place.',
+        icon: Zap,
+    },
+    {
+        title: 'Stronger parent visibility',
+        description:
+            'Parents get timely updates, clearer expectations, and an easier way to stay aligned with the school.',
+        icon: MessageSquare,
+    },
+    {
+        title: 'Operational confidence',
+        description:
+            'Leadership gets cleaner reporting, better accountability, and fewer blind spots across day-to-day operations.',
+        icon: Briefcase,
+    },
+    {
+        title: 'Secure student data handling',
+        description:
+            'Sensitive records stay inside a structured system designed for reliable access, permissions, and long-term maintainability.',
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Mobile-ready access',
+        description:
+            'Teachers, staff, and families can use the platform across desktop, tablet, and mobile screens without losing clarity.',
+        icon: Smartphone,
+    },
+    {
+        title: 'Room to grow with your school',
+        description:
+            'Whether you are managing one campus or scaling operations, the system is built to handle broader workflows over time.',
+        icon: Database,
+    },
+];
+
+const implementationSteps = [
+    {
+        title: 'Map your school structure',
+        description:
+            'Set up terms, classes, staff roles, and the core workflows your school runs every week.',
+        icon: Calendar,
+    },
+    {
+        title: 'Import records and configure access',
+        description:
+            'Bring in student and staff data, then align permissions for administrators, faculty, and parents.',
+        icon: Database,
+    },
+    {
+        title: 'Launch with guided onboarding',
+        description:
+            'Start with the workflows that matter most first, then expand reporting, billing, and communication from there.',
+        icon: CheckCircle2,
+    },
+];
+
+const testimonials = [
+    {
+        quote: 'We needed one place to manage attendance, parent communication, and term reporting. Koamishin gave our admin team a cleaner daily rhythm.',
+        name: 'Mariam Santos',
+        role: 'School administrator',
+    },
+    {
+        quote: 'The biggest improvement was clarity. Teachers knew where updates lived, and parents stopped missing important notices.',
+        name: 'Daniel Ofori',
+        role: 'Academic coordinator',
+    },
+    {
+        quote: 'What stood out was how practical the workflows felt. It matched how a school actually runs instead of forcing us into generic software patterns.',
+        name: 'Leah Okonkwo',
+        role: 'Registrar',
+    },
+];
+
+const supportCategories = [
+    'All',
+    'Onboarding',
+    'Parent access',
+    'Finance',
+    'Operations',
 ];
 
 const faqs = [
-  {
-    question: 'What makes Koamishin Academy different from other SIS platforms?',
-    answer:
-      'We focus on a modern, student-first experience combined with enterprise-grade security. Our platform is built on the latest technology and designed for scalability.',
-  },
-  {
-    question: 'Can we integrate Koamishin with our existing systems?',
-    answer:
-      'Yes! Our API-first architecture allows seamless integration with your current systems including HR, finance, and other educational tools.',
-  },
-  {
-    question: 'How long does implementation take?',
-    answer:
-      'Implementation time varies by size, but most schools are up and running within 4-6 weeks. We provide full onboarding and training.',
-  },
-  {
-    question: 'Is Koamishin suitable for all school sizes?',
-    answer:
-      'Absolutely! From small private schools to large public districts, our platform scales perfectly with your institution.',
-  },
-  {
-    question: 'What kind of support do you provide?',
-    answer:
-      'We offer 24/7 technical support, comprehensive documentation, and regular updates to ensure your platform stays current.',
-  },
-  {
-    question: 'Can parents and guardians access the platform?',
-    answer:
-      'Yes! We provide dedicated parent portals for viewing grades, attendance, and communicating with teachers.',
-  },
-];
-
-const openFaq = ref<number | null>(null);
-
-let lenisInstance: Lenis | null = null;
-onMounted(() => {
-  lenisInstance = new Lenis({
-    duration: 1.2,
-    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
-  });
-
-  const raf = (time: number) => {
-    if (lenisInstance) lenisInstance.raf(time);
-    requestAnimationFrame(raf);
-  };
-  requestAnimationFrame(raf);
-
-  // Intersection Observer for reveal animations
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-        }
-      });
+    {
+        category: 'Onboarding',
+        question: 'How long does a typical school rollout take?',
+        answer: 'Most schools can start with their essential workflows in a few weeks. The exact pace depends on the quality of existing records and how many modules you want live first.',
     },
     {
-      threshold: 0.1,
-    }
-  );
+        category: 'Onboarding',
+        question: 'Can we start with only a few core workflows first?',
+        answer: 'Yes. Many schools begin with enrollment, attendance, and communication, then expand into reporting and billing once staff are comfortable.',
+    },
+    {
+        category: 'Parent access',
+        question: 'Can parents and guardians have separate access?',
+        answer: 'Yes. Parent-facing access can be structured around the student record so families can follow attendance, updates, and key notices more easily.',
+    },
+    {
+        category: 'Parent access',
+        question: 'Will teachers still control how communication is sent?',
+        answer: 'Yes. Schools can keep communication organized by role so classroom updates, school-wide notices, and administrative reminders are handled clearly.',
+    },
+    {
+        category: 'Finance',
+        question: 'Can the platform support tuition and payment follow-up?',
+        answer: 'Yes. Koamishin is designed to give your team better billing visibility, clearer status tracking, and a simpler way to follow up on outstanding items.',
+    },
+    {
+        category: 'Operations',
+        question: 'Is Koamishin only for large institutions?',
+        answer: 'No. It works well for growing schools that need structure now, as well as larger institutions that want more coordinated operations across teams.',
+    },
+    {
+        category: 'Operations',
+        question: 'Can we connect this with our existing school processes?',
+        answer: 'Yes. The goal is to fit the platform around how your school already operates, then improve the parts that are slowing your team down.',
+    },
+];
 
-  document.querySelectorAll('.reveal-element').forEach((el) => {
-    observer.observe(el);
-  });
+const supportCards = [
+    {
+        title: 'Rollout planning',
+        description:
+            'Get a guided view of which workflows to launch first and what your team needs to prepare.',
+        icon: Calendar,
+        points: [
+            'School structure review',
+            'Priority module planning',
+            'Admin onboarding support',
+        ],
+    },
+    {
+        title: 'Parent access guidance',
+        description:
+            'Clarify how communication, visibility, and guardian access should work before rollout begins.',
+        icon: Users,
+        points: [
+            'Guardian communication flow',
+            'Notification expectations',
+            'Role-specific access planning',
+        ],
+    },
+    {
+        title: 'Operational readiness',
+        description:
+            'Review your data, reporting expectations, and day-to-day admin processes before launch.',
+        icon: Globe,
+        points: [
+            'Data preparation',
+            'Reporting expectations',
+            'Daily workflow mapping',
+        ],
+    },
+];
+
+const techStack = [
+    'Laravel 13',
+    'Vue 3',
+    'TypeScript',
+    'Tailwind CSS',
+    'Inertia.js',
+    'MySQL',
+    'PHP 8.5',
+    'Vite',
+    'Octane',
+    'Wayfinder',
+    'Pest',
+    'PostgreSQL',
+];
+
+const activeSection = ref('hero');
+const mobileMenuOpen = ref(false);
+const activeCategory = ref('All');
+const supportSearch = ref('');
+const openFaq = ref<string | null>(faqs[0]?.question ?? null);
+const trackedSectionIds = [
+    'hero',
+    'impact',
+    'programs',
+    'why',
+    'implementation',
+    'faq',
+    'contact',
+] as const;
+
+const filteredFaqs = computed(() => {
+    const query = supportSearch.value.trim().toLowerCase();
+
+    return faqs.filter((faq) => {
+        const matchesCategory =
+            activeCategory.value === 'All' ||
+            faq.category === activeCategory.value;
+        const haystack =
+            `${faq.question} ${faq.answer} ${faq.category}`.toLowerCase();
+
+        return (
+            matchesCategory && (query.length === 0 || haystack.includes(query))
+        );
+    });
+});
+
+const currentYear = new Date().getFullYear();
+
+let lenisInstance: Lenis | null = null;
+let rafId: number | null = null;
+let revealObserver: IntersectionObserver | null = null;
+let trackedSections: HTMLElement[] = [];
+
+const updateActiveSection = () => {
+    if (trackedSections.length === 0) {
+        return;
+    }
+
+    const scrollMarker = window.scrollY + 180;
+    const currentSection = trackedSections.reduce(
+        (current, section) =>
+            section.offsetTop <= scrollMarker ? section.id : current,
+        'hero',
+    );
+
+    activeSection.value = currentSection;
+};
+
+const handleNavClick = (sectionId: string) => {
+    activeSection.value = sectionId;
+    mobileMenuOpen.value = false;
+};
+
+onMounted(() => {
+    const reduceMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    if (!reduceMotion) {
+        lenisInstance = new Lenis({
+            duration: 1.05,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true,
+        });
+
+        const raf = (time: number) => {
+            lenisInstance?.raf(time);
+            rafId = requestAnimationFrame(raf);
+        };
+
+        rafId = requestAnimationFrame(raf);
+    }
+
+    const revealElements = Array.from(
+        document.querySelectorAll<HTMLElement>('.reveal-element'),
+    );
+
+    if (reduceMotion) {
+        revealElements.forEach((element) => element.classList.add('revealed'));
+    } else {
+        revealObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        revealObserver?.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.15 },
+        );
+
+        revealElements.forEach((element) => revealObserver?.observe(element));
+    }
+
+    trackedSections = trackedSectionIds
+        .map((sectionId) => document.getElementById(sectionId))
+        .filter(
+            (section): section is HTMLElement => section instanceof HTMLElement,
+        );
+
+    updateActiveSection();
+
+    window.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('resize', updateActiveSection);
 });
 
 onUnmounted(() => {
-  if (lenisInstance) lenisInstance.destroy();
+    lenisInstance?.destroy();
+    revealObserver?.disconnect();
+    window.removeEventListener('scroll', updateActiveSection);
+    window.removeEventListener('resize', updateActiveSection);
+
+    if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+    }
 });
 
-const toggleFaq = (index: number) => {
-  openFaq.value = openFaq.value === index ? null : index;
+const toggleFaq = (question: string) => {
+    openFaq.value = openFaq.value === question ? null : question;
+};
+
+const setCategory = (category: string) => {
+    activeCategory.value = category;
+    openFaq.value = null;
 };
 </script>
 
 <template>
-  <Head title="Koamishin Academy - Modern School Management" />
-  <div
-    class="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground"
-  >
-    <ImpersonateBanner />
-    <!-- Navbar -->
-    <header
-      class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/60"
+    <Head
+        title="Koamishin Academy - School operations, communication, and reporting"
     >
-      <div
-        class="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6"
-      >
-        <a href="#hero" class="flex items-center gap-2">
-          <KoamishinLogo class="h-8 w-8" />
-          <span class="text-lg font-bold">Koamishin</span>
+        <meta
+            name="description"
+            content="Koamishin helps schools run admissions, attendance, grading, parent communication, billing, and reporting from one connected platform."
+        />
+    </Head>
+
+    <div
+        class="relative flex min-h-screen flex-col overflow-x-clip bg-background text-foreground selection:bg-primary selection:text-primary-foreground"
+    >
+        <a
+            href="#main-content"
+            class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+        >
+            Skip to content
         </a>
 
-        <nav class="hidden items-center gap-6 md:flex">
-          <a href="#programs" class="text-sm font-medium hover:text-primary">Features</a>
-          <a href="#why" class="text-sm font-medium hover:text-primary">Why Koamishin</a>
-          <a href="#faq" class="text-sm font-medium hover:text-primary">FAQ</a>
-          <a href="#contact" class="text-sm font-medium hover:text-primary">Contact</a>
-        </nav>
-
-        <nav class="flex items-center gap-3">
-          <template v-if="$page.props.auth.user">
-            <Button as-child variant="ghost" size="sm">
-              <Link :href="route('dashboard')">Dashboard</Link>
-            </Button>
-          </template>
-          <template v-else>
-            <Button as-child variant="ghost" size="sm">
-              <Link :href="route('login')">Log in</Link>
-            </Button>
-            <Button as-child size="sm">
-              <Link :href="route('register')">Get Started</Link>
-            </Button>
-          </template>
-        </nav>
-      </div>
-    </header>
-
-    <main class="flex-1">
-      <!-- Hero Section -->
-      <section id="hero" class="relative overflow-hidden py-24 lg:py-32">
-        <div
-          class="container mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 text-center reveal-element"
-        >
-          <Badge variant="secondary" class="rounded-full px-4 py-1 text-sm">
-            The Modern School Management Platform
-          </Badge>
-
-          <div class="flex flex-col items-center gap-4">
-            <KoamishinLogo
-              class="mb-4 h-32 w-32 rounded-[20px] shadow-2xl shadow-primary/20"
-            />
-            <h1
-              class="bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-4xl font-bold tracking-tighter text-transparent sm:text-6xl md:text-7xl lg:text-8xl"
-            >
-              Koamishin Academy
-            </h1>
-          </div>
-
-          <p
-            class="max-w-[52rem] text-lg leading-relaxed text-muted-foreground sm:text-xl sm:leading-8"
-          >
-            The complete school management platform that brings together students,
-            teachers, and administrators into one seamless experience.
-          </p>
-
-          <div class="flex flex-wrap items-center justify-center gap-4 pt-6">
-            <Button as-child size="lg" class="h-12 px-10">
-              <Link :href="route('register')">Start Free Trial</Link>
-            </Button>
-            <Button as-child variant="outline" size="lg" class="h-12 px-10">
-              <a href="#programs">Explore Features</a>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Features Section -->
-      <section id="programs" class="container mx-auto max-w-7xl px-6 py-24">
-        <div class="mb-16 text-center reveal-element">
-          <h2
-            class="mb-4 text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
-          >
-            Powerful Features for Schools
-          </h2>
-          <p class="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Everything you need to manage your institution efficiently and effectively
-          </p>
-        </div>
-
-        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <Card
-            v-for="(feature, index) in programs"
-            :key="feature.title"
-            class="group border-border bg-card transition-all duration-500 hover:-translate-y-2 hover:border-primary/50 hover:shadow-xl reveal-element"
-            :style="{ animationDelay: `${index * 100}ms` }"
-          >
-            <CardHeader>
-              <div
-                class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20"
-              >
-                <component :is="feature.icon" class="h-7 w-7 text-primary" />
-              </div>
-              <CardTitle class="text-xl font-semibold">{{ feature.title }}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription class="mb-6 text-sm">
-                {{ feature.description }}
-              </CardDescription>
-              <ul class="space-y-2">
-                <li
-                  v-for="(detail, i) in feature.details"
-                  :key="i"
-                  class="flex items-center gap-2 text-sm text-muted-foreground"
-                >
-                  <CheckCircle2 class="h-4 w-4 text-emerald-500" />
-                  {{ detail }}
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <!-- Why Choose Section -->
-      <section
-        id="why"
-        class="relative overflow-hidden bg-primary/5 py-24 lg:py-32"
-      >
-        <div class="container mx-auto max-w-7xl px-6">
-          <div class="mb-16 text-center reveal-element">
-            <h2
-              class="mb-4 text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
-            >
-              Why Choose Koamishin?
-            </h2>
-            <p class="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Here's why schools around the world trust us with their management needs
-            </p>
-          </div>
-
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card
-              v-for="(item, index) in whyChoose"
-              :key="item.title"
-              class="border-border bg-card reveal-element"
-              :style="{ animationDelay: `${index * 75}ms` }"
-            >
-              <CardHeader>
-                <div class="flex items-center gap-3">
-                  <component :is="item.icon" class="h-8 w-8 text-primary" />
-                  <CardTitle class="text-xl">{{ item.title }}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription class="text-sm">{{ item.description }}</CardDescription>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <!-- FAQ Section -->
-      <section id="faq" class="container mx-auto max-w-5xl px-6 py-24">
-        <div class="mb-12 text-center reveal-element">
-          <h2
-            class="mb-4 text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl"
-          >
-            Frequently Asked Questions
-          </h2>
-          <p class="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Have questions? We've got answers
-          </p>
-        </div>
-
-        <div class="space-y-4">
-          <Card
-            v-for="(faq, index) in faqs"
-            :key="index"
-            class="border-border bg-card reveal-element"
-            :style="{ animationDelay: `${index * 50}ms` }"
-          >
-            <button
-              @click="toggleFaq(index)"
-              class="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-            >
-              <span class="text-lg font-semibold">{{ faq.question }}</span>
-              <ChevronDown
-                v-if="openFaq !== index"
-                class="h-6 w-6 text-muted-foreground"
-              />
-              <ChevronUp
-                v-else
-                class="h-6 w-6 text-muted-foreground"
-              />
-            </button>
+        <div class="pointer-events-none absolute inset-0 overflow-hidden">
             <div
-              v-show="openFaq === index"
-              class="px-6 pb-5 pt-0 text-muted-foreground transition-all duration-300"
+                class="absolute top-0 left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl"
+            />
+            <div
+                class="absolute top-[22rem] right-[-8rem] h-[24rem] w-[24rem] rounded-full bg-primary/8 blur-3xl"
+            />
+            <div
+                class="absolute top-[48rem] left-[-8rem] h-[20rem] w-[20rem] rounded-full bg-accent/20 blur-3xl"
+            />
+        </div>
+
+        <ImpersonateBanner />
+
+        <header
+            class="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl"
+        >
+            <div
+                class="container mx-auto flex h-18 max-w-7xl items-center justify-between px-6 py-4"
             >
-              {{ faq.answer }}
+                <a href="#hero" class="flex items-center gap-3">
+                    <KoamishinLogo
+                        class="h-10 w-10 rounded-2xl shadow-lg shadow-primary/10"
+                    />
+                    <div class="space-y-0.5">
+                        <p class="text-base font-semibold tracking-tight">
+                            Koamishin
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            School operations platform
+                        </p>
+                    </div>
+                </a>
+
+                <nav
+                    class="hidden items-center gap-2 rounded-full border border-border/60 bg-background/80 p-1 md:flex"
+                >
+                    <a
+                        v-for="item in navItems"
+                        :key="item.id"
+                        :href="`#${item.id}`"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
+                        :class="
+                            activeSection === item.id
+                                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                                : 'text-muted-foreground hover:bg-accent/70 hover:text-foreground'
+                        "
+                        :aria-current="
+                            activeSection === item.id ? 'page' : undefined
+                        "
+                        @click="handleNavClick(item.id)"
+                    >
+                        {{ item.label }}
+                    </a>
+                </nav>
+
+                <div class="hidden items-center gap-3 md:flex">
+                    <Button as-child variant="ghost" size="sm">
+                        <a
+                            href="mailto:contact@koamishin.com?subject=Koamishin%20walkthrough"
+                            >Book a walkthrough</a
+                        >
+                    </Button>
+
+                    <template v-if="$page.props.auth.user">
+                        <Button as-child size="sm" class="rounded-full px-5">
+                            <Link :href="route('dashboard')"
+                                >Open dashboard</Link
+                            >
+                        </Button>
+                    </template>
+                    <template v-else>
+                        <Button as-child variant="ghost" size="sm">
+                            <Link :href="route('login')">Log in</Link>
+                        </Button>
+                        <Button
+                            v-if="props.canRegister"
+                            as-child
+                            size="sm"
+                            class="rounded-full px-5"
+                        >
+                            <Link :href="route('register')"
+                                >Create account</Link
+                            >
+                        </Button>
+                    </template>
+                </div>
+
+                <Button
+                    variant="outline"
+                    size="sm"
+                    class="md:hidden"
+                    :aria-expanded="mobileMenuOpen"
+                    aria-controls="mobile-navigation"
+                    @click="mobileMenuOpen = !mobileMenuOpen"
+                >
+                    {{ mobileMenuOpen ? 'Close' : 'Menu' }}
+                </Button>
             </div>
-          </Card>
-        </div>
-      </section>
 
-      <!-- CTA Section -->
-      <section
-        id="contact"
-        class="relative overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 py-24 lg:py-32"
-      >
-        <div class="container mx-auto max-w-5xl px-6 text-center reveal-element">
-          <h2
-            class="mb-6 text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl"
-          >
-            Ready to Transform Your School?
-          </h2>
-          <p class="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
-            Join hundreds of schools already using Koamishin to manage their daily operations
-          </p>
-          <div class="flex flex-wrap items-center justify-center gap-4">
-            <Button as-child size="lg" class="h-12 px-10">
-              <Link :href="route('register')">Get Started Now</Link>
-            </Button>
-            <Button as-child variant="outline" size="lg" class="h-12 px-10">
-              <a href="mailto:contact@koamishin.com">Contact Sales</a>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Tech Stack Carousel -->
-      <section
-        class="relative border-y border-border bg-accent/30 py-10 overflow-hidden"
-      >
-        <div class="relative">
-          <div 
-            class="flex gap-16 px-8 animate-scroll"
-          >
-            <span
-              v-for="(tech, index) in [...techStack, ...techStack]"
-              :key="index"
-              class="text-2xl font-bold uppercase tracking-widest text-muted-foreground/30 sm:text-3xl flex-shrink-0"
+            <div
+                v-if="mobileMenuOpen"
+                id="mobile-navigation"
+                class="border-t border-border/60 bg-background/95 px-6 py-4 md:hidden"
             >
-              {{ tech }}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <style>
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-          display: inline-flex;
-        }
-      </style>
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-border bg-card py-12">
-      <div class="container mx-auto max-w-7xl px-6">
-        <div class="grid gap-8 md:grid-cols-4">
-          <div class="space-y-4">
-            <div class="flex items-center gap-2">
-              <KoamishinLogo class="h-8 w-8" />
-              <span class="text-lg font-bold">Koamishin</span>
+                <nav class="flex flex-col gap-2">
+                    <a
+                        v-for="item in navItems"
+                        :key="item.id"
+                        :href="`#${item.id}`"
+                        class="rounded-xl px-4 py-3 text-sm font-medium transition-colors"
+                        :class="
+                            activeSection === item.id
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        "
+                        :aria-current="
+                            activeSection === item.id ? 'page' : undefined
+                        "
+                        @click="handleNavClick(item.id)"
+                    >
+                        {{ item.label }}
+                    </a>
+                    <a
+                        href="mailto:contact@koamishin.com?subject=Koamishin%20walkthrough"
+                        class="rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        @click="mobileMenuOpen = false"
+                    >
+                        Book a walkthrough
+                    </a>
+                </nav>
             </div>
-            <p class="text-sm text-muted-foreground">
-              Modern school management software for the next generation of education.
-            </p>
-          </div>
+        </header>
 
-          <div class="space-y-4">
-            <h4 class="font-semibold">Product</h4>
-            <ul class="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#programs" class="hover:text-primary">Features</a></li>
-              <li><a href="#why" class="hover:text-primary">Why Choose Us</a></li>
-              <li><a href="#faq" class="hover:text-primary">FAQ</a></li>
-            </ul>
-          </div>
+        <main id="main-content" class="relative flex-1">
+            <section
+                id="hero"
+                class="scroll-mt-28 px-6 pt-16 pb-10 sm:pt-20 lg:pt-24 lg:pb-16"
+            >
+                <div class="container mx-auto max-w-6xl">
+                    <div
+                        class="reveal-element relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-card/85 px-6 py-12 shadow-2xl shadow-primary/10 backdrop-blur sm:px-10 lg:px-16 lg:py-20"
+                    >
+                        <div
+                            class="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-primary/18 via-primary/6 to-transparent"
+                        />
+                        <div
+                            class="absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent"
+                        />
 
-          <div class="space-y-4">
-            <h4 class="font-semibold">Company</h4>
-            <ul class="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" class="hover:text-primary">About Us</a></li>
-              <li><a href="#" class="hover:text-primary">Blog</a></li>
-              <li><a href="#" class="hover:text-primary">Careers</a></li>
-            </ul>
-          </div>
+                        <div
+                            class="relative mx-auto flex max-w-4xl flex-col items-center text-center"
+                        >
+                            <Badge
+                                variant="secondary"
+                                class="rounded-full border border-border/60 bg-background/85 px-4 py-1.5 text-sm backdrop-blur"
+                            >
+                                Built for private schools, academies, and
+                                learning centers
+                            </Badge>
 
-          <div class="space-y-4">
-            <h4 class="font-semibold">Legal</h4>
-            <ul class="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" class="hover:text-primary">Privacy Policy</a></li>
-              <li><a href="#" class="hover:text-primary">Terms of Service</a></li>
-              <li><a href="#" class="hover:text-primary">Security</a></li>
-            </ul>
-          </div>
-        </div>
+                            <h1
+                                class="mt-6 max-w-4xl text-4xl font-semibold tracking-[-0.06em] text-balance sm:text-6xl lg:text-7xl"
+                            >
+                                Run the school day with more clarity, less
+                                manual follow-up, and better parent visibility.
+                            </h1>
 
-        <div class="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>© {{ new Date().getFullYear() }} Koamishin. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
-  </div>
+                            <p
+                                class="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl"
+                            >
+                                Koamishin keeps admissions, attendance, academic
+                                records, parent communication, and billing in
+                                one connected system so your team can move
+                                faster with less admin noise.
+                            </p>
+
+                            <div
+                                class="mt-8 flex flex-wrap items-center justify-center gap-3"
+                            >
+                                <span
+                                    v-for="highlight in heroHighlights"
+                                    :key="highlight"
+                                    class="rounded-full border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm"
+                                >
+                                    {{ highlight }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="mt-10 flex flex-wrap items-center justify-center gap-4"
+                            >
+                                <Button
+                                    v-if="
+                                        !$page.props.auth.user &&
+                                        props.canRegister
+                                    "
+                                    as-child
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <Link :href="route('register')">
+                                        Create your school account
+                                        <ArrowRight class="h-4 w-4" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    v-else-if="$page.props.auth.user"
+                                    as-child
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <Link :href="route('dashboard')">
+                                        Open dashboard
+                                        <ArrowRight class="h-4 w-4" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    as-child
+                                    variant="outline"
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <a href="#implementation">
+                                        See rollout steps
+                                        <ChevronRight class="h-4 w-4" />
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="impact" class="scroll-mt-28 px-6 py-10 lg:py-16">
+                <div class="container mx-auto max-w-7xl space-y-8">
+                    <div class="grid gap-4 lg:grid-cols-3">
+                        <Card
+                            v-for="stat in platformStats"
+                            :key="stat.value"
+                            class="reveal-element rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm backdrop-blur"
+                        >
+                            <CardHeader class="space-y-3">
+                                <CardTitle class="text-2xl tracking-tight">{{
+                                    stat.value
+                                }}</CardTitle>
+                                <CardDescription class="text-sm leading-6">{{
+                                    stat.label
+                                }}</CardDescription>
+                            </CardHeader>
+                        </Card>
+                    </div>
+
+                    <div class="grid gap-4 lg:grid-cols-3">
+                        <Card
+                            v-for="quote in testimonials"
+                            :key="quote.name"
+                            class="reveal-element rounded-[1.75rem] border-border/60 bg-background/85 shadow-sm"
+                        >
+                            <CardContent class="flex h-full flex-col gap-6 p-6">
+                                <p
+                                    class="text-base leading-7 text-foreground/90"
+                                >
+                                    “{{ quote.quote }}”
+                                </p>
+                                <div
+                                    class="mt-auto border-t border-border/60 pt-4"
+                                >
+                                    <p class="font-semibold tracking-tight">
+                                        {{ quote.name }}
+                                    </p>
+                                    <p class="text-sm text-muted-foreground">
+                                        {{ quote.role }}
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            <section id="programs" class="scroll-mt-28 px-6 py-16 lg:py-24">
+                <div class="container mx-auto max-w-7xl">
+                    <div class="reveal-element mb-14 max-w-3xl">
+                        <Badge
+                            variant="secondary"
+                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                        >
+                            Platform capabilities
+                        </Badge>
+                        <h2
+                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                        >
+                            The workflows schools use every day, redesigned to
+                            work together.
+                        </h2>
+                        <p
+                            class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground"
+                        >
+                            Instead of splitting school operations across
+                            disconnected tools, Koamishin gives your team a
+                            single operating layer for records, communication,
+                            academic follow-up, and reporting.
+                        </p>
+                    </div>
+
+                    <div class="grid gap-6 lg:auto-rows-fr lg:grid-cols-3">
+                        <Card
+                            v-for="(feature, index) in programs"
+                            :key="feature.title"
+                            class="group reveal-element overflow-hidden rounded-[2rem] border-border/60 bg-card/90 shadow-sm transition-transform duration-300 hover:-translate-y-1"
+                            :class="feature.layout"
+                            :style="{ animationDelay: `${index * 90}ms` }"
+                        >
+                            <CardHeader class="space-y-5 pb-3">
+                                <div
+                                    class="flex items-start justify-between gap-4"
+                                >
+                                    <div
+                                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-inner shadow-primary/10 transition-colors group-hover:bg-primary/15"
+                                    >
+                                        <component
+                                            :is="feature.icon"
+                                            class="h-7 w-7 text-primary"
+                                        />
+                                    </div>
+                                    <span
+                                        class="rounded-full border border-border/60 bg-background/90 px-3 py-1 text-xs font-medium text-muted-foreground"
+                                    >
+                                        {{ feature.metric }}
+                                    </span>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <CardTitle
+                                        class="text-2xl tracking-tight"
+                                        >{{ feature.title }}</CardTitle
+                                    >
+                                    <CardDescription
+                                        class="max-w-2xl text-sm leading-7"
+                                    >
+                                        {{ feature.description }}
+                                    </CardDescription>
+                                </div>
+                            </CardHeader>
+
+                            <CardContent class="flex h-full flex-col gap-6">
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <div
+                                        v-for="detail in feature.details"
+                                        :key="detail"
+                                        class="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-muted-foreground"
+                                    >
+                                        <CheckCircle2
+                                            class="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
+                                        />
+                                        <span>{{ detail }}</span>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="mt-auto rounded-[1.5rem] border border-border/60 bg-background/90 p-4"
+                                >
+                                    <div
+                                        class="mb-4 flex items-center justify-between"
+                                    >
+                                        <p class="text-sm font-medium">
+                                            Inside this workflow
+                                        </p>
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            Daily school view
+                                        </p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span
+                                            v-for="item in feature.preview"
+                                            :key="item"
+                                            class="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground"
+                                        >
+                                            {{ item }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            <section id="why" class="scroll-mt-28 px-6 py-16 lg:py-24">
+                <div
+                    class="container mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_minmax(0,1.05fr)]"
+                >
+                    <div class="reveal-element lg:sticky lg:top-28 lg:h-fit">
+                        <Badge
+                            variant="secondary"
+                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                        >
+                            Why schools choose it
+                        </Badge>
+                        <h2
+                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                        >
+                            Better operational flow, not just another dashboard.
+                        </h2>
+                        <p
+                            class="mt-5 max-w-xl text-lg leading-8 text-muted-foreground"
+                        >
+                            The goal is simple: help your school act faster,
+                            communicate more clearly, and keep student
+                            information dependable across the people who use it
+                            every day.
+                        </p>
+
+                        <div
+                            class="mt-8 rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-sm"
+                        >
+                            <p class="text-sm font-semibold tracking-tight">
+                                What leadership gets
+                            </p>
+                            <ul
+                                class="mt-4 space-y-3 text-sm leading-6 text-muted-foreground"
+                            >
+                                <li class="flex items-start gap-3">
+                                    <CheckCircle2
+                                        class="mt-1 h-4 w-4 shrink-0 text-emerald-500"
+                                    />
+                                    Cleaner visibility across admin and academic
+                                    processes.
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <CheckCircle2
+                                        class="mt-1 h-4 w-4 shrink-0 text-emerald-500"
+                                    />
+                                    Less time chasing updates across
+                                    disconnected tools.
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <CheckCircle2
+                                        class="mt-1 h-4 w-4 shrink-0 text-emerald-500"
+                                    />
+                                    A structure that can expand with more
+                                    workflows over time.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <Card
+                            v-for="(item, index) in whyChoose"
+                            :key="item.title"
+                            class="reveal-element rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm"
+                            :style="{ animationDelay: `${index * 70}ms` }"
+                        >
+                            <CardHeader class="space-y-4">
+                                <div
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10"
+                                >
+                                    <component
+                                        :is="item.icon"
+                                        class="h-6 w-6 text-primary"
+                                    />
+                                </div>
+                                <CardTitle class="text-xl tracking-tight">{{
+                                    item.title
+                                }}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription class="text-sm leading-7">{{
+                                    item.description
+                                }}</CardDescription>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id="implementation"
+                class="scroll-mt-28 px-6 py-16 lg:py-24"
+            >
+                <div class="container mx-auto max-w-7xl">
+                    <div class="reveal-element mb-12 max-w-3xl">
+                        <Badge
+                            variant="secondary"
+                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                        >
+                            Rollout approach
+                        </Badge>
+                        <h2
+                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                        >
+                            A practical way to introduce Koamishin without
+                            overwhelming your team.
+                        </h2>
+                        <p
+                            class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground"
+                        >
+                            Start with the core operational pieces your school
+                            depends on, then expand to richer reporting and
+                            communication with a clearer implementation path.
+                        </p>
+                    </div>
+
+                    <div class="grid gap-6 lg:grid-cols-3">
+                        <Card
+                            v-for="(step, index) in implementationSteps"
+                            :key="step.title"
+                            class="reveal-element rounded-[1.9rem] border-border/60 bg-card/90 shadow-sm"
+                            :style="{ animationDelay: `${index * 80}ms` }"
+                        >
+                            <CardHeader class="space-y-5">
+                                <div
+                                    class="flex items-center justify-between gap-4"
+                                >
+                                    <div
+                                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10"
+                                    >
+                                        <component
+                                            :is="step.icon"
+                                            class="h-7 w-7 text-primary"
+                                        />
+                                    </div>
+                                    <span
+                                        class="text-sm font-medium text-muted-foreground"
+                                        >0{{ index + 1 }}</span
+                                    >
+                                </div>
+                                <CardTitle class="text-2xl tracking-tight">{{
+                                    step.title
+                                }}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription class="text-sm leading-7">{{
+                                    step.description
+                                }}</CardDescription>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            <section id="faq" class="scroll-mt-28 px-6 py-16 lg:py-24">
+                <div
+                    class="container mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]"
+                >
+                    <div>
+                        <div class="reveal-element mb-10">
+                            <Badge
+                                variant="secondary"
+                                class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                            >
+                                Support and rollout planning
+                            </Badge>
+                            <h2
+                                class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                            >
+                                Browse common questions, then move into a more
+                                guided school setup conversation.
+                            </h2>
+                            <p
+                                class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground"
+                            >
+                                Instead of hiding everything in a long
+                                accordion, this section helps schools filter by
+                                concern, scan answers quickly, and understand
+                                what support is available.
+                            </p>
+                        </div>
+
+                        <div
+                            class="reveal-element mb-6 rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-sm"
+                        >
+                            <div
+                                class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center"
+                            >
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="category in supportCategories"
+                                        :key="category"
+                                        type="button"
+                                        class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+                                        :class="
+                                            activeCategory === category
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'border border-border/60 bg-background text-muted-foreground hover:text-foreground'
+                                        "
+                                        @click="setCategory(category)"
+                                    >
+                                        {{ category }}
+                                    </button>
+                                </div>
+                                <div>
+                                    <Input
+                                        v-model="supportSearch"
+                                        class="h-11 rounded-full bg-background"
+                                        type="search"
+                                        placeholder="Search rollout, billing, parent access..."
+                                        aria-label="Search support questions"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="filteredFaqs.length" class="space-y-4">
+                            <Card
+                                v-for="(faq, index) in filteredFaqs"
+                                :key="faq.question"
+                                class="reveal-element rounded-[1.5rem] border-border/60 bg-background/90 shadow-sm"
+                                :style="{ animationDelay: `${index * 50}ms` }"
+                            >
+                                <button
+                                    type="button"
+                                    class="flex w-full items-start justify-between gap-4 px-6 py-5 text-left"
+                                    :aria-expanded="openFaq === faq.question"
+                                    :aria-controls="`faq-panel-${index}`"
+                                    @click="toggleFaq(faq.question)"
+                                >
+                                    <div class="space-y-2">
+                                        <span
+                                            class="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
+                                        >
+                                            {{ faq.category }}
+                                        </span>
+                                        <p
+                                            class="text-lg font-semibold tracking-tight"
+                                        >
+                                            {{ faq.question }}
+                                        </p>
+                                    </div>
+                                    <ChevronDown
+                                        class="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200"
+                                        :class="
+                                            openFaq === faq.question
+                                                ? 'rotate-180'
+                                                : ''
+                                        "
+                                    />
+                                </button>
+                                <div
+                                    :id="`faq-panel-${index}`"
+                                    v-show="openFaq === faq.question"
+                                    class="px-6 pt-0 pb-5 text-sm leading-7 text-muted-foreground"
+                                >
+                                    {{ faq.answer }}
+                                </div>
+                            </Card>
+                        </div>
+                        <Card
+                            v-else
+                            class="reveal-element rounded-[1.5rem] border-border/60 bg-card/85 shadow-sm"
+                        >
+                            <CardContent class="p-6">
+                                <p class="font-semibold tracking-tight">
+                                    No support topics matched your search.
+                                </p>
+                                <p
+                                    class="mt-2 text-sm leading-7 text-muted-foreground"
+                                >
+                                    Try a broader term like attendance, billing,
+                                    onboarding, or parent access.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <aside class="space-y-4 lg:pt-24">
+                        <Card
+                            v-for="card in supportCards"
+                            :key="card.title"
+                            class="reveal-element rounded-[1.5rem] border-border/60 bg-card/90 shadow-sm"
+                        >
+                            <CardHeader class="space-y-4">
+                                <div
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10"
+                                >
+                                    <component
+                                        :is="card.icon"
+                                        class="h-6 w-6 text-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <CardTitle class="text-xl tracking-tight">{{
+                                        card.title
+                                    }}</CardTitle>
+                                    <CardDescription
+                                        class="mt-2 text-sm leading-7"
+                                        >{{ card.description }}</CardDescription
+                                    >
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <ul
+                                    class="space-y-3 text-sm text-muted-foreground"
+                                >
+                                    <li
+                                        v-for="point in card.points"
+                                        :key="point"
+                                        class="flex items-start gap-3"
+                                    >
+                                        <CheckCircle2
+                                            class="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
+                                        />
+                                        <span>{{ point }}</span>
+                                    </li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </aside>
+                </div>
+            </section>
+
+            <section id="contact" class="scroll-mt-28 px-6 py-16 lg:py-24">
+                <div class="reveal-element container mx-auto max-w-6xl">
+                    <div
+                        class="overflow-hidden rounded-[2.25rem] border border-border/60 bg-gradient-to-br from-card via-card to-primary/10 p-8 shadow-2xl shadow-primary/10 sm:p-10 lg:p-12"
+                    >
+                        <div
+                            class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
+                        >
+                            <div>
+                                <Badge
+                                    variant="secondary"
+                                    class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                                >
+                                    Ready for a closer look?
+                                </Badge>
+                                <h2
+                                    class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                                >
+                                    Bring your school’s daily operations into
+                                    one clearer system.
+                                </h2>
+                                <p
+                                    class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground"
+                                >
+                                    Whether you are cleaning up enrollment,
+                                    improving parent updates, or trying to
+                                    reduce admin duplication, Koamishin gives
+                                    your team a more connected way to work.
+                                </p>
+                                <div
+                                    class="mt-6 flex flex-wrap gap-3 text-sm text-muted-foreground"
+                                >
+                                    <span
+                                        class="rounded-full border border-border/60 bg-background/80 px-4 py-2"
+                                        >Guided onboarding available</span
+                                    >
+                                    <span
+                                        class="rounded-full border border-border/60 bg-background/80 px-4 py-2"
+                                        >Works for small and growing
+                                        schools</span
+                                    >
+                                    <span
+                                        class="rounded-full border border-border/60 bg-background/80 px-4 py-2"
+                                        >Built for real school workflows</span
+                                    >
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex flex-col gap-3 sm:flex-row lg:flex-col"
+                            >
+                                <Button
+                                    v-if="
+                                        !$page.props.auth.user &&
+                                        props.canRegister
+                                    "
+                                    as-child
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <Link :href="route('register')"
+                                        >Create your school account</Link
+                                    >
+                                </Button>
+                                <Button
+                                    v-else-if="$page.props.auth.user"
+                                    as-child
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <Link :href="route('dashboard')"
+                                        >Open dashboard</Link
+                                    >
+                                </Button>
+                                <Button
+                                    as-child
+                                    variant="outline"
+                                    size="lg"
+                                    class="h-12 rounded-full px-8"
+                                >
+                                    <a
+                                        href="mailto:contact@koamishin.com?subject=Koamishin%20walkthrough"
+                                        >Book a live walkthrough</a
+                                    >
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="relative overflow-hidden border-y border-border/60 bg-accent/25 py-8"
+            >
+                <div class="container mx-auto mb-4 max-w-7xl px-6">
+                    <p
+                        class="text-center text-xs font-medium tracking-[0.22em] text-muted-foreground uppercase"
+                    >
+                        Built on a dependable modern foundation
+                    </p>
+                </div>
+                <div class="relative">
+                    <div class="animate-scroll flex gap-16 px-8">
+                        <span
+                            v-for="(tech, index) in [
+                                ...techStack,
+                                ...techStack,
+                            ]"
+                            :key="`${tech}-${index}`"
+                            class="shrink-0 text-xl font-semibold tracking-[0.28em] text-muted-foreground/35 uppercase sm:text-2xl"
+                        >
+                            {{ tech }}
+                        </span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer
+            class="border-t border-border/60 bg-card/80 px-6 py-12 backdrop-blur"
+        >
+            <div class="container mx-auto max-w-7xl">
+                <div
+                    class="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_0.7fr_0.8fr]"
+                >
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <KoamishinLogo class="h-10 w-10 rounded-2xl" />
+                            <div>
+                                <p class="text-lg font-semibold tracking-tight">
+                                    Koamishin
+                                </p>
+                                <p class="text-sm text-muted-foreground">
+                                    School operations platform
+                                </p>
+                            </div>
+                        </div>
+                        <p
+                            class="max-w-xl text-sm leading-7 text-muted-foreground"
+                        >
+                            Designed for schools that want clearer operations,
+                            stronger communication, and a more dependable way to
+                            manage the day-to-day work behind learning.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3
+                            class="text-sm font-semibold tracking-[0.18em] text-muted-foreground uppercase"
+                        >
+                            Explore
+                        </h3>
+                        <ul class="space-y-3 text-sm text-muted-foreground">
+                            <li>
+                                <a
+                                    href="#programs"
+                                    class="transition-colors hover:text-foreground"
+                                    >Capabilities</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#impact"
+                                    class="transition-colors hover:text-foreground"
+                                    >Impact</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#why"
+                                    class="transition-colors hover:text-foreground"
+                                    >Why Koamishin</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#faq"
+                                    class="transition-colors hover:text-foreground"
+                                    >Support</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3
+                            class="text-sm font-semibold tracking-[0.18em] text-muted-foreground uppercase"
+                        >
+                            Contact
+                        </h3>
+                        <ul class="space-y-3 text-sm text-muted-foreground">
+                            <li>
+                                <a
+                                    href="mailto:contact@koamishin.com"
+                                    class="transition-colors hover:text-foreground"
+                                >
+                                    contact@koamishin.com
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="mailto:contact@koamishin.com?subject=Koamishin%20walkthrough"
+                                    class="transition-colors hover:text-foreground"
+                                >
+                                    Book a walkthrough
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#contact"
+                                    class="transition-colors hover:text-foreground"
+                                    >Start with a guided rollout conversation</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div
+                    class="mt-10 border-t border-border/60 pt-6 text-sm text-muted-foreground"
+                >
+                    <p>
+                        © {{ currentYear }} Koamishin. Built for modern school
+                        operations.
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
 </template>
+
+<style scoped>
+:global(html) {
+    scroll-behavior: smooth;
+}
+
+.reveal-element {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+    transition:
+        opacity 0.65s ease,
+        transform 0.65s ease;
+}
+
+.revealed {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-scroll {
+    display: inline-flex;
+    min-width: max-content;
+    animation: marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :global(html) {
+        scroll-behavior: auto;
+    }
+
+    .reveal-element,
+    .revealed,
+    .animate-scroll {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+</style>

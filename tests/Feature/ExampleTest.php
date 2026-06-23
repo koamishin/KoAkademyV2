@@ -1,7 +1,11 @@
 <?php
 
-test('returns a successful response', function (): void {
+test('home renders the welcome page', function (): void {
     $response = $this->get(route('home'));
 
-    $response->assertOk();
+    $response
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Welcome')
+            ->has('canRegister'));
 });

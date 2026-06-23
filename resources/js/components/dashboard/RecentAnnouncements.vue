@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { show as showClass } from '@/routes/campus';
+import { show as showClass } from '@/routes/classroom';
 import type { AnnouncementItem } from '@/types/dashboard';
 
 defineProps<{
     items: AnnouncementItem[];
+    campus: { slug: string } | string;
 }>();
 
 function relativeTime(dateStr: string): string {
@@ -61,7 +62,7 @@ function relativeTime(dateStr: string): string {
             <Link
                 v-for="item in items"
                 :key="item.id"
-                :href="showClass({ classOffering: item.classOfferingId })"
+                :href="showClass({ campus: campus, classOffering: item.classOfferingId })"
                 class="group block rounded-2xl p-5 transition-all duration-300 hover:bg-accent/50"
             >
                 <div class="flex flex-col gap-3">
