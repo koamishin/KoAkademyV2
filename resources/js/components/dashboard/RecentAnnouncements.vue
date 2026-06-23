@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { show as showClass } from '@/routes/classroom';
+import { show as showClass } from '@/routes/campus';
 import type { AnnouncementItem } from '@/types/dashboard';
 
 defineProps<{
@@ -33,13 +33,13 @@ function relativeTime(dateStr: string): string {
 
 <template>
     <div
-        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl transition-colors hover:bg-white/[0.03]"
+        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm transition-all duration-500 hover:shadow-xl"
     >
         <div
-            class="flex items-center justify-between border-b border-white/[0.04] px-8 py-6"
+            class="flex items-center justify-between border-b border-border/50 px-8 py-6"
         >
             <h2
-                class="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+                class="text-sm font-semibold tracking-[0.2em] text-foreground uppercase"
             >
                 Recent Announcements
             </h2>
@@ -49,10 +49,10 @@ function relativeTime(dateStr: string): string {
             v-if="items.length === 0"
             class="flex flex-1 flex-col items-center justify-center p-12 text-center"
         >
-            <p class="text-2xl font-semibold tracking-tight text-zinc-300">
+            <p class="text-2xl font-semibold tracking-tight text-foreground">
                 All Quiet
             </p>
-            <p class="mt-2 text-sm font-medium tracking-wide text-zinc-500">
+            <p class="mt-2 text-sm font-medium text-muted-foreground">
                 No recent announcements from your classes.
             </p>
         </div>
@@ -62,29 +62,29 @@ function relativeTime(dateStr: string): string {
                 v-for="item in items"
                 :key="item.id"
                 :href="showClass({ classOffering: item.classOfferingId })"
-                class="group block rounded-2xl p-4 transition-colors hover:bg-white/[0.04]"
+                class="group block rounded-2xl p-5 transition-all duration-300 hover:bg-accent/50"
             >
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-3">
                     <div class="flex items-start justify-between gap-4">
                         <p
-                            class="truncate text-base font-medium tracking-tight text-zinc-100 transition-colors group-hover:text-violet-300"
+                            class="truncate text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
                         >
                             {{ item.title || 'Announcement' }}
                         </p>
                         <span
-                            class="shrink-0 text-[10px] font-bold tracking-widest text-zinc-500 uppercase"
+                            class="shrink-0 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
                         >
                             {{ relativeTime(item.publishedAt) }}
                         </span>
                     </div>
                     <p
-                        class="line-clamp-2 text-sm leading-relaxed font-medium tracking-wide text-zinc-400"
+                        class="line-clamp-2 text-sm leading-relaxed font-medium text-muted-foreground"
                     >
                         {{ item.body }}
                     </p>
-                    <div class="mt-1">
+                    <div class="flex items-center gap-2">
                         <span
-                            class="text-xs font-bold tracking-widest text-zinc-600 uppercase transition-colors group-hover:text-violet-400/70"
+                            class="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase transition-colors group-hover:text-primary"
                         >
                             {{ item.subjectCode || item.subjectName }}
                         </span>

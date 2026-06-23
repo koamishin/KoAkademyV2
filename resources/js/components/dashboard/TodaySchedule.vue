@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Clock, MapPin } from 'lucide-vue-next';
 import type { ScheduleItem } from '@/types/dashboard';
 
 defineProps<{
@@ -34,26 +35,32 @@ function getStatus(
 }
 
 const statusStyles: Record<string, string> = {
-    done: 'bg-zinc-700',
-    ongoing: 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.5)]',
-    upcoming: 'bg-blue-400',
+    done: 'bg-muted-foreground/30',
+    ongoing: 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]',
+    upcoming: 'bg-primary',
+};
+
+const statusTextStyles: Record<string, string> = {
+    done: 'text-muted-foreground',
+    ongoing: 'text-emerald-500',
+    upcoming: 'text-primary',
 };
 </script>
 
 <template>
     <div
-        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl transition-colors hover:bg-white/[0.03]"
+        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm transition-all duration-500 hover:shadow-xl"
     >
         <div
-            class="flex items-center justify-between border-b border-white/[0.04] px-8 py-6"
+            class="flex items-center justify-between border-b border-border/50 px-8 py-6"
         >
             <h2
-                class="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+                class="text-sm font-semibold tracking-[0.2em] text-foreground uppercase"
             >
                 Today's Schedule
             </h2>
             <span
-                class="text-xs font-bold tracking-widest text-zinc-500 uppercase"
+                class="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase"
             >
                 {{
                     new Date().toLocaleDateString('en-US', {
@@ -69,10 +76,10 @@ const statusStyles: Record<string, string> = {
             v-if="items.length === 0"
             class="flex flex-1 flex-col items-center justify-center p-12 text-center"
         >
-            <p class="text-2xl font-semibold tracking-tight text-zinc-300">
+            <p class="text-2xl font-semibold tracking-tight text-foreground">
                 Free Day
             </p>
-            <p class="mt-2 text-sm font-medium tracking-wide text-zinc-500">
+            <p class="mt-2 text-sm font-medium text-muted-foreground">
                 No classes scheduled for today.
             </p>
         </div>
@@ -81,50 +88,41 @@ const statusStyles: Record<string, string> = {
             <div
                 v-for="item in items"
                 :key="item.id"
-                class="group relative flex items-start gap-5 rounded-2xl p-4 transition-colors hover:bg-white/[0.04]"
+                class="group relative flex items-start gap-5 rounded-2xl p-5 transition-all duration-300 hover:bg-accent/50"
             >
                 <!-- Timeline indicator -->
-                <div class="relative flex flex-col items-center pt-2">
+                <div class="relative flex flex-col items-center pt-3">
                     <div
-                        class="h-2 w-2 rounded-full"
+                        class="h-3 w-3 rounded-full transition-all duration-300"
                         :class="
                             statusStyles[getStatus(item.startsAt, item.endsAt)]
                         "
                     />
                     <div
-                        class="absolute top-5 bottom-[-1.5rem] w-px bg-white/[0.06] group-last:hidden"
+                        class="absolute top-7 bottom-[-1.5rem] w-px bg-border group-last:hidden"
                     />
                 </div>
 
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between gap-4">
                         <p
-                            class="truncate text-base font-medium tracking-tight text-zinc-100"
+                            class="truncate text-base font-semibold tracking-tight text-foreground"
                         >
                             {{ item.subjectName }}
                         </p>
                         <span
-                            class="shrink-0 text-[10px] font-bold tracking-widest uppercase"
-                            :class="{
-                                'text-zinc-600':
-                                    getStatus(item.startsAt, item.endsAt) ===
-                                    'done',
-                                'text-emerald-400':
-                                    getStatus(item.startsAt, item.endsAt) ===
-                                    'ongoing',
-                                'text-blue-400':
-                                    getStatus(item.startsAt, item.endsAt) ===
-                                    'upcoming',
-                            }"
+                            class="shrink-0 text-[10px] font-bold tracking-[0.2em] uppercase"
+                            :class="statusTextStyles[getStatus(item.startsAt, item.endsAt)]"
                         >
                             {{ getStatus(item.startsAt, item.endsAt) }}
                         </span>
                     </div>
 
                     <div
-                        class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-medium tracking-wide text-zinc-500"
+                        class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-muted-foreground"
                     >
-                        <span class="text-zinc-400">
+                        <span class="flex items-center gap-2">
+                            <Clock class="h-3.5 w-3.5" />
                             {{ formatTime(item.startsAt) }} —
                             {{ formatTime(item.endsAt) }}
                         </span>
@@ -132,9 +130,7 @@ const statusStyles: Record<string, string> = {
                             v-if="item.roomName"
                             class="flex items-center gap-2"
                         >
-                            <span
-                                class="h-1 w-1 rounded-full bg-zinc-700"
-                            ></span>
+                            <MapPin class="h-3.5 w-3.5" />
                             {{ item.roomName }}
                         </span>
                     </div>

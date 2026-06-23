@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { GraduationCap, ChevronRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 import type {
     StudentInfo,
@@ -15,12 +16,12 @@ const props = defineProps<{
 const greeting = computed(() => {
     const hour = new Date().getHours();
     if (hour < 12) {
-        return 'Good morning';
+        return 'Good Morning';
     }
     if (hour < 17) {
-        return 'Good afternoon';
+        return 'Good Afternoon';
     }
-    return 'Good evening';
+    return 'Good Evening';
 });
 
 const enrollmentStatusColor = computed(() => {
@@ -50,90 +51,111 @@ const enrollmentStatusLabel = computed(() => {
 
 <template>
     <div
-        class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-2xl transition-all duration-500 sm:p-10"
+        class="group relative overflow-hidden rounded-[2rem] border border-border bg-card p-6 shadow-sm transition-all duration-700 hover:shadow-xl hover:-translate-y-0.5"
     >
-        <!-- Animated ambient light blobs -->
+        <!-- Decorative gradient blobs -->
         <div
-            class="pointer-events-none absolute -top-20 -right-20 h-64 w-64 animate-pulse rounded-full bg-violet-600/20 blur-[80px]"
-            style="animation-duration: 4s"
+            class="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-[100px]"
         />
         <div
-            class="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 animate-pulse rounded-full bg-indigo-600/10 blur-[100px]"
-            style="animation-duration: 6s; animation-delay: 1s"
+            class="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-tr from-indigo-500/10 to-emerald-500/10 blur-[120px]"
         />
 
         <div
-            class="relative z-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
+            class="relative z-10 flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
         >
+            <!-- Left: User Info & Greeting -->
             <div class="min-w-0 flex-1">
-                <div class="min-w-0">
-                    <p
-                        class="text-xs font-semibold tracking-widest text-zinc-500 uppercase"
-                    >
-                        {{ greeting }}
-                    </p>
-                    <h1
-                        class="mt-2 truncate text-4xl font-medium tracking-tighter text-zinc-100 sm:text-5xl"
-                    >
-                        {{ student?.fullName ?? 'Student' }}
-                    </h1>
-                    <p
-                        v-if="academicContext"
-                        class="mt-3 text-sm font-medium tracking-wide text-zinc-400"
-                    >
-                        {{ academicContext.academicYearName }}
-                        <span
-                            v-if="academicContext.termName"
-                            class="px-1.5 text-zinc-600"
-                            >·</span
+                <div class="min-w-0 flex items-start gap-6">
+                    <!-- Avatar placeholder -->
+                    <div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 p-0.5">
+                        <div class="flex h-full w-full items-center justify-center rounded-full bg-card">
+                            <GraduationCap class="h-10 w-10 text-primary" />
+                        </div>
+                    </div>
+                    <div class="min-w-0">
+                        <p
+                            class="text-xs font-semibold tracking-[0.3em] text-muted-foreground uppercase"
                         >
-                        <span v-if="academicContext.termName">{{
-                            academicContext.termName
-                        }}</span>
-                    </p>
+                            {{ greeting }}
+                        </p>
+                        <h1
+                            class="mt-2 truncate text-4xl font-semibold tracking-tighter text-foreground sm:text-5xl"
+                        >
+                            {{ student?.fullName ?? 'Student' }}
+                        </h1>
+                        <p
+                            v-if="academicContext"
+                            class="mt-3 text-sm font-medium text-muted-foreground"
+                        >
+                            {{ academicContext.academicYearName }}
+                            <span
+                                v-if="academicContext.termName"
+                                class="px-1.5 text-zinc-500"
+                            >·</span
+                            >
+                            <span v-if="academicContext.termName">
+                                {{ academicContext.termName }}
+                            </span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col items-start gap-3 md:items-end">
-                <span
-                    class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase ring-1"
-                    :class="enrollmentStatusColor"
-                >
-                    {{ enrollmentStatusLabel }}
-                </span>
+            <!-- Right: Status & Quick Actions -->
+            <div class="flex flex-col items-start gap-4 md:items-end">
+                <div class="flex items-center gap-3">
+                    <span
+                        class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold tracking-[0.2em] uppercase ring-1 transition-all duration-300"
+                        :class="enrollmentStatusColor"
+                    >
+                        <div class="h-1.5 w-1.5 rounded-full current" style="background-color: currentColor" />
+                        {{ enrollmentStatusLabel }}
+                    </span>
+                </div>
 
-                <span
-                    v-if="student?.studentNumber || enrollment?.studentNumber"
-                    class="text-sm font-medium tracking-widest text-zinc-500"
-                >
-                    {{ enrollment?.studentNumber ?? student?.studentNumber }}
-                </span>
+                <div class="flex flex-col items-start gap-1">
+                    <span
+                        v-if="student?.studentNumber || enrollment?.studentNumber"
+                        class="text-xs font-semibold tracking-[0.3em] text-muted-foreground uppercase"
+                    >
+                        Student ID
+                    </span>
+                    <span class="text-sm font-medium text-foreground">
+                        {{ enrollment?.studentNumber ?? student?.studentNumber }}
+                    </span>
+                </div>
             </div>
         </div>
 
-        <!-- Meta / Context Row -->
+        <!-- Context Row -->
         <div
             v-if="enrollment?.sectionName"
-            class="relative z-10 mt-8 flex items-center gap-6 border-t border-white/[0.06] pt-6 text-sm font-medium text-zinc-400"
+            class="relative z-10 mt-10 grid grid-cols-1 gap-6 border-t border-border/50 pt-8 md:grid-cols-3"
         >
-            <div class="flex flex-col">
-                <span
-                    class="text-[10px] font-bold tracking-widest text-zinc-600 uppercase"
+            <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase"
                     >Section</span
                 >
-                <span class="mt-0.5 text-zinc-200">{{
-                    enrollment.sectionName
-                }}</span>
+                <span class="text-lg font-semibold text-foreground">
+                    {{ enrollment.sectionName }}
+                </span>
             </div>
-            <div class="h-8 w-px bg-white/[0.06]"></div>
-            <div class="flex flex-col">
-                <span
-                    class="text-[10px] font-bold tracking-widest text-zinc-600 uppercase"
+            <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase"
                     >Enrolled Subjects</span
                 >
-                <span class="mt-0.5 text-zinc-200">{{
-                    enrollment.subjectsCount
-                }}</span>
+                <span class="text-lg font-semibold text-foreground">
+                    {{ enrollment.subjectsCount }}
+                </span>
+            </div>
+            <div class="flex items-end justify-start md:justify-end">
+                <button
+                    class="group inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground transition-all duration-300 hover:bg-accent hover:text-accent-foreground hover:border-transparent"
+                >
+                    View Schedule
+                    <ChevronRight class="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
             </div>
         </div>
     </div>

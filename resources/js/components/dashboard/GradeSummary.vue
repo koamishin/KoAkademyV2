@@ -6,10 +6,10 @@ defineProps<{
 }>();
 
 function gradeColor(percentage: number): string {
-    if (percentage >= 90) return 'text-emerald-400';
-    if (percentage >= 75) return 'text-blue-400';
-    if (percentage >= 60) return 'text-amber-400';
-    return 'text-red-400';
+    if (percentage >= 90) return 'text-emerald-500';
+    if (percentage >= 75) return 'text-blue-500';
+    if (percentage >= 60) return 'text-amber-500';
+    return 'text-red-500';
 }
 
 function ringColor(percentage: number): string {
@@ -29,13 +29,13 @@ function dashoffset(percentage: number): number {
 
 <template>
     <div
-        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl transition-colors hover:bg-white/[0.03]"
+        class="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm transition-all duration-500 hover:shadow-xl"
     >
         <div
-            class="flex items-center justify-between border-b border-white/[0.04] px-8 py-6"
+            class="flex items-center justify-between border-b border-border/50 px-8 py-6"
         >
             <h2
-                class="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+                class="text-sm font-semibold tracking-[0.2em] text-foreground uppercase"
             >
                 Grade Summary
             </h2>
@@ -45,10 +45,10 @@ function dashoffset(percentage: number): number {
             v-if="items.length === 0"
             class="flex flex-1 flex-col items-center justify-center p-12 text-center"
         >
-            <p class="text-2xl font-semibold tracking-tight text-zinc-300">
+            <p class="text-2xl font-semibold tracking-tight text-foreground">
                 No Grades Yet
             </p>
-            <p class="mt-2 text-sm font-medium tracking-wide text-zinc-500">
+            <p class="mt-2 text-sm font-medium text-muted-foreground">
                 Keep up the good work!
             </p>
         </div>
@@ -57,26 +57,26 @@ function dashoffset(percentage: number): number {
             <div
                 v-for="item in items"
                 :key="item.classOfferingId"
-                class="group flex items-center justify-between gap-5 rounded-2xl p-4 transition-colors hover:bg-white/[0.04]"
+                class="group flex items-center justify-between gap-5 rounded-2xl p-5 transition-all duration-300 hover:bg-accent/50"
             >
                 <div class="min-w-0 flex-1">
                     <p
-                        class="truncate text-base font-medium tracking-tight text-zinc-100"
+                        class="truncate text-base font-semibold tracking-tight text-foreground"
                     >
                         {{ item.className }}
                     </p>
                     <div
-                        class="mt-2 flex items-center gap-3 text-xs font-medium tracking-wide text-zinc-500"
+                        class="mt-3 flex items-center gap-3 text-xs font-medium text-muted-foreground"
                     >
                         <span
                             v-if="item.subjectCode"
-                            class="font-bold tracking-widest text-zinc-400 uppercase"
+                            class="font-bold tracking-[0.2em] text-muted-foreground uppercase"
                         >
                             {{ item.subjectCode }}
                         </span>
                         <span
                             v-if="item.subjectCode"
-                            class="h-1 w-1 rounded-full bg-zinc-700"
+                            class="h-1 w-1 rounded-full bg-border"
                         ></span>
                         <span
                             >{{ item.gradedCount }}
@@ -87,7 +87,7 @@ function dashoffset(percentage: number): number {
                 </div>
 
                 <div
-                    class="relative flex h-14 w-14 shrink-0 items-center justify-center"
+                    class="relative flex h-16 w-16 shrink-0 items-center justify-center"
                 >
                     <!-- Background ring -->
                     <svg
@@ -99,9 +99,9 @@ function dashoffset(percentage: number): number {
                             cy="24"
                             :r="radius"
                             fill="none"
-                            class="text-white/[0.04]"
+                            class="text-border"
                             stroke="currentColor"
-                            stroke-width="2.5"
+                            stroke-width="3"
                         />
                         <!-- Progress ring -->
                         <circle
@@ -111,7 +111,7 @@ function dashoffset(percentage: number): number {
                             fill="none"
                             :class="ringColor(item.percentage)"
                             stroke="currentColor"
-                            stroke-width="2.5"
+                            stroke-width="3"
                             stroke-linecap="round"
                             :stroke-dasharray="circumference"
                             :stroke-dashoffset="dashoffset(item.percentage)"
@@ -119,7 +119,7 @@ function dashoffset(percentage: number): number {
                         />
                     </svg>
                     <span
-                        class="relative text-sm font-semibold tracking-tighter"
+                        class="relative text-sm font-bold tracking-tighter"
                         :class="gradeColor(item.percentage)"
                     >
                         {{ Math.round(item.percentage)
