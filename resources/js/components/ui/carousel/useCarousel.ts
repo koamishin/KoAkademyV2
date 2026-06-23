@@ -1,7 +1,7 @@
 import type { UnwrapRefCarouselApi as CarouselApi, CarouselEmits, CarouselProps } from "./interface"
 import { createInjectionState } from "@vueuse/core"
 import emblaCarouselVue from "embla-carousel-vue"
-import { onMounted, ref } from "vue"
+import { onMounted, ref, watch } from "vue"
 
 const [useProvideCarousel, useInjectCarousel] = createInjectionState(
   ({
@@ -29,16 +29,18 @@ const [useProvideCarousel, useInjectCarousel] = createInjectionState(
       canScrollPrev.value = api?.canScrollPrev() || false
     }
 
-    onMounted(() => {
-      if (!emblaApi.value)
+    watch(emblaApi, (api) => {
+      if (!api)
         return
 
-      emblaApi.value?.on("init", onSelect)
-      emblaApi.value?.on("reInit", onSelect)
-      emblaApi.value?.on("select", onSelect)
-
-      emits("init-api", emblaApi.value)
-    })
+      api.on("init", onSelect)
+      api.on("reInit", onSelect)
+      api.on("select", onSelect)
+      
+      onSelect(api)
+      
+      emits("init-api", api)
+    }, { immediate: true })
 
     return { carouselRef: emblaNode, carouselApi: emblaApi, canScrollPrev, canScrollNext, scrollPrev, scrollNext, orientation }
   },
