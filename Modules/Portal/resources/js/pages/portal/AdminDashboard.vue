@@ -242,25 +242,35 @@ onMounted(() => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-4 sm:p-6 lg:p-8">
       <!-- Header -->
-      <header class="flex items-center justify-between rounded-2xl border border-border bg-card p-4 sm:p-6">
-        <div>
-          <p class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Activity class="size-4" />
-            Daily operations
-          </p>
-          <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{{ admin.campusName }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">
+      <header class="flex items-center justify-between rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-lg"
+              :style="{
+                background: `linear-gradient(135deg, ${chartColors.primary}, ${chartColors.accent})`,
+              }"
+            >
+              <Activity class="size-4 text-white" />
+            </div>
+            <p class="text-sm font-medium text-muted-foreground">
+              Daily operations
+            </p>
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ admin.campusName }}</h1>
+          <p class="text-sm text-muted-foreground max-w-2xl">
             A focused admin view for queues, classes, and today’s campus movement.
           </p>
         </div>
         <div class="hidden sm:block">
           <div
-            class="flex h-16 w-16 items-center justify-center rounded-xl"
+            class="flex h-20 w-20 items-center justify-center rounded-2xl"
             :style="{
-              background: `linear-gradient(135deg, ${chartColors.primary}, ${chartColors.accent})`,
+              background: `linear-gradient(135deg, ${chartColors.primary}20, ${chartColors.accent}20)`,
+              border: `1px solid ${chartColors.primary}30`,
             }"
           >
-            <Activity class="size-8 text-white" />
+            <Activity class="size-10" :style="{ color: chartColors.primary }" />
           </div>
         </div>
       </header>
@@ -269,10 +279,13 @@ onMounted(() => {
       <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <component
           :is="card.href ? Link : 'article'"
-          v-for="card in statCards"
+          v-for="(card, index) in statCards"
           :key="card.label"
           :href="card.href ? card.href({ campus: page.props.currentCampus!.slug }) : undefined"
-          class="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+          class="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
+          :style="{
+            animationDelay: `${index * 50}ms`,
+          }"
         >
           <div
             class="absolute left-0 top-0 h-1 w-full"
@@ -280,40 +293,40 @@ onMounted(() => {
           ></div>
           <div class="flex items-start justify-between">
             <div
-              class="flex h-12 w-12 items-center justify-center rounded-xl"
+              class="flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
               :style="{ background: `linear-gradient(135deg, ${chartColors.primary}, ${chartColors.accent})` }"
             >
-              <component :is="card.icon" class="size-6 text-white" />
+              <component :is="card.icon" class="size-7 text-white" />
             </div>
-            <TrendingUp class="size-5 text-muted-foreground" :style="{ color: chartColors.primary }" />
+            <TrendingUp class="size-6 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" :style="{ color: chartColors.primary }" />
           </div>
-          <p class="mt-5 text-3xl font-bold tracking-tight">{{ stats[card.value] }}</p>
-          <p class="mt-1 text-sm font-medium text-muted-foreground">{{ card.label }}</p>
+          <p class="mt-5 text-4xl font-bold tracking-tight transition-all duration-300 group-hover:scale-105">{{ stats[card.value] }}</p>
+          <p class="mt-1 text-sm font-semibold text-muted-foreground">{{ card.label }}</p>
         </component>
       </section>
 
       <!-- Charts Section -->
       <section class="grid gap-6 lg:grid-cols-3">
-        <div class="col-span-2 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="text-lg font-semibold">Enrollment Trends</h3>
+        <div class="col-span-2 rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
+          <div class="flex items-center justify-between mb-6">
+            <div class="space-y-1">
+              <h3 class="text-xl font-bold">Enrollment Trends</h3>
               <p class="text-sm text-muted-foreground">Weekly enrollment activity</p>
             </div>
           </div>
-          <div class="h-64">
+          <div class="h-72">
             <Line :data="enrollmentChartData" :options="chartOptions" />
           </div>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="text-lg font-semibold">Class Status</h3>
+        <div class="rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
+          <div class="flex items-center justify-between mb-6">
+            <div class="space-y-1">
+              <h3 class="text-xl font-bold">Class Status</h3>
               <p class="text-sm text-muted-foreground">Distribution of classes</p>
             </div>
           </div>
-          <div class="h-64">
+          <div class="h-72">
             <Doughnut :data="classStatusChartData" :options="{ ...chartOptions, cutout: '70%' }" />
           </div>
         </div>
@@ -321,48 +334,51 @@ onMounted(() => {
 
       <section class="grid gap-6 lg:grid-cols-3">
         <!-- Applications Chart -->
-        <div class="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="text-lg font-semibold">Applications</h3>
+        <div class="rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
+          <div class="flex items-center justify-between mb-6">
+            <div class="space-y-1">
+              <h3 class="text-xl font-bold">Applications</h3>
               <p class="text-sm text-muted-foreground">Monthly submissions</p>
             </div>
           </div>
-          <div class="h-64">
+          <div class="h-72">
             <Bar :data="applicationsChartData" :options="chartOptions" />
           </div>
         </div>
 
         <!-- Queues Section -->
-        <div class="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <div class="rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">Applications queue</h2>
+            <h2 class="text-xl font-bold">Applications queue</h2>
             <Link
               :href="adminApplicationsIndex({ campus: page.props.currentCampus!.slug })"
-              class="text-sm font-medium"
+              class="group flex items-center gap-1 text-sm font-semibold transition-all duration-300"
               :style="{ color: chartColors.primary }"
             >
               View all
-              <ArrowRight class="ml-1 inline size-4" />
+              <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div class="mt-5 space-y-3">
+          <div class="mt-6 space-y-3">
             <article
-              v-for="item in applicationQueue"
+              v-for="(item, index) in applicationQueue"
               :key="item.id"
-              class="flex items-start gap-3 rounded-xl bg-muted/50 p-4"
+              class="flex items-start gap-4 rounded-2xl bg-muted/50 p-5 transition-all duration-300 hover:bg-muted hover:shadow-md"
+              :style="{
+                animationDelay: `${index * 30}ms`,
+              }"
             >
               <div class="mt-1">
                 <CheckCircle2 class="size-5" :style="{ color: chartColors.chart2 }" />
               </div>
               <div class="flex-1">
-                <p class="font-medium">{{ item.studentName ?? item.number }}</p>
-                <div class="mt-1 flex items-center gap-2">
-                  <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium" :class="getStatusColor(item.status)">
+                <p class="font-semibold">{{ item.studentName ?? item.number }}</p>
+                <div class="mt-2 flex flex-wrap items-center gap-3">
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="getStatusColor(item.status)">
                     {{ item.status.replace('_', ' ') }}
                   </span>
-                  <span class="text-xs text-muted-foreground">
-                    <Clock class="mr-1 inline size-3" />
+                  <span class="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock class="size-3" />
                     {{ item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : 'N/A' }}
                   </span>
                 </div>
@@ -370,39 +386,42 @@ onMounted(() => {
             </article>
             <div
               v-if="applicationQueue.length === 0"
-              class="flex flex-col items-center justify-center py-8 text-center"
+              class="flex flex-col items-center justify-center py-10 text-center"
             >
-              <AlertCircle class="mb-2 size-8 text-muted-foreground" />
+              <AlertCircle class="mb-3 size-10 text-muted-foreground" />
               <p class="text-sm text-muted-foreground">No applications need attention.</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+        <div class="rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">Enrollment queue</h2>
+            <h2 class="text-xl font-bold">Enrollment queue</h2>
             <Link
               :href="adminEnrollmentsIndex({ campus: page.props.currentCampus!.slug })"
-              class="text-sm font-medium"
+              class="group flex items-center gap-1 text-sm font-semibold transition-all duration-300"
               :style="{ color: chartColors.primary }"
             >
               View all
-              <ArrowRight class="ml-1 inline size-4" />
+              <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div class="mt-5 space-y-3">
+          <div class="mt-6 space-y-3">
             <article
-              v-for="item in enrollmentQueue"
+              v-for="(item, index) in enrollmentQueue"
               :key="item.id"
-              class="flex items-start gap-3 rounded-xl bg-muted/50 p-4"
+              class="flex items-start gap-4 rounded-2xl bg-muted/50 p-5 transition-all duration-300 hover:bg-muted hover:shadow-md"
+              :style="{
+                animationDelay: `${index * 30}ms`,
+              }"
             >
               <div class="mt-1">
                 <CheckCircle2 class="size-5" :style="{ color: chartColors.chart2 }" />
               </div>
               <div class="flex-1">
-                <p class="font-medium">{{ item.studentName ?? item.studentNumber ?? 'Student' }}</p>
-                <div class="mt-1 flex items-center gap-2">
-                  <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium" :class="getStatusColor(item.status)">
+                <p class="font-semibold">{{ item.studentName ?? item.studentNumber ?? 'Student' }}</p>
+                <div class="mt-2">
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="getStatusColor(item.status)">
                     {{ item.status.replace('_', ' ') }}
                   </span>
                 </div>
@@ -410,9 +429,9 @@ onMounted(() => {
             </article>
             <div
               v-if="enrollmentQueue.length === 0"
-              class="flex flex-col items-center justify-center py-8 text-center"
+              class="flex flex-col items-center justify-center py-10 text-center"
             >
-              <AlertCircle class="mb-2 size-8 text-muted-foreground" />
+              <AlertCircle class="mb-3 size-10 text-muted-foreground" />
               <p class="text-sm text-muted-foreground">No pending enrollments.</p>
             </div>
           </div>
@@ -420,31 +439,34 @@ onMounted(() => {
       </section>
 
       <!-- Classes Section -->
-      <section class="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+      <section class="rounded-3xl border border-border bg-card p-6 sm:p-8 text-card-foreground shadow-sm transition-all duration-500 hover:shadow-xl">
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold">Class operations</h2>
+          <div class="space-y-1">
+            <h2 class="text-xl font-bold">Class operations</h2>
             <p class="text-sm text-muted-foreground">Active classes and their students</p>
           </div>
           <Link
             :href="adminClassesIndex({ campus: page.props.currentCampus!.slug })"
-            class="text-sm font-medium"
+            class="group flex items-center gap-1 text-sm font-semibold transition-all duration-300"
             :style="{ color: chartColors.primary }"
           >
             View all
-            <ArrowRight class="ml-1 inline size-4" />
+            <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
-        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <article
-            v-for="item in classes"
+            v-for="(item, index) in classes"
             :key="item.id"
-            class="group rounded-xl border border-border bg-muted/50 p-5 transition-all hover:border-primary/50 hover:bg-card"
+            class="group rounded-2xl border border-border bg-muted/50 p-6 transition-all duration-300 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:-translate-y-1"
+            :style="{
+              animationDelay: `${index * 40}ms`,
+            }"
           >
-            <div class="flex items-center justify-between">
-              <h3 class="font-semibold">{{ item.name }}</h3>
+            <div class="flex items-start justify-between">
+              <h3 class="font-bold text-lg">{{ item.name }}</h3>
               <span
-                class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                class="rounded-full px-3 py-1 text-xs font-semibold"
                 :style="{
                   background: `${chartColors.chart2}20`,
                   color: chartColors.chart2,
@@ -453,22 +475,22 @@ onMounted(() => {
                 {{ item.status }}
               </span>
             </div>
-            <p class="mt-1 text-sm text-muted-foreground">{{ item.code }}</p>
-            <div class="mt-4 flex items-center justify-between">
+            <p class="mt-2 text-sm text-muted-foreground font-medium">{{ item.code }}</p>
+            <div class="mt-5 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UsersRound class="size-4 text-muted-foreground" />
-                <span class="text-sm font-medium">{{ item.students }} students</span>
+                <span class="text-sm font-bold">{{ item.students }} students</span>
               </div>
-              <div v-if="item.teacher" class="text-xs text-muted-foreground">
+              <div v-if="item.teacher" class="text-xs text-muted-foreground font-medium">
                 {{ item.teacher }}
               </div>
             </div>
           </article>
           <div
             v-if="classes.length === 0"
-            class="col-span-full flex flex-col items-center justify-center py-12 text-center"
+            class="col-span-full flex flex-col items-center justify-center py-16 text-center"
           >
-            <AlertCircle class="mb-3 size-10 text-muted-foreground" />
+            <AlertCircle class="mb-4 size-12 text-muted-foreground" />
             <p class="text-sm text-muted-foreground">No classes are active yet.</p>
           </div>
         </div>
