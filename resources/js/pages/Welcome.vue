@@ -196,27 +196,6 @@ const whyChoose = [
     },
 ];
 
-const implementationSteps = [
-    {
-        title: 'Map your school structure',
-        description:
-            'Set up terms, classes, staff roles, and the core workflows your school runs every week.',
-        icon: Calendar,
-    },
-    {
-        title: 'Import records and configure access',
-        description:
-            'Bring in student and staff data, then align permissions for administrators, faculty, and parents.',
-        icon: Database,
-    },
-    {
-        title: 'Launch with guided onboarding',
-        description:
-            'Start with the workflows that matter most first, then expand reporting, billing, and communication from there.',
-        icon: CheckCircle2,
-    },
-];
-
 const testimonials = [
     {
         quote: 'We needed one place to manage attendance, parent communication, and term reporting. Koamishin gave our admin team a cleaner daily rhythm.',
@@ -283,9 +262,9 @@ const faqs = [
 
 const supportCards = [
     {
-        title: 'Rollout planning',
+        title: 'Setup planning',
         description:
-            'Get a guided view of which workflows to launch first and what your team needs to prepare.',
+            'Get a guided view of which workflows to set up first and what your team needs to prepare.',
         icon: Calendar,
         points: [
             'School structure review',
@@ -296,7 +275,7 @@ const supportCards = [
     {
         title: 'Parent access guidance',
         description:
-            'Clarify how communication, visibility, and guardian access should work before rollout begins.',
+            'Clarify how communication, visibility, and guardian access should work before setup begins.',
         icon: Users,
         points: [
             'Guardian communication flow',
@@ -339,10 +318,9 @@ const supportSearch = ref('');
 const openFaq = ref<string | null>(faqs[0]?.question ?? null);
 const trackedSectionIds = [
     'hero',
-    'impact',
     'programs',
+    'impact',
     'why',
-    'implementation',
     'faq',
     'contact',
 ] as const;
@@ -622,21 +600,15 @@ const setCategory = (category: string) => {
         <main id="main-content" class="relative flex-1">
             <section
                 id="hero"
-                class="scroll-mt-28 px-6 pt-16 pb-10 sm:pt-20 lg:pt-24 lg:pb-16"
+                class="scroll-mt-28 px-6 pt-8 pb-10 sm:pt-10 lg:pt-12 lg:pb-16"
             >
                 <div class="container mx-auto max-w-6xl">
-                    <div
-                        class="reveal-element relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-card/85 px-6 py-12 shadow-2xl shadow-primary/10 backdrop-blur sm:px-10 lg:px-16 lg:py-20"
-                    >
+                    <div class="reveal-element relative">
                         <div
-                            class="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-primary/18 via-primary/6 to-transparent"
+                            class="pointer-events-none absolute inset-x-0 top-[-2rem] mx-auto h-[26rem] max-w-4xl rounded-full bg-primary/12 blur-3xl"
                         />
                         <div
-                            class="absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent"
-                        />
-
-                        <div
-                            class="relative mx-auto flex max-w-4xl flex-col items-center text-center"
+                            class="relative mx-auto flex max-w-5xl flex-col items-center text-center"
                         >
                             <Badge
                                 variant="secondary"
@@ -647,14 +619,14 @@ const setCategory = (category: string) => {
                             </Badge>
 
                             <h1
-                                class="mt-6 max-w-4xl text-4xl font-semibold tracking-[-0.06em] text-balance sm:text-6xl lg:text-7xl"
+                                class="mt-5 max-w-5xl text-4xl font-semibold tracking-[-0.065em] text-balance sm:text-6xl lg:text-7xl"
                             >
                                 Run the school day with more clarity, less
                                 manual follow-up, and better parent visibility.
                             </h1>
 
                             <p
-                                class="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl"
+                                class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl"
                             >
                                 Koamishin keeps admissions, attendance, academic
                                 records, parent communication, and billing in
@@ -663,19 +635,19 @@ const setCategory = (category: string) => {
                             </p>
 
                             <div
-                                class="mt-8 flex flex-wrap items-center justify-center gap-3"
+                                class="mt-6 flex flex-wrap items-center justify-center gap-3"
                             >
                                 <span
                                     v-for="highlight in heroHighlights"
                                     :key="highlight"
-                                    class="rounded-full border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm"
+                                    class="rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-medium text-muted-foreground backdrop-blur"
                                 >
                                     {{ highlight }}
                                 </span>
                             </div>
 
                             <div
-                                class="mt-10 flex flex-wrap items-center justify-center gap-4"
+                                class="mt-8 flex flex-wrap items-center justify-center gap-4"
                             >
                                 <Button
                                     v-if="
@@ -708,135 +680,93 @@ const setCategory = (category: string) => {
                                     size="lg"
                                     class="h-12 rounded-full px-8"
                                 >
-                                    <a href="#implementation">
-                                        See rollout steps
+                                    <a href="#programs">
+                                        Explore capabilities
                                         <ChevronRight class="h-4 w-4" />
                                     </a>
                                 </Button>
                             </div>
+
+                            <div
+                                class="mt-10 h-px w-full max-w-4xl bg-gradient-to-r from-transparent via-primary/35 to-transparent"
+                            />
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="impact" class="scroll-mt-28 px-6 py-10 lg:py-16">
-                <div class="container mx-auto max-w-7xl space-y-8">
-                    <div class="grid gap-4 lg:grid-cols-3">
-                        <Card
-                            v-for="stat in platformStats"
-                            :key="stat.value"
-                            class="reveal-element rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm backdrop-blur"
-                        >
-                            <CardHeader class="space-y-3">
-                                <CardTitle class="text-2xl tracking-tight">{{
-                                    stat.value
-                                }}</CardTitle>
-                                <CardDescription class="text-sm leading-6">{{
-                                    stat.label
-                                }}</CardDescription>
-                            </CardHeader>
-                        </Card>
-                    </div>
-
-                    <div class="grid gap-4 lg:grid-cols-3">
-                        <Card
-                            v-for="quote in testimonials"
-                            :key="quote.name"
-                            class="reveal-element rounded-[1.75rem] border-border/60 bg-background/85 shadow-sm"
-                        >
-                            <CardContent class="flex h-full flex-col gap-6 p-6">
-                                <p
-                                    class="text-base leading-7 text-foreground/90"
-                                >
-                                    “{{ quote.quote }}”
-                                </p>
-                                <div
-                                    class="mt-auto border-t border-border/60 pt-4"
-                                >
-                                    <p class="font-semibold tracking-tight">
-                                        {{ quote.name }}
-                                    </p>
-                                    <p class="text-sm text-muted-foreground">
-                                        {{ quote.role }}
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </section>
-
-            <section id="programs" class="scroll-mt-28 px-6 py-16 lg:py-24">
+            <section id="programs" class="scroll-mt-28 px-6 py-14 lg:py-18">
                 <div class="container mx-auto max-w-7xl">
-                    <div class="reveal-element mb-14 max-w-3xl">
-                        <Badge
-                            variant="secondary"
-                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
-                        >
-                            Platform capabilities
-                        </Badge>
-                        <h2
-                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
-                        >
-                            The workflows schools use every day, redesigned to
-                            work together.
-                        </h2>
+                    <div
+                        class="mb-10 grid gap-6 border-b border-border/60 pb-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-end"
+                    >
+                        <div class="reveal-element max-w-3xl">
+                            <Badge
+                                variant="secondary"
+                                class="mb-4 rounded-full px-4 py-1.5 text-sm"
+                            >
+                                Platform capabilities
+                            </Badge>
+                            <h2
+                                class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                            >
+                                A school operating stack, presented with
+                                pricing-style clarity.
+                            </h2>
+                        </div>
                         <p
-                            class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground"
+                            class="reveal-element max-w-2xl text-base leading-7 text-muted-foreground lg:justify-self-end"
                         >
-                            Instead of splitting school operations across
-                            disconnected tools, Koamishin gives your team a
-                            single operating layer for records, communication,
-                            academic follow-up, and reporting.
+                            Each capability behaves like a focused layer in one
+                            connected system, so staff can understand what each
+                            area owns without feeling overwhelmed.
                         </p>
                     </div>
 
-                    <div class="grid gap-6 lg:auto-rows-fr lg:grid-cols-3">
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <Card
                             v-for="(feature, index) in programs"
                             :key="feature.title"
-                            class="group reveal-element overflow-hidden rounded-[2rem] border-border/60 bg-card/90 shadow-sm transition-transform duration-300 hover:-translate-y-1"
-                            :class="feature.layout"
-                            :style="{ animationDelay: `${index * 90}ms` }"
+                            class="group reveal-element flex h-full flex-col rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/8"
+                            :style="{ animationDelay: `${index * 80}ms` }"
                         >
-                            <CardHeader class="space-y-5 pb-3">
+                            <CardHeader class="space-y-5 pb-4">
                                 <div
-                                    class="flex items-start justify-between gap-4"
+                                    class="flex items-center justify-between gap-4"
                                 >
                                     <div
-                                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-inner shadow-primary/10 transition-colors group-hover:bg-primary/15"
+                                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/15"
                                     >
                                         <component
                                             :is="feature.icon"
-                                            class="h-7 w-7 text-primary"
+                                            class="h-6 w-6 text-primary"
                                         />
                                     </div>
                                     <span
-                                        class="rounded-full border border-border/60 bg-background/90 px-3 py-1 text-xs font-medium text-muted-foreground"
+                                        class="rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-[0.1em] text-muted-foreground uppercase"
                                     >
                                         {{ feature.metric }}
                                     </span>
                                 </div>
 
-                                <div class="space-y-3">
-                                    <CardTitle
-                                        class="text-2xl tracking-tight"
-                                        >{{ feature.title }}</CardTitle
-                                    >
-                                    <CardDescription
-                                        class="max-w-2xl text-sm leading-7"
-                                    >
+                                <div
+                                    class="space-y-3 border-b border-border/60 pb-5"
+                                >
+                                    <CardTitle class="text-xl tracking-tight">
+                                        {{ feature.title }}
+                                    </CardTitle>
+                                    <CardDescription class="text-sm leading-6">
                                         {{ feature.description }}
                                     </CardDescription>
                                 </div>
                             </CardHeader>
 
-                            <CardContent class="flex h-full flex-col gap-6">
-                                <div class="grid gap-3 sm:grid-cols-2">
+                            <CardContent class="flex flex-1 flex-col gap-5">
+                                <div class="space-y-3">
                                     <div
                                         v-for="detail in feature.details"
                                         :key="detail"
-                                        class="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-muted-foreground"
+                                        class="flex items-start gap-3 text-sm text-muted-foreground"
                                     >
                                         <CheckCircle2
                                             class="mt-0.5 h-4 w-4 shrink-0 text-emerald-500"
@@ -845,26 +775,17 @@ const setCategory = (category: string) => {
                                     </div>
                                 </div>
 
-                                <div
-                                    class="mt-auto rounded-[1.5rem] border border-border/60 bg-background/90 p-4"
-                                >
-                                    <div
-                                        class="mb-4 flex items-center justify-between"
+                                <div class="mt-auto space-y-3 pt-2">
+                                    <p
+                                        class="text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase"
                                     >
-                                        <p class="text-sm font-medium">
-                                            Inside this workflow
-                                        </p>
-                                        <p
-                                            class="text-xs text-muted-foreground"
-                                        >
-                                            Daily school view
-                                        </p>
-                                    </div>
+                                        Typical school view
+                                    </p>
                                     <div class="flex flex-wrap gap-2">
                                         <span
                                             v-for="item in feature.preview"
                                             :key="item"
-                                            class="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground"
+                                            class="rounded-full bg-accent/80 px-3 py-1.5 text-xs font-medium text-accent-foreground"
                                         >
                                             {{ item }}
                                         </span>
@@ -872,6 +793,88 @@ const setCategory = (category: string) => {
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
+                </div>
+            </section>
+
+            <section id="impact" class="scroll-mt-28 px-6 py-14 lg:py-18">
+                <div class="container mx-auto max-w-7xl">
+                    <div
+                        class="grid gap-10 border-t border-border/60 pt-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
+                    >
+                        <div class="reveal-element max-w-2xl space-y-5">
+                            <Badge
+                                variant="secondary"
+                                class="rounded-full px-4 py-1.5 text-sm"
+                            >
+                                Impact in practice
+                            </Badge>
+                            <h2
+                                class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                            >
+                                Clearer operations, shown as momentum instead of
+                                dashboard clutter.
+                            </h2>
+                            <p
+                                class="text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+                            >
+                                The value is not another wall of widgets. It is
+                                a steadier rhythm for leadership, admin teams,
+                                teachers, and families working from the same
+                                flow.
+                            </p>
+                        </div>
+
+                        <div
+                            class="grid gap-6 sm:grid-cols-3 sm:gap-4 lg:gap-6"
+                        >
+                            <div
+                                v-for="stat in platformStats"
+                                :key="stat.value"
+                                class="reveal-element border-b border-border/60 pb-5 sm:border-b-0 sm:border-l sm:pl-4 first:sm:border-l-0 first:sm:pl-0"
+                            >
+                                <p
+                                    class="text-2xl font-semibold tracking-tight sm:text-3xl"
+                                >
+                                    {{ stat.value }}
+                                </p>
+                                <p
+                                    class="mt-3 text-sm leading-6 text-muted-foreground"
+                                >
+                                    {{ stat.label }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="mt-10 divide-y divide-border/60 border-y border-border/60"
+                    >
+                        <div
+                            v-for="(quote, index) in testimonials"
+                            :key="quote.name"
+                            class="reveal-element grid gap-4 py-6 lg:grid-cols-[2rem_minmax(0,1fr)_15rem] lg:items-start lg:gap-6"
+                            :style="{ animationDelay: `${index * 70}ms` }"
+                        >
+                            <p class="text-2xl leading-none text-primary/65">
+                                “
+                            </p>
+                            <p
+                                class="text-base leading-7 text-foreground/90 sm:text-lg"
+                            >
+                                {{ quote.quote }}
+                            </p>
+                            <div
+                                class="space-y-1 text-sm text-muted-foreground lg:text-right"
+                            >
+                                <p
+                                    class="font-semibold tracking-tight text-foreground"
+                                >
+                                    {{ quote.name }}
+                                </p>
+                                <p>{{ quote.role }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -965,71 +968,6 @@ const setCategory = (category: string) => {
                 </div>
             </section>
 
-            <section
-                id="implementation"
-                class="scroll-mt-28 px-6 py-16 lg:py-24"
-            >
-                <div class="container mx-auto max-w-7xl">
-                    <div class="reveal-element mb-12 max-w-3xl">
-                        <Badge
-                            variant="secondary"
-                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
-                        >
-                            Rollout approach
-                        </Badge>
-                        <h2
-                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
-                        >
-                            A practical way to introduce Koamishin without
-                            overwhelming your team.
-                        </h2>
-                        <p
-                            class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground"
-                        >
-                            Start with the core operational pieces your school
-                            depends on, then expand to richer reporting and
-                            communication with a clearer implementation path.
-                        </p>
-                    </div>
-
-                    <div class="grid gap-6 lg:grid-cols-3">
-                        <Card
-                            v-for="(step, index) in implementationSteps"
-                            :key="step.title"
-                            class="reveal-element rounded-[1.9rem] border-border/60 bg-card/90 shadow-sm"
-                            :style="{ animationDelay: `${index * 80}ms` }"
-                        >
-                            <CardHeader class="space-y-5">
-                                <div
-                                    class="flex items-center justify-between gap-4"
-                                >
-                                    <div
-                                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10"
-                                    >
-                                        <component
-                                            :is="step.icon"
-                                            class="h-7 w-7 text-primary"
-                                        />
-                                    </div>
-                                    <span
-                                        class="text-sm font-medium text-muted-foreground"
-                                        >0{{ index + 1 }}</span
-                                    >
-                                </div>
-                                <CardTitle class="text-2xl tracking-tight">{{
-                                    step.title
-                                }}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <CardDescription class="text-sm leading-7">{{
-                                    step.description
-                                }}</CardDescription>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </section>
-
             <section id="faq" class="scroll-mt-28 px-6 py-16 lg:py-24">
                 <div
                     class="container mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]"
@@ -1040,21 +978,20 @@ const setCategory = (category: string) => {
                                 variant="secondary"
                                 class="mb-5 rounded-full px-4 py-1.5 text-sm"
                             >
-                                Support and rollout planning
+                                Support and common questions
                             </Badge>
                             <h2
                                 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
                             >
                                 Browse common questions, then move into a more
-                                guided school setup conversation.
+                                confident school setup conversation.
                             </h2>
                             <p
                                 class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground"
                             >
-                                Instead of hiding everything in a long
-                                accordion, this section helps schools filter by
-                                concern, scan answers quickly, and understand
-                                what support is available.
+                                Filter by concern, scan answers quickly, and
+                                understand what kind of setup guidance is
+                                available before your team gets started.
                             </p>
                         </div>
 
@@ -1085,35 +1022,37 @@ const setCategory = (category: string) => {
                                         v-model="supportSearch"
                                         class="h-11 rounded-full bg-background"
                                         type="search"
-                                        placeholder="Search rollout, billing, parent access..."
+                                        placeholder="Search setup, billing, parent access..."
                                         aria-label="Search support questions"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="filteredFaqs.length" class="space-y-4">
-                            <Card
+                        <div
+                            v-if="filteredFaqs.length"
+                            class="overflow-hidden rounded-[1.5rem] border border-border/60 bg-card/85 shadow-sm"
+                        >
+                            <div
                                 v-for="(faq, index) in filteredFaqs"
                                 :key="faq.question"
-                                class="reveal-element rounded-[1.5rem] border-border/60 bg-background/90 shadow-sm"
-                                :style="{ animationDelay: `${index * 50}ms` }"
+                                class="border-b border-border/60 last:border-b-0"
                             >
                                 <button
                                     type="button"
-                                    class="flex w-full items-start justify-between gap-4 px-6 py-5 text-left"
+                                    class="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-accent/30 sm:px-6"
                                     :aria-expanded="openFaq === faq.question"
                                     :aria-controls="`faq-panel-${index}`"
                                     @click="toggleFaq(faq.question)"
                                 >
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <span
                                             class="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
                                         >
                                             {{ faq.category }}
                                         </span>
                                         <p
-                                            class="text-lg font-semibold tracking-tight"
+                                            class="text-base font-semibold tracking-tight sm:text-lg"
                                         >
                                             {{ faq.question }}
                                         </p>
@@ -1130,15 +1069,17 @@ const setCategory = (category: string) => {
                                 <div
                                     :id="`faq-panel-${index}`"
                                     v-show="openFaq === faq.question"
-                                    class="px-6 pt-0 pb-5 text-sm leading-7 text-muted-foreground"
+                                    class="px-5 pb-4 text-sm leading-6 text-muted-foreground sm:px-6"
                                 >
-                                    {{ faq.answer }}
+                                    <div class="max-w-3xl pr-8">
+                                        {{ faq.answer }}
+                                    </div>
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                         <Card
                             v-else
-                            class="reveal-element rounded-[1.5rem] border-border/60 bg-card/85 shadow-sm"
+                            class="rounded-[1.5rem] border-border/60 bg-card/85 shadow-sm"
                         >
                             <CardContent class="p-6">
                                 <p class="font-semibold tracking-tight">
@@ -1411,7 +1352,7 @@ const setCategory = (category: string) => {
                                 <a
                                     href="#contact"
                                     class="transition-colors hover:text-foreground"
-                                    >Start with a guided rollout conversation</a
+                                    >Start with a guided setup conversation</a
                                 >
                             </li>
                         </ul>
