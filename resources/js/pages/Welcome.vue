@@ -63,12 +63,7 @@ const navItems = [
     { id: 'contact', label: 'Contact' },
 ];
 
-const heroHighlights = [
-    'Admissions',
-    'Attendance',
-    'Parent communication',
-    'Billing',
-];
+const heroHighlights = ['Admissions', 'Attendance', 'Billing', 'Reporting'];
 
 const platformStats = [
     {
@@ -621,17 +616,18 @@ const setCategory = (category: string) => {
                             <h1
                                 class="mt-5 max-w-5xl text-4xl font-semibold tracking-[-0.065em] text-balance sm:text-6xl lg:text-7xl"
                             >
-                                Run the school day with more clarity, less
-                                manual follow-up, and better parent visibility.
+                                Run your school from one connected software
+                                platform built for operations, records, and
+                                reporting.
                             </h1>
 
                             <p
                                 class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl"
                             >
-                                Koamishin keeps admissions, attendance, academic
-                                records, parent communication, and billing in
-                                one connected system so your team can move
-                                faster with less admin noise.
+                                Koamishin brings admissions, attendance,
+                                academic records, billing, and reporting into
+                                one connected platform designed for everyday
+                                school operations.
                             </p>
 
                             <div
