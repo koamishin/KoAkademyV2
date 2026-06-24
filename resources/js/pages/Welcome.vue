@@ -376,12 +376,21 @@ onMounted(() => {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add('revealed');
-                        revealObserver?.unobserve(entry.target);
+                        const el = entry.target as HTMLElement;
+                        el.classList.add('revealed');
+                        // Clear the stagger delay after the reveal animation
+                        // completes so it doesn't block hover transitions
+                        const delayMs =
+                            parseFloat(el.style.transitionDelay || '0') * 1000 +
+                            950;
+                        setTimeout(() => {
+                            el.style.transitionDelay = '';
+                        }, delayMs);
+                        revealObserver?.unobserve(el);
                     }
                 });
             },
-            { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+            { threshold: 0.08, rootMargin: '0px 0px -5% 0px' },
         );
 
         revealElements.forEach((element) => revealObserver?.observe(element));
@@ -426,7 +435,7 @@ const setCategory = (category: string) => {
     </Head>
 
     <div
-        class="relative flex min-h-screen flex-col overflow-x-clip bg-background text-foreground selection:bg-primary selection:text-primary-foreground"
+        class="relative flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground selection:bg-primary selection:text-primary-foreground"
     >
         <a
             href="#main-content"
@@ -453,17 +462,19 @@ const setCategory = (category: string) => {
             class="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl"
         >
             <div
-                class="container mx-auto flex h-18 max-w-7xl items-center justify-between px-6 py-4"
+                class="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6"
             >
-                <a href="#hero" class="flex items-center gap-3">
+                <a href="#hero" class="flex items-center gap-2.5">
                     <KoamishinLogo
-                        class="h-10 w-10 rounded-2xl shadow-lg shadow-primary/10"
+                        class="h-9 w-9 rounded-xl shadow-lg shadow-primary/10"
                     />
                     <div class="space-y-0.5">
-                        <p class="text-base font-semibold tracking-tight">
+                        <p class="text-sm font-semibold tracking-tight">
                             Koamishin
                         </p>
-                        <p class="text-xs text-muted-foreground">
+                        <p
+                            class="hidden text-xs text-muted-foreground sm:block"
+                        >
                             School operations platform
                         </p>
                     </div>
@@ -572,55 +583,53 @@ const setCategory = (category: string) => {
         <main id="main-content" class="relative flex-1">
             <section
                 id="hero"
-                class="scroll-mt-28 px-6 pt-8 pb-10 sm:pt-10 lg:pt-12 lg:pb-16"
+                class="scroll-mt-16 px-4 pt-6 pb-8 sm:px-6 sm:pt-10 lg:pt-12 lg:pb-16"
             >
                 <div class="container mx-auto max-w-6xl">
                     <div class="reveal-element relative">
                         <div
-                            class="pointer-events-none absolute inset-x-0 top-[-2rem] mx-auto h-[26rem] max-w-4xl rounded-full bg-primary/12 blur-3xl"
+                            class="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-96 max-w-4xl rounded-full bg-primary/12 blur-3xl"
                         />
                         <div
                             class="relative mx-auto flex max-w-5xl flex-col items-center text-center"
                         >
                             <Badge
                                 variant="secondary"
-                                class="rounded-full border border-border/60 bg-background/85 px-4 py-1.5 text-sm backdrop-blur"
+                                class="rounded-full border border-border/60 bg-background/85 px-3 py-1 text-xs backdrop-blur"
                             >
-                                Built for private schools, academies, and
-                                learning centers
+                                Private schools · Academies · Learning centers
                             </Badge>
 
                             <h1
-                                class="mt-5 max-w-5xl text-4xl font-semibold tracking-[-0.065em] text-balance sm:text-6xl lg:text-7xl"
+                                class="mt-4 max-w-5xl text-[2rem] leading-[1.08] font-semibold tracking-[-0.05em] sm:text-5xl sm:tracking-[-0.065em] lg:text-7xl"
                             >
-                                Run your school from one connected software
-                                platform built for operations, records, and
-                                reporting.
+                                Run your school from one connected platform
+                                built for operations, records, and reporting.
                             </h1>
 
                             <p
-                                class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl"
+                                class="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:max-w-3xl sm:text-lg sm:leading-8"
                             >
                                 Koamishin brings admissions, attendance,
                                 academic records, billing, and reporting into
-                                one connected platform designed for everyday
-                                school operations.
+                                one connected platform for everyday school
+                                operations.
                             </p>
 
                             <div
-                                class="mt-6 flex flex-wrap items-center justify-center gap-3"
+                                class="mobile-rail -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0"
                             >
                                 <span
                                     v-for="highlight in heroHighlights"
                                     :key="highlight"
-                                    class="rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-medium text-muted-foreground backdrop-blur"
+                                    class="shrink-0 rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur"
                                 >
                                     {{ highlight }}
                                 </span>
                             </div>
 
                             <div
-                                class="mt-8 flex flex-wrap items-center justify-center gap-4"
+                                class="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4"
                             >
                                 <Button
                                     v-if="
@@ -629,7 +638,7 @@ const setCategory = (category: string) => {
                                     "
                                     as-child
                                     size="lg"
-                                    class="h-12 rounded-full px-8"
+                                    class="h-12 w-full rounded-full px-8 sm:w-auto"
                                 >
                                     <Link :href="route('register')">
                                         Create your school account
@@ -640,7 +649,7 @@ const setCategory = (category: string) => {
                                     v-else-if="$page.props.auth.user"
                                     as-child
                                     size="lg"
-                                    class="h-12 rounded-full px-8"
+                                    class="h-12 w-full rounded-full px-8 sm:w-auto"
                                 >
                                     <Link :href="route('dashboard')">
                                         Open dashboard
@@ -651,7 +660,7 @@ const setCategory = (category: string) => {
                                     as-child
                                     variant="outline"
                                     size="lg"
-                                    class="h-12 rounded-full px-8"
+                                    class="h-12 w-full rounded-full px-8 sm:w-auto"
                                 >
                                     <a href="#programs">
                                         Explore capabilities
@@ -661,14 +670,17 @@ const setCategory = (category: string) => {
                             </div>
 
                             <div
-                                class="mt-10 h-px w-full max-w-4xl bg-gradient-to-r from-transparent via-primary/35 to-transparent"
+                                class="mt-8 h-px w-full max-w-4xl bg-gradient-to-r from-transparent via-primary/35 to-transparent"
                             />
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="programs" class="scroll-mt-28 px-6 py-14 lg:py-18">
+            <section
+                id="programs"
+                class="scroll-mt-16 px-4 py-10 sm:px-6 lg:py-18"
+            >
                 <div class="container mx-auto max-w-7xl">
                     <div
                         class="mb-10 grid gap-6 border-b border-border/60 pb-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-end"
@@ -696,12 +708,14 @@ const setCategory = (category: string) => {
                         </p>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                    >
                         <Card
                             v-for="(feature, index) in programs"
                             :key="feature.title"
                             class="group reveal-element flex h-full flex-col rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/8"
-                            :style="{ animationDelay: `${index * 80}ms` }"
+                            :style="{ transitionDelay: `${index * 110}ms` }"
                         >
                             <CardHeader class="space-y-5 pb-4">
                                 <div
@@ -770,26 +784,29 @@ const setCategory = (category: string) => {
                 </div>
             </section>
 
-            <section id="impact" class="scroll-mt-28 px-6 py-14 lg:py-18">
+            <section
+                id="impact"
+                class="scroll-mt-16 px-4 py-10 sm:px-6 lg:py-18"
+            >
                 <div class="container mx-auto max-w-7xl">
                     <div
                         class="grid gap-10 border-t border-border/60 pt-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
                     >
-                        <div class="reveal-element max-w-2xl space-y-5">
+                        <div class="reveal-element max-w-2xl space-y-4">
                             <Badge
                                 variant="secondary"
-                                class="rounded-full px-4 py-1.5 text-sm"
+                                class="rounded-full px-3 py-1 text-xs"
                             >
                                 Impact in practice
                             </Badge>
                             <h2
-                                class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                                class="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl sm:text-balance lg:text-5xl"
                             >
                                 Clearer operations, shown as momentum instead of
                                 dashboard clutter.
                             </h2>
                             <p
-                                class="text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+                                class="text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"
                             >
                                 The value is not another wall of widgets. It is
                                 a steadier rhythm for leadership, admin teams,
@@ -799,12 +816,13 @@ const setCategory = (category: string) => {
                         </div>
 
                         <div
-                            class="grid gap-6 sm:grid-cols-3 sm:gap-4 lg:gap-6"
+                            class="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4 lg:gap-6"
                         >
                             <div
-                                v-for="stat in platformStats"
+                                v-for="(stat, index) in platformStats"
                                 :key="stat.value"
                                 class="reveal-element border-b border-border/60 pb-5 sm:border-b-0 sm:border-l sm:pl-4 first:sm:border-l-0 first:sm:pl-0"
+                                :style="{ transitionDelay: `${index * 110}ms` }"
                             >
                                 <p
                                     class="text-2xl font-semibold tracking-tight sm:text-3xl"
@@ -821,24 +839,24 @@ const setCategory = (category: string) => {
                     </div>
 
                     <div
-                        class="mt-10 divide-y divide-border/60 border-y border-border/60"
+                        class="mt-8 divide-y divide-border/60 border-y border-border/60"
                     >
                         <div
                             v-for="(quote, index) in testimonials"
                             :key="quote.name"
                             class="reveal-element grid gap-4 py-6 lg:grid-cols-[2rem_minmax(0,1fr)_15rem] lg:items-start lg:gap-6"
-                            :style="{ animationDelay: `${index * 70}ms` }"
+                            :style="{ transitionDelay: `${index * 120}ms` }"
                         >
                             <p class="text-2xl leading-none text-primary/65">
-                                “
+                                "
                             </p>
                             <p
-                                class="text-base leading-7 text-foreground/90 sm:text-lg"
+                                class="text-sm leading-7 text-foreground/90 sm:text-base sm:text-lg"
                             >
                                 {{ quote.quote }}
                             </p>
                             <div
-                                class="space-y-1 text-sm text-muted-foreground lg:text-right"
+                                class="space-y-0.5 text-sm text-muted-foreground lg:text-right"
                             >
                                 <p
                                     class="font-semibold tracking-tight text-foreground"
@@ -852,24 +870,24 @@ const setCategory = (category: string) => {
                 </div>
             </section>
 
-            <section id="why" class="scroll-mt-28 px-6 py-16 lg:py-24">
+            <section id="why" class="scroll-mt-16 px-4 py-10 sm:px-6 lg:py-24">
                 <div
                     class="container mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_minmax(0,1.05fr)]"
                 >
                     <div class="reveal-element lg:sticky lg:top-28 lg:h-fit">
                         <Badge
                             variant="secondary"
-                            class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                            class="mb-4 rounded-full px-3 py-1 text-xs"
                         >
                             Why schools choose it
                         </Badge>
                         <h2
-                            class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                            class="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-5xl"
                         >
                             Better operational flow, not just another dashboard.
                         </h2>
                         <p
-                            class="mt-5 max-w-xl text-lg leading-8 text-muted-foreground"
+                            class="mt-4 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"
                         >
                             The goal is simple: help your school act faster,
                             communicate more clearly, and keep student
@@ -878,7 +896,7 @@ const setCategory = (category: string) => {
                         </p>
 
                         <div
-                            class="mt-8 rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-sm"
+                            class="mt-6 rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-sm"
                         >
                             <p class="text-sm font-semibold tracking-tight">
                                 What leadership gets
@@ -911,12 +929,12 @@ const setCategory = (category: string) => {
                         </div>
                     </div>
 
-                    <div class="grid gap-5 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Card
                             v-for="(item, index) in whyChoose"
                             :key="item.title"
                             class="reveal-element rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm"
-                            :style="{ animationDelay: `${index * 70}ms` }"
+                            :style="{ transitionDelay: `${index * 90}ms` }"
                         >
                             <CardHeader class="space-y-4">
                                 <div
@@ -941,26 +959,26 @@ const setCategory = (category: string) => {
                 </div>
             </section>
 
-            <section id="faq" class="scroll-mt-28 px-6 py-16 lg:py-24">
+            <section id="faq" class="scroll-mt-16 px-4 py-10 sm:px-6 lg:py-24">
                 <div
                     class="container mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]"
                 >
                     <div>
-                        <div class="reveal-element mb-10">
+                        <div class="reveal-element mb-6">
                             <Badge
                                 variant="secondary"
-                                class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                                class="mb-4 rounded-full px-3 py-1 text-xs"
                             >
                                 Support and common questions
                             </Badge>
                             <h2
-                                class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                                class="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-5xl lg:text-balance"
                             >
                                 Browse common questions, then move into a more
                                 confident school setup conversation.
                             </h2>
                             <p
-                                class="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground"
+                                class="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"
                             >
                                 Filter by concern, scan answers quickly, and
                                 understand what kind of setup guidance is
@@ -1068,11 +1086,13 @@ const setCategory = (category: string) => {
                         </Card>
                     </div>
 
-                    <aside class="space-y-4 lg:pt-24">
+                    <aside
+                        class="mobile-rail -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:block lg:space-y-4 lg:overflow-visible lg:px-0 lg:pt-24 lg:pb-0"
+                    >
                         <Card
                             v-for="card in supportCards"
                             :key="card.title"
-                            class="reveal-element rounded-[1.5rem] border-border/60 bg-card/90 shadow-sm"
+                            class="reveal-element mobile-rail-card min-w-[82vw] shrink-0 rounded-[1.5rem] border-border/60 bg-card/90 shadow-sm lg:min-w-0 lg:shrink"
                         >
                             <CardHeader class="space-y-4">
                                 <div
@@ -1114,23 +1134,26 @@ const setCategory = (category: string) => {
                 </div>
             </section>
 
-            <section id="contact" class="scroll-mt-28 px-6 py-16 lg:py-24">
+            <section
+                id="contact"
+                class="scroll-mt-16 px-4 py-10 sm:px-6 lg:py-24"
+            >
                 <div class="reveal-element container mx-auto max-w-6xl">
                     <div
-                        class="overflow-hidden rounded-[2.25rem] border border-border/60 bg-gradient-to-br from-card via-card to-primary/10 p-8 shadow-2xl shadow-primary/10 sm:p-10 lg:p-12"
+                        class="overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/10 p-6 shadow-2xl shadow-primary/10 sm:rounded-[2.25rem] sm:p-10 lg:p-12"
                     >
                         <div
-                            class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
+                            class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
                         >
                             <div>
                                 <Badge
                                     variant="secondary"
-                                    class="mb-5 rounded-full px-4 py-1.5 text-sm"
+                                    class="mb-4 rounded-full px-3 py-1 text-xs"
                                 >
                                     Ready for a closer look?
                                 </Badge>
                                 <h2
-                                    class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl"
+                                    class="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl sm:text-balance lg:text-5xl"
                                 >
                                     Bring your school’s daily operations into
                                     one clearer system.
@@ -1380,6 +1403,19 @@ const setCategory = (category: string) => {
     display: inline-flex;
     min-width: max-content;
     animation: marquee 28s linear infinite;
+}
+
+.mobile-rail {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-rail-card {
+    scroll-snap-stop: always;
 }
 
 @media (max-width: 767px) {
