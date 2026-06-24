@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import Lenis from 'lenis';
 import {
     ArrowRight,
     BarChart3,
@@ -338,8 +337,6 @@ const filteredFaqs = computed(() => {
 
 const currentYear = new Date().getFullYear();
 
-let lenisInstance: Lenis | null = null;
-let rafId: number | null = null;
 let revealObserver: IntersectionObserver | null = null;
 let trackedSections: HTMLElement[] = [];
 
@@ -368,21 +365,6 @@ onMounted(() => {
         '(prefers-reduced-motion: reduce)',
     ).matches;
 
-    if (!reduceMotion) {
-        lenisInstance = new Lenis({
-            duration: 1.05,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            smoothWheel: true,
-        });
-
-        const raf = (time: number) => {
-            lenisInstance?.raf(time);
-            rafId = requestAnimationFrame(raf);
-        };
-
-        rafId = requestAnimationFrame(raf);
-    }
-
     const revealElements = Array.from(
         document.querySelectorAll<HTMLElement>('.reveal-element'),
     );
@@ -399,7 +381,7 @@ onMounted(() => {
                     }
                 });
             },
-            { threshold: 0.15 },
+            { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
         );
 
         revealElements.forEach((element) => revealObserver?.observe(element));
@@ -418,14 +400,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    lenisInstance?.destroy();
     revealObserver?.disconnect();
     window.removeEventListener('scroll', updateActiveSection);
     window.removeEventListener('resize', updateActiveSection);
-
-    if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-    }
 });
 
 const toggleFaq = (question: string) => {
@@ -499,7 +476,7 @@ const setCategory = (category: string) => {
                         v-for="item in navItems"
                         :key="item.id"
                         :href="`#${item.id}`"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
+                        class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                         :class="
                             activeSection === item.id
                                 ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
@@ -568,7 +545,7 @@ const setCategory = (category: string) => {
                         v-for="item in navItems"
                         :key="item.id"
                         :href="`#${item.id}`"
-                        class="rounded-xl px-4 py-3 text-sm font-medium transition-colors"
+                        class="rounded-xl px-4 py-3 text-sm font-medium transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                         :class="
                             activeSection === item.id
                                 ? 'bg-primary text-primary-foreground'
@@ -583,7 +560,7 @@ const setCategory = (category: string) => {
                     </a>
                     <a
                         href="mailto:contact@koamishin.com?subject=Koamishin%20walkthrough"
-                        class="rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        class="rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-accent hover:text-foreground"
                         @click="mobileMenuOpen = false"
                     >
                         Book a walkthrough
@@ -723,7 +700,7 @@ const setCategory = (category: string) => {
                         <Card
                             v-for="(feature, index) in programs"
                             :key="feature.title"
-                            class="group reveal-element flex h-full flex-col rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/8"
+                            class="group reveal-element flex h-full flex-col rounded-[1.75rem] border-border/60 bg-card/85 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/8"
                             :style="{ animationDelay: `${index * 80}ms` }"
                         >
                             <CardHeader class="space-y-5 pb-4">
@@ -731,7 +708,7 @@ const setCategory = (category: string) => {
                                     class="flex items-center justify-between gap-4"
                                 >
                                     <div
-                                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 transition-colors group-hover:bg-primary/15"
+                                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-primary/15"
                                     >
                                         <component
                                             :is="feature.icon"
@@ -1002,7 +979,7 @@ const setCategory = (category: string) => {
                                         v-for="category in supportCategories"
                                         :key="category"
                                         type="button"
-                                        class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+                                        class="rounded-full px-4 py-2 text-sm font-medium transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                                         :class="
                                             activeCategory === category
                                                 ? 'bg-primary text-primary-foreground'
@@ -1036,7 +1013,7 @@ const setCategory = (category: string) => {
                             >
                                 <button
                                     type="button"
-                                    class="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-accent/30 sm:px-6"
+                                    class="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-accent/30 sm:px-6"
                                     :aria-expanded="openFaq === faq.question"
                                     :aria-controls="`faq-panel-${index}`"
                                     @click="toggleFaq(faq.question)"
@@ -1054,7 +1031,7 @@ const setCategory = (category: string) => {
                                         </p>
                                     </div>
                                     <ChevronDown
-                                        class="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200"
+                                        class="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                                         :class="
                                             openFaq === faq.question
                                                 ? 'rotate-180'
@@ -1375,15 +1352,18 @@ const setCategory = (category: string) => {
 
 .reveal-element {
     opacity: 0;
-    transform: translate3d(0, 24px, 0);
+    filter: blur(10px);
+    transform: translate3d(0, 40px, 0) scale(0.985);
     transition:
-        opacity 0.65s ease,
-        transform 0.65s ease;
+        opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .revealed {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 @keyframes marquee {
@@ -1402,6 +1382,12 @@ const setCategory = (category: string) => {
     animation: marquee 28s linear infinite;
 }
 
+@media (max-width: 767px) {
+    :global(html) {
+        scroll-padding-top: 6rem;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     :global(html) {
         scroll-behavior: auto;
@@ -1412,6 +1398,7 @@ const setCategory = (category: string) => {
     .animate-scroll {
         animation: none !important;
         opacity: 1 !important;
+        filter: none !important;
         transform: none !important;
         transition: none !important;
     }
