@@ -15,6 +15,7 @@ use App\Models\Term;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Modules\Classroom\Models\ClassOffering;
 use Modules\Enrollment\Enums\EnrollmentClassification;
 use Modules\Enrollment\Enums\EnrollmentStatus;
@@ -40,8 +41,10 @@ final class StudentRecordData
     public function index(Request $request, Campus $campus): array
     {
         $filters = $this->filters($request);
+        $showArchived = $filters['view'] === 'archived';
 
         $query = Person::query()
+            ->when($showArchived, fn (Builder $query): Builder => $query->onlyTrashed())
             ->whereHas('roles', fn (Builder $query): Builder => $query
                 ->where('campus_id', $campus->getKey())
                 ->where('role', PersonRole::Student)
@@ -51,6 +54,7 @@ final class StudentRecordData
                 'studentProfile',
                 'studentDocuments' => fn ($query) => $query->where('campus_id', $campus->getKey())->latest(),
                 'transferCreditEvaluations' => fn ($query) => $query->where('campus_id', $campus->getKey())->with('subjects')->latest(),
+                'guardians',
                 'enrollments' => fn ($query) => $query
                     ->where('campus_id', $campus->getKey())
                     ->with(['period.term.academicYear', 'curriculum.program', 'section'])
@@ -71,25 +75,8 @@ final class StudentRecordData
             'students' => $students,
             'filters' => $filters,
             'options' => $this->options($campus),
-            'summary' => [
-                'total' => Person::query()->whereHas('roles', fn (Builder $query): Builder => $query
-                    ->where('campus_id', $campus->getKey())
-                    ->where('role', PersonRole::Student)
-                    ->where('active', true))->count(),
-                'activeEnrollments' => Enrollment::query()
-                    ->whereBelongsTo($campus)
-                    ->whereIn('status', [EnrollmentStatus::Pending, EnrollmentStatus::Approved])
-                    ->count(),
-                'waiting' => Enrollment::query()
-                    ->whereBelongsTo($campus)
-                    ->whereIn('status', [EnrollmentStatus::Draft, EnrollmentStatus::Waitlisted])
-                    ->count(),
-                'documentGaps' => $this->documentGapCount($campus),
-                'transferReviews' => TransferCreditEvaluation::query()
-                    ->whereBelongsTo($campus)
-                    ->whereIn('status', ['draft', 'in_review'])
-                    ->count(),
-            ],
+            'summary' => $this->summary($campus),
+            'charts' => $this->charts($campus),
         ];
     }
 
@@ -138,6 +125,17 @@ final class StudentRecordData
                 ->all(),
             'options' => $this->options($campus),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function edit(Person $student, Campus $campus): array
+    {
+        $data = $this->show($student, $campus);
+        $data['form'] = $this->studentForm($student);
+
+        return $data;
     }
 
     /**
@@ -230,6 +228,10 @@ final class StudentRecordData
             'phone' => $student->phone,
             'status' => $student->status,
             'enrollmentsCount' => (int) $student->campus_enrollments_count,
+            'guardiansCount' => $student->guardians->count(),
+            'primaryGuardian' => $student->guardians
+                ->first(fn (Person $guardian): bool => (bool) $guardian->pivot->is_primary)?->full_name,
+            'deletedAt' => $student->deleted_at?->toISOString(),
             'documentSummary' => $this->documentSummary($student),
             'transferSummary' => [
                 'openEvaluations' => $student->transferCreditEvaluations
@@ -251,6 +253,12 @@ final class StudentRecordData
                 'curriculum' => $currentEnrollment->curriculum?->name,
                 'section' => $currentEnrollment->section?->name,
             ] : null,
+            'can' => [
+                'view' => true,
+                'edit' => $student->deleted_at === null,
+                'delete' => $student->deleted_at === null,
+                'restore' => $student->deleted_at !== null,
+            ],
         ];
     }
 
@@ -276,6 +284,7 @@ final class StudentRecordData
             'status' => $student->status,
             'studentNumber' => $role?->reference_number,
             'metadata' => $student->metadata ?? [],
+            'deletedAt' => $student->deleted_at?->toISOString(),
             'profile' => $student->studentProfile ? [
                 'psaBirthCertificateNumber' => $student->studentProfile->psa_birth_certificate_number,
                 'learnerReferenceNumber' => $student->studentProfile->learner_reference_number,
@@ -322,6 +331,12 @@ final class StudentRecordData
                 ])
                 ->values()
                 ->all(),
+            'can' => [
+                'view' => true,
+                'edit' => $student->deleted_at === null,
+                'delete' => $student->deleted_at === null,
+                'restore' => $student->deleted_at !== null,
+            ],
         ];
     }
 
@@ -491,15 +506,19 @@ final class StudentRecordData
     /**
      * @return array<string, mixed>
      */
-    private function options(Campus $campus): array
+    public function options(Campus $campus): array
     {
         $programs = Program::query()
             ->whereBelongsTo($campus)
-            ->with(['curricula' => fn ($query) => $query->orderBy('name')])
+            ->with([
+                'educationLevel:id,name,code,category',
+                'curricula' => fn ($query) => $query->orderBy('name'),
+            ])
             ->orderBy('name')
-            ->get(['id', 'campus_id', 'name', 'code']);
+            ->get(['id', 'campus_id', 'education_level_id', 'name', 'code']);
 
         return [
+            'academicStyle' => $this->academicStyle($campus, $programs),
             'statuses' => ['active', 'inactive', 'graduated', 'transferred'],
             'incomeBrackets' => [
                 'below_100000' => 'Below PHP 100,000',
@@ -557,6 +576,12 @@ final class StudentRecordData
                     'id' => $program->id,
                     'name' => $program->name,
                     'code' => $program->code,
+                    'educationLevel' => $program->educationLevel ? [
+                        'id' => $program->educationLevel->id,
+                        'name' => $program->educationLevel->name,
+                        'code' => $program->educationLevel->code,
+                        'category' => $program->educationLevel->category,
+                    ] : null,
                     'curricula' => $program->curricula
                         ->map(fn (Curriculum $curriculum): array => [
                             'id' => $curriculum->id,
@@ -619,6 +644,209 @@ final class StudentRecordData
                 ])
                 ->all(),
         ];
+    }
+
+    /**
+     * @param  Collection<int, Program>  $programs
+     * @return array{level: string, label: string}
+     */
+    private function academicStyle(Campus $campus, Collection $programs): array
+    {
+        $scope = str((string) data_get($campus->settings, 'academic_scope', ''))->lower()->toString();
+        $levels = $programs
+            ->map(fn (Program $program): string => str(implode(' ', [
+                $program->educationLevel?->code,
+                $program->educationLevel?->name,
+                $program->educationLevel?->category,
+            ]))->lower()->toString())
+            ->implode(' ');
+        $source = "{$scope} {$levels}";
+
+        $level = match (true) {
+            str_contains($source, 'college'), str_contains($source, 'col'), str_contains($source, 'undergraduate') => 'college',
+            str_contains($source, 'senior'), str_contains($source, 'junior'), str_contains($source, 'high'), str_contains($source, 'shs'), str_contains($source, 'jhs') => 'high_school',
+            str_contains($source, 'grade_school'), str_contains($source, 'elementary'), str_contains($source, 'elem'), str_contains($source, 'kindergarten') => 'elementary',
+            default => 'college',
+        };
+
+        return [
+            'level' => $level,
+            'label' => match ($level) {
+                'elementary' => 'Elementary',
+                'high_school' => 'High school',
+                default => 'College',
+            },
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function summary(Campus $campus): array
+    {
+        $total = $this->studentCount($campus);
+        $documentGaps = $this->documentGapCount($campus);
+
+        return [
+            'total' => $total,
+            'activeEnrollments' => Enrollment::query()
+                ->whereBelongsTo($campus)
+                ->whereIn('status', [EnrollmentStatus::Pending, EnrollmentStatus::Approved])
+                ->count(),
+            'waiting' => Enrollment::query()
+                ->whereBelongsTo($campus)
+                ->whereIn('status', [EnrollmentStatus::Draft, EnrollmentStatus::Waitlisted])
+                ->count(),
+            'documentGaps' => $documentGaps,
+            'documentReady' => max(0, $total - $documentGaps),
+            'transferReviews' => TransferCreditEvaluation::query()
+                ->whereBelongsTo($campus)
+                ->whereIn('status', ['draft', 'in_review'])
+                ->count(),
+            'archived' => $this->studentCount($campus, onlyTrashed: true),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function charts(Campus $campus): array
+    {
+        $statusCounts = Person::query()
+            ->whereHas('roles', fn (Builder $query): Builder => $query
+                ->where('campus_id', $campus->getKey())
+                ->where('role', PersonRole::Student)
+                ->where('active', true))
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $enrollmentStatusCounts = Enrollment::query()
+            ->whereBelongsTo($campus)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $transferStatusCounts = TransferCreditEvaluation::query()
+            ->whereBelongsTo($campus)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $summary = $this->summary($campus);
+
+        return [
+            'profileStatuses' => collect($this->options($campus)['statuses'])
+                ->map(fn (string $status): array => [
+                    'label' => str($status)->replace('_', ' ')->title()->toString(),
+                    'value' => (int) ($statusCounts[$status] ?? 0),
+                ])
+                ->values()
+                ->all(),
+            'enrollmentStatuses' => collect(EnrollmentStatus::cases())
+                ->map(fn (EnrollmentStatus $status): array => [
+                    'label' => str($status->value)->replace('_', ' ')->title()->toString(),
+                    'value' => (int) ($enrollmentStatusCounts[$status->value] ?? 0),
+                ])
+                ->values()
+                ->all(),
+            'documentReadiness' => [
+                ['label' => 'Ready', 'value' => $summary['documentReady']],
+                ['label' => 'Needs documents', 'value' => $summary['documentGaps']],
+            ],
+            'transferWorkload' => collect(TransferCreditEvaluation::STATUSES)
+                ->map(fn (string $status): array => [
+                    'label' => str($status)->replace('_', ' ')->title()->toString(),
+                    'value' => (int) ($transferStatusCounts[$status] ?? 0),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function studentForm(Person $student): array
+    {
+        $profile = $student->studentProfile;
+        $role = $student->roles->first();
+        $metadata = $student->metadata ?? [];
+
+        return [
+            'first_name' => $student->first_name,
+            'middle_name' => $student->middle_name,
+            'last_name' => $student->last_name,
+            'suffix' => $student->suffix,
+            'birth_date' => $student->birth_date?->toDateString(),
+            'sex' => $student->sex,
+            'email' => $student->email,
+            'phone' => $student->phone,
+            'address' => $student->address,
+            'status' => $student->status,
+            'student_number' => $role?->reference_number,
+            'metadata' => [
+                'learner_reference_number' => $metadata['learner_reference_number'] ?? $profile?->learner_reference_number,
+                'previous_school' => $metadata['previous_school'] ?? $profile?->previous_school_name,
+                'emergency_contact' => $metadata['emergency_contact'] ?? $profile?->emergency_contact_phone,
+            ],
+            'profile' => [
+                'psa_birth_certificate_number' => $profile?->psa_birth_certificate_number,
+                'learner_reference_number' => $profile?->learner_reference_number,
+                'nationality' => $profile?->nationality ?? 'Filipino',
+                'civil_status' => $profile?->civil_status,
+                'religion' => $profile?->religion,
+                'mother_tongue' => $profile?->mother_tongue,
+                'is_indigenous_people' => (bool) ($profile?->is_indigenous_people ?? false),
+                'indigenous_community' => $profile?->indigenous_community,
+                'has_disability' => (bool) ($profile?->has_disability ?? false),
+                'disability_type' => $profile?->disability_type,
+                'is_4ps_beneficiary' => (bool) ($profile?->is_4ps_beneficiary ?? false),
+                'four_ps_household_id' => $profile?->four_ps_household_id,
+                'annual_family_income_bracket' => $profile?->annual_family_income_bracket,
+                'household_gross_income' => $profile?->household_gross_income,
+                'has_government_subsidy' => (bool) ($profile?->has_government_subsidy ?? false),
+                'subsidy_program' => $profile?->subsidy_program,
+                'emergency_contact_name' => $profile?->emergency_contact_name,
+                'emergency_contact_relationship' => $profile?->emergency_contact_relationship,
+                'emergency_contact_phone' => $profile?->emergency_contact_phone,
+                'current_address' => $profile?->current_address ?? [],
+                'permanent_address' => $profile?->permanent_address ?? [],
+                'previous_school_name' => $profile?->previous_school_name,
+                'previous_school_address' => $profile?->previous_school_address,
+                'previous_school_type' => $profile?->previous_school_type,
+                'last_grade_level_completed' => $profile?->last_grade_level_completed,
+                'last_school_year_attended' => $profile?->last_school_year_attended,
+                'senior_high_school_strand' => $profile?->senior_high_school_strand,
+                'college_year_level' => $profile?->college_year_level,
+                'reporting_flags' => $profile?->reporting_flags ?? [],
+            ],
+            'guardians' => $student->guardians
+                ->map(fn (Person $guardian): array => [
+                    'id' => $guardian->id,
+                    'first_name' => $guardian->first_name,
+                    'last_name' => $guardian->last_name,
+                    'email' => $guardian->email,
+                    'phone' => $guardian->phone,
+                    'relationship' => $guardian->pivot->relationship,
+                    'is_primary' => (bool) $guardian->pivot->is_primary,
+                    'has_portal_access' => (bool) $guardian->pivot->has_portal_access,
+                ])
+                ->values()
+                ->all(),
+            'documents' => [],
+        ];
+    }
+
+    private function studentCount(Campus $campus, bool $onlyTrashed = false): int
+    {
+        return Person::query()
+            ->when($onlyTrashed, fn (Builder $query): Builder => $query->onlyTrashed())
+            ->whereHas('roles', fn (Builder $query): Builder => $query
+                ->where('campus_id', $campus->getKey())
+                ->where('role', PersonRole::Student)
+                ->where('active', true))
+            ->count();
     }
 
     private function documentGapCount(Campus $campus): int

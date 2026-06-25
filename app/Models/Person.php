@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Enrollment\Models\Enrollment;
 use Modules\Enrollment\Models\StudentDocument;
 use Modules\Enrollment\Models\StudentProfile;
@@ -16,6 +17,8 @@ use Modules\Enrollment\Models\TransferCreditEvaluation;
 
 final class Person extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id', 'first_name', 'middle_name', 'last_name', 'suffix', 'birth_date',
         'sex', 'email', 'phone', 'address', 'status', 'metadata',

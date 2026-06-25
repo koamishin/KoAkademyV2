@@ -31,6 +31,15 @@ final class AdminStudentController extends Controller
         return Inertia::render('enrollment/StudentRecords', $studentRecordData->index($request, $campus));
     }
 
+    public function create(Request $request, Campus $campus, AdminStudentAuthorizer $authorizer, StudentRecordData $studentRecordData): Response
+    {
+        $authorizer->abortUnlessCanManage($request->user(), $campus);
+
+        return Inertia::render('enrollment/StudentCreate', [
+            'options' => $studentRecordData->options($campus),
+        ]);
+    }
+
     public function store(StoreStudentRequest $request, Campus $campus): RedirectResponse
     {
         $validated = $request->validated();
@@ -62,6 +71,14 @@ final class AdminStudentController extends Controller
         return Inertia::render('enrollment/StudentProfile', $studentRecordData->show($student, $campus));
     }
 
+    public function edit(Request $request, Campus $campus, Person $student, AdminStudentAuthorizer $authorizer, StudentRecordData $studentRecordData): Response
+    {
+        $authorizer->abortUnlessCanManage($request->user(), $campus);
+        $authorizer->abortUnlessStudentBelongsToCampus($student, $campus);
+
+        return Inertia::render('enrollment/StudentEdit', $studentRecordData->edit($student, $campus));
+    }
+
     public function update(UpdateStudentRequest $request, Campus $campus, Person $student, AdminStudentAuthorizer $authorizer): RedirectResponse
     {
         $authorizer->abortUnlessCanManage($request->user(), $campus);
@@ -82,6 +99,28 @@ final class AdminStudentController extends Controller
         });
 
         return back()->with('status', 'Student record updated.');
+    }
+
+    public function destroy(Request $request, Campus $campus, Person $student, AdminStudentAuthorizer $authorizer): RedirectResponse
+    {
+        $authorizer->abortUnlessCanManage($request->user(), $campus);
+        $authorizer->abortUnlessStudentBelongsToCampus($student, $campus);
+
+        $student->delete();
+
+        return to_route('admin.students.index', ['campus' => $campus])
+            ->with('status', 'Student record archived.');
+    }
+
+    public function restore(Request $request, Campus $campus, Person $student, AdminStudentAuthorizer $authorizer): RedirectResponse
+    {
+        $authorizer->abortUnlessCanManage($request->user(), $campus);
+        $authorizer->abortUnlessStudentBelongsToCampus($student, $campus);
+
+        $student->restore();
+
+        return to_route('admin.students.show', ['campus' => $campus, 'student' => $student])
+            ->with('status', 'Student record restored.');
     }
 
     /**

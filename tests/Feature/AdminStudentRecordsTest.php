@@ -28,6 +28,7 @@ use Modules\Enrollment\Models\TransferCreditEvaluation;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\assertSoftDeleted;
 
 test('admin can list and view campus scoped student records', function (): void {
     $context = adminStudentContext();
@@ -42,6 +43,10 @@ test('admin can list and view campus scoped student records', function (): void 
             ->has('students.data.0.documentSummary')
             ->has('summary.documentGaps')
             ->has('summary.transferReviews')
+            ->has('summary.archived')
+            ->has('charts.profileStatuses')
+            ->has('charts.enrollmentStatuses')
+            ->has('charts.documentReadiness')
             ->where('students.data.0.fullName', $student->full_name)
         );
 
@@ -59,6 +64,35 @@ test('admin can list and view campus scoped student records', function (): void 
         );
 });
 
+test('admin can open full page create and edit student screens', function (): void {
+    $context = adminStudentContext();
+    $student = createCampusStudent($context['campus'], 'Ana', 'Reyes');
+
+    actingAs($context['admin'])
+        ->get(route('admin.students.create', ['campus' => $context['campus']]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('enrollment/StudentCreate')
+            ->where('options.academicStyle.level', 'college')
+            ->has('options.statuses')
+            ->has('options.documentTypes')
+            ->has('options.programs')
+            ->has('options.programs.0.educationLevel')
+        );
+
+    actingAs($context['admin'])
+        ->get(route('admin.students.edit', ['campus' => $context['campus'], 'student' => $student]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('enrollment/StudentEdit')
+            ->where('student.fullName', $student->full_name)
+            ->where('form.first_name', 'Ana')
+            ->has('documents')
+            ->has('transferCredits')
+            ->has('enrollments')
+        );
+});
+
 test('non admin users cannot access student records', function (): void {
     $context = adminStudentContext();
     $studentUser = User::factory()->create();
@@ -72,6 +106,58 @@ test('non admin users cannot access student records', function (): void {
     actingAs($studentUser)
         ->get(route('admin.students.index', ['campus' => $context['campus']]))
         ->assertForbidden();
+
+    $student = createCampusStudent($context['campus'], 'Ana', 'Reyes');
+
+    actingAs($studentUser)
+        ->get(route('admin.students.create', ['campus' => $context['campus']]))
+        ->assertForbidden();
+
+    actingAs($studentUser)
+        ->get(route('admin.students.edit', ['campus' => $context['campus'], 'student' => $student]))
+        ->assertForbidden();
+
+    actingAs($studentUser)
+        ->delete(route('admin.students.destroy', ['campus' => $context['campus'], 'student' => $student]))
+        ->assertForbidden();
+
+    actingAs($studentUser)
+        ->post(route('admin.students.restore', ['campus' => $context['campus'], 'student' => $student]))
+        ->assertForbidden();
+});
+
+test('admin can archive and restore student records', function (): void {
+    $context = adminStudentContext();
+    $student = createCampusStudent($context['campus'], 'Ana', 'Reyes');
+
+    actingAs($context['admin'])
+        ->delete(route('admin.students.destroy', ['campus' => $context['campus'], 'student' => $student]))
+        ->assertRedirect(route('admin.students.index', ['campus' => $context['campus']]));
+
+    assertSoftDeleted('people', ['id' => $student->id]);
+
+    actingAs($context['admin'])
+        ->get(route('admin.students.index', ['campus' => $context['campus']]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('students.data', 0)
+            ->where('summary.archived', 1)
+        );
+
+    actingAs($context['admin'])
+        ->get(route('admin.students.index', ['campus' => $context['campus'], 'view' => 'archived']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('students.data', 1)
+            ->where('students.data.0.fullName', $student->full_name)
+            ->where('students.data.0.can.restore', true)
+        );
+
+    actingAs($context['admin'])
+        ->post(route('admin.students.restore', ['campus' => $context['campus'], 'student' => $student->id]))
+        ->assertRedirect(route('admin.students.show', ['campus' => $context['campus'], 'student' => $student->id]));
+
+    expect(Person::query()->find($student->id))->not->toBeNull();
 });
 
 test('admin can create and update a student profile with guardians', function (): void {

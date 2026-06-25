@@ -22,9 +22,13 @@ Route::prefix('campus/{campus:slug}')
             ->name('admin.students.')
             ->group(function (): void {
                 Route::get('/', [AdminStudentController::class, 'index'])->name('index');
+                Route::get('/create', [AdminStudentController::class, 'create'])->name('create');
                 Route::post('/', [AdminStudentController::class, 'store'])->name('store');
-                Route::get('/{student}', [AdminStudentController::class, 'show'])->name('show');
-                Route::patch('/{student}', [AdminStudentController::class, 'update'])->name('update');
+                Route::get('/{student}', [AdminStudentController::class, 'show'])->withTrashed()->name('show');
+                Route::get('/{student}/edit', [AdminStudentController::class, 'edit'])->withTrashed()->name('edit');
+                Route::patch('/{student}', [AdminStudentController::class, 'update'])->withTrashed()->name('update');
+                Route::delete('/{student}', [AdminStudentController::class, 'destroy'])->name('destroy');
+                Route::post('/{student}/restore', [AdminStudentController::class, 'restore'])->withTrashed()->name('restore');
                 Route::post('/{student}/documents', [StudentDocumentController::class, 'store'])->name('documents.store');
                 Route::patch('/{student}/documents/{document}', [StudentDocumentController::class, 'update'])->name('documents.update');
                 Route::post('/{student}/transfer-credits', [TransferCreditEvaluationController::class, 'store'])->name('transfer-credits.store');
