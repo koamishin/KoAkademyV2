@@ -11,6 +11,7 @@ use App\Models\CurriculumItem;
 use App\Models\EducationLevel;
 use App\Models\Program;
 use App\Models\Subject;
+use App\Support\CampusAcademicConfiguration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -18,7 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class CreateCurriculumFromBuilder
 {
-    public function __construct(private CurriculumTemplateRegistry $curriculumTemplateRegistry) {}
+    public function __construct(
+        private CurriculumTemplateRegistry $curriculumTemplateRegistry,
+        private CampusAcademicConfiguration $campusAcademicConfiguration,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -70,7 +74,15 @@ final readonly class CreateCurriculumFromBuilder
             $educationLevel = EducationLevel::query()
                 ->whereKey($validated['education_level_id'])
                 ->where('institution_id', $campus->institution_id)
-                ->firstOrFail();
+                ->whereKey($this->campusAcademicConfiguration->educationLevelIds($campus))
+                ->first();
+
+            if ($educationLevel === null) {
+                throw ValidationException::withMessages([
+                    'education_level_id' => 'This education level is not configured for the current campus.',
+                ]);
+            }
+
             $program = $this->resolveProgram($campus, $educationLevel, $validated);
             $template = $validated['template_key'] === 'blank'
                 ? $this->curriculumTemplateRegistry->blank()
@@ -201,6 +213,7 @@ final readonly class CreateCurriculumFromBuilder
                 ->whereKey($data['program_id'])
                 ->where('campus_id', $campus->id)
                 ->where('education_level_id', $educationLevel->id)
+                ->where('status', 'active')
                 ->firstOrFail();
         }
 

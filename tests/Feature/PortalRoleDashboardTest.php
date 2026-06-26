@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\RoleEnums;
+use App\Filament\Resources\Curricula\CurriculumResource;
 use App\Models\AcademicModuleSetting;
 use App\Models\AcademicYear;
 use App\Models\Campus;
@@ -169,8 +170,26 @@ test('admin users receive the operations dashboard and admin navigation', functi
         );
 
     expect(portalNavigationTitles($response))
-        ->toContain('Dashboard', 'Applications Queue', 'Enrollment Queue', 'Classes', 'Advanced Admin')
+        ->toContain('Dashboard', 'Applications Queue', 'Enrollment Queue', 'Classes', 'Curriculum Manager', 'Advanced Admin')
         ->not->toContain('Academic History');
+});
+
+test('admin curriculum manager portal route redirects to Filament manager', function (): void {
+    $campus = portalCampus();
+    $user = portalUser($campus, RoleEnums::SCHOOL_ADMIN);
+
+    $this->actingAs($user)
+        ->get(route('admin.curricula.index', ['campus' => $campus]))
+        ->assertRedirect(CurriculumResource::getUrl('index', ['tenant' => $campus]));
+});
+
+test('non admin users cannot access the curriculum manager portal route', function (): void {
+    $campus = portalCampus();
+    $user = portalUser($campus, RoleEnums::STUDENT);
+
+    $this->actingAs($user)
+        ->get(route('admin.curricula.index', ['campus' => $campus]))
+        ->assertForbidden();
 });
 
 test('users cannot access a different campus portal', function (): void {

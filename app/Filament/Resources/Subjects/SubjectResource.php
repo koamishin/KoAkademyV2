@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Subjects;
 
 use App\Models\Subject;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,6 +37,7 @@ final class SubjectResource extends Resource
                 ->schema([
                     Select::make('institution_id')
                         ->relationship('institution', 'name')
+                        ->default(fn (): ?int => Filament::getTenant()?->institution_id)
                         ->required()
                         ->disabled()
                         ->saved(),

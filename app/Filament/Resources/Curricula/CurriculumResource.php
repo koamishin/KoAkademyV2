@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Curricula;
 
+use App\Filament\Resources\Curricula\Pages\CreateCurriculum;
 use App\Filament\Resources\Curricula\Pages\EditCurriculum;
 use App\Filament\Resources\Curricula\Pages\ListCurricula;
+use App\Models\Campus;
 use App\Models\Curriculum;
+use App\Models\Program;
 use App\Models\Subject;
+use App\Support\CampusAcademicConfiguration;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -31,7 +35,17 @@ final class CurriculumResource extends Resource
 
     protected static bool $isScopedToTenant = false;
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Academic Setup';
+
+    protected static ?string $navigationLabel = 'Curriculum Manager';
+
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $modelLabel = 'curriculum';
+
+    protected static ?string $pluralModelLabel = 'curricula';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -174,13 +188,32 @@ final class CurriculumResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('program.name')->label('Program')->searchable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn (Curriculum $curriculum): string => $curriculum->code),
+                TextColumn::make('program.educationLevel.name')
+                    ->label('School type')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state, Curriculum $curriculum): string => self::schoolTypeLabel($curriculum, $state)),
+                TextColumn::make('program.name')
+                    ->label('Program')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('effective_year')->label('Effective')->sortable(),
-                TextColumn::make('template_authority')->label('Foundation')->placeholder('Custom'),
                 TextColumn::make('items_count')->counts('items')->label('Subjects')->badge(),
-                IconColumn::make('is_customized')->label('Customized')->boolean(),
+                TextColumn::make('pricing')
+                    ->label('Pricing')
+                    ->state(fn (Curriculum $curriculum): string => sprintf(
+                        '%s %s / unit; %s %s / lab',
+                        $curriculum->currency,
+                        number_format((float) $curriculum->tuition_per_unit, 2),
+                        $curriculum->currency,
+                        number_format((float) $curriculum->laboratory_fee_per_subject, 2),
+                    )),
                 TextColumn::make('status')->badge(),
+                IconColumn::make('is_customized')->label('Customized')->boolean(),
             ])
             ->filters([
                 SelectFilter::make('status')->options([
@@ -189,7 +222,41 @@ final class CurriculumResource extends Resource
                     'inactive' => 'Inactive',
                     'archived' => 'Archived',
                 ]),
+                SelectFilter::make('education_level_id')
+                    ->label('Education level')
+                    ->options(fn (): array => self::configuredEducationLevelOptions())
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        filled($data['value'] ?? null),
+                        fn (Builder $query): Builder => $query->whereHas(
+                            'program',
+                            fn (Builder $programQuery): Builder => $programQuery->where('education_level_id', $data['value']),
+                        ),
+                    )),
+                SelectFilter::make('program_id')
+                    ->label('Program')
+                    ->options(fn (): array => Program::query()
+                        ->where('campus_id', Filament::getTenant()?->getKey())
+                        ->where('status', 'active')
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all()),
+                SelectFilter::make('effective_year')
+                    ->label('Effective year')
+                    ->options(fn (): array => Curriculum::query()
+                        ->when(
+                            Filament::getTenant() !== null,
+                            fn (Builder $query): Builder => $query->whereHas(
+                                'program',
+                                fn (Builder $programQuery): Builder => $programQuery->where('campus_id', Filament::getTenant()?->getKey()),
+                            ),
+                        )
+                        ->distinct()
+                        ->orderByDesc('effective_year')
+                        ->pluck('effective_year', 'effective_year')
+                        ->map(fn (int $year): string => (string) $year)
+                        ->all()),
             ])
+            ->filtersFormColumns(2)
             ->recordUrl(fn (Curriculum $curriculum): string => self::getUrl('edit', [
                 'record' => $curriculum,
                 'tenant' => Filament::getTenant(),
@@ -210,10 +277,127 @@ final class CurriculumResource extends Resource
         );
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function configuredEducationLevelOptions(?Campus $campus = null): array
+    {
+        $campus ??= Filament::getTenant();
+
+        if (! $campus instanceof Campus) {
+            return [];
+        }
+
+        return app(CampusAcademicConfiguration::class)->educationLevelOptions($campus);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function configuredSchoolTypeOptions(?Campus $campus = null): array
+    {
+        $campus ??= Filament::getTenant();
+
+        if (! $campus instanceof Campus) {
+            return [];
+        }
+
+        return app(CampusAcademicConfiguration::class)->schoolTypeOptions($campus);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public static function configuredEducationLevelIds(Campus $campus): array
+    {
+        return app(CampusAcademicConfiguration::class)->educationLevelIds($campus);
+    }
+
+    public static function applySchoolTypeScope(Builder $query, string $type): Builder
+    {
+        return match ($type) {
+            'elementary' => $query->whereHas('program.educationLevel', fn (Builder $builder): Builder => $builder
+                ->where('category', 'grade_school')
+                ->orWhere('code', 'ELEM')
+                ->orWhere('name', 'like', '%Elementary%')
+                ->orWhere('name', 'like', '%Grade School%')),
+            'junior_high' => $query->whereHas('program.educationLevel', fn (Builder $builder): Builder => $builder
+                ->where(function (Builder $builder): void {
+                    $builder
+                        ->whereIn('code', ['JHS', 'G7', 'G8', 'G9', 'G10'])
+                        ->orWhere('name', 'like', '%Junior High%')
+                        ->orWhere('name', 'like', '%Middle School%')
+                        ->orWhere('name', 'like', '%Grade 7%')
+                        ->orWhere('name', 'like', '%Grade 8%')
+                        ->orWhere('name', 'like', '%Grade 9%')
+                        ->orWhere('name', 'like', '%Grade 10%');
+                })),
+            'senior_high' => $query->whereHas('program.educationLevel', fn (Builder $builder): Builder => $builder
+                ->where(function (Builder $builder): void {
+                    $builder
+                        ->whereIn('code', ['SHS', 'G11', 'G12'])
+                        ->orWhere('name', 'like', '%Senior High%')
+                        ->orWhere('name', 'like', '%Grade 11%')
+                        ->orWhere('name', 'like', '%Grade 12%');
+                })),
+            'college' => $query->whereHas('program.educationLevel', fn (Builder $builder): Builder => $builder
+                ->where('category', 'college')
+                ->orWhere('code', 'COL')
+                ->orWhere('code', 'UG')
+                ->orWhere('name', 'like', '%College%')
+                ->orWhere('name', 'like', '%Undergraduate%')
+                ->orWhere('name', 'like', '%Graduate%')),
+            'other' => $query
+                ->whereDoesntHave('program.educationLevel', fn (Builder $builder): Builder => $builder
+                    ->where('category', 'grade_school')
+                    ->orWhere('code', 'ELEM')
+                    ->orWhere('name', 'like', '%Elementary%')
+                    ->orWhere('name', 'like', '%Grade School%'))
+                ->whereDoesntHave('program.educationLevel', fn (Builder $builder): Builder => $builder
+                    ->whereIn('code', ['JHS', 'G7', 'G8', 'G9', 'G10'])
+                    ->orWhere('name', 'like', '%Junior High%')
+                    ->orWhere('name', 'like', '%Middle School%')
+                    ->orWhere('name', 'like', '%Grade 7%')
+                    ->orWhere('name', 'like', '%Grade 8%')
+                    ->orWhere('name', 'like', '%Grade 9%')
+                    ->orWhere('name', 'like', '%Grade 10%'))
+                ->whereDoesntHave('program.educationLevel', fn (Builder $builder): Builder => $builder
+                    ->whereIn('code', ['SHS', 'G11', 'G12'])
+                    ->orWhere('name', 'like', '%Senior High%')
+                    ->orWhere('name', 'like', '%Grade 11%')
+                    ->orWhere('name', 'like', '%Grade 12%'))
+                ->whereDoesntHave('program.educationLevel', fn (Builder $builder): Builder => $builder
+                    ->where('category', 'college')
+                    ->orWhere('code', 'COL')
+                    ->orWhere('code', 'UG')
+                    ->orWhere('name', 'like', '%College%')
+                    ->orWhere('name', 'like', '%Undergraduate%')
+                    ->orWhere('name', 'like', '%Graduate%')),
+            default => $query,
+        };
+    }
+
+    private static function schoolTypeLabel(Curriculum $curriculum, ?string $educationLevelName): string
+    {
+        $educationLevel = $curriculum->program?->educationLevel;
+
+        if ($educationLevel === null) {
+            return 'Other';
+        }
+
+        $campusAcademicConfiguration = app(CampusAcademicConfiguration::class);
+
+        return $campusAcademicConfiguration->schoolTypeName(
+            $campusAcademicConfiguration->schoolTypeKey($educationLevel),
+            $educationLevelName,
+        );
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => ListCurricula::route('/'),
+            'create' => CreateCurriculum::route('/create'),
             'edit' => EditCurriculum::route('/{record}/edit'),
         ];
     }

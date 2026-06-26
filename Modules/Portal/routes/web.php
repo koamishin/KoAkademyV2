@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminCurriculumManagerController;
 use Illuminate\Support\Facades\Route;
 use Modules\Portal\Http\Controllers\CampusDashboardController;
 use Modules\Portal\Http\Controllers\DashboardRedirectController;
@@ -17,4 +18,5 @@ Route::prefix('campus/{campus:slug}')
     ->scopeBindings()
     ->group(function (): void {
         Route::get('dashboard', CampusDashboardController::class)->name('campus.dashboard');
+        Route::get('admin/curricula', AdminCurriculumManagerController::class)->name('admin.curricula.index');
     });

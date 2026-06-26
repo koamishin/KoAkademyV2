@@ -58,6 +58,13 @@ final class PortalServiceProvider extends ModuleServiceProvider
                 'icon' => 'ShieldCheck',
                 'section' => 'Account',
             ])
+            ->add(fn ($request, $context): ?array => $context['campus'] && $context['canAccessAdminPortal'] ? [
+                'title' => 'Curriculum Manager',
+                'href' => route('admin.curricula.index', ['campus' => $context['campus']['slug']]),
+                'icon' => 'BookOpenCheck',
+                'section' => 'Admin',
+                'external' => true,
+            ] : null)
             ->add(fn ($request, $context): ?array => $context['canAccessAdminPortal'] ? [
                 'title' => 'Advanced Admin',
                 'href' => $context['campus'] ? url('/admin/campus/'.$context['campus']['slug']) : url('/admin'),

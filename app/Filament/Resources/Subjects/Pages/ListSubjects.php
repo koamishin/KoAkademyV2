@@ -23,8 +23,8 @@ final class ListSubjects extends ListRecords
                 ->color('gray')
                 ->url(CurriculumResource::getUrl('index', ['tenant' => filament()->getTenant()])),
             CreateAction::make()
-                ->label('Build curriculum')
-                ->icon('heroicon-o-sparkles'),
+                ->label('Create subject')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }
