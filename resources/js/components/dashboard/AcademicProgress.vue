@@ -73,8 +73,8 @@ function relativeTime(dateStr: string): string {
 </script>
 
 <template>
-    <div class="py-8 border-t border-border/50">
-        <h2 class="text-lg font-semibold text-foreground">Academic Progress</h2>
+    <div class="py-6 border-t border-border/50 sm:py-8">
+        <h2 class="text-base font-semibold text-foreground sm:text-lg">Academic Progress</h2>
         
         <!-- Grades Section -->
         <div class="mt-6">
@@ -88,10 +88,10 @@ function relativeTime(dateStr: string): string {
                 <div
                     v-for="item in grades"
                     :key="item.classOfferingId"
-                    class="flex items-center justify-between gap-4 rounded-lg p-4 transition-colors hover:bg-accent/30"
+                    class="flex items-center justify-between gap-3 rounded-lg p-3 sm:gap-4 sm:p-4 transition-colors hover:bg-accent/30"
                 >
                     <div class="min-w-0 flex-1">
-                        <p class="font-medium text-foreground">{{ item.className }}</p>
+                        <p class="text-sm font-medium text-foreground sm:text-base">{{ item.className }}</p>
                         <div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                             <span v-if="item.subjectCode" class="font-medium uppercase">{{ item.subjectCode }}</span>
                             <span v-if="item.subjectCode" class="text-border">·</span>
@@ -99,7 +99,7 @@ function relativeTime(dateStr: string): string {
                         </div>
                     </div>
                     
-                    <div class="relative flex h-12 w-12 shrink-0 items-center justify-center">
+                    <div class="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-12 sm:w-12">
                         <svg class="absolute inset-0 h-full w-full -rotate-90 transform" viewBox="0 0 48 48">
                             <circle
                                 cx="24"
@@ -124,7 +124,7 @@ function relativeTime(dateStr: string): string {
                                 class="transition-all duration-700 ease-out"
                             />
                         </svg>
-                        <span class="relative text-xs font-bold" :class="gradeColor(item.percentage)">
+                        <span class="relative text-[10px] font-bold sm:text-xs" :class="gradeColor(item.percentage)">
                             {{ Math.round(item.percentage) }}%
                         </span>
                     </div>
@@ -133,7 +133,7 @@ function relativeTime(dateStr: string): string {
         </div>
 
         <!-- Announcements Section -->
-        <div class="mt-8">
+        <div class="mt-6 sm:mt-8">
             <h3 class="mb-4 text-sm font-medium text-muted-foreground">Recent Announcements</h3>
             
             <div v-if="announcements.length === 0" class="py-8 text-center">
@@ -145,17 +145,17 @@ function relativeTime(dateStr: string): string {
                     v-for="item in announcements"
                     :key="item.id"
                     :href="showClass({ campus: campus, classOffering: item.classOfferingId })"
-                    class="block rounded-lg p-4 transition-colors hover:bg-accent/30"
+                    class="block rounded-lg p-3 transition-colors hover:bg-accent/30 sm:p-4"
                 >
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start justify-between gap-3 sm:gap-4">
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-foreground transition-colors hover:text-primary">
+                            <p class="text-sm font-medium text-foreground transition-colors hover:text-primary sm:text-base">
                                 {{ item.title || 'Announcement' }}
                             </p>
-                            <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                            <p class="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
                                 {{ item.body }}
                             </p>
-                            <div class="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                            <div class="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground sm:text-xs">
                                 <span class="font-medium uppercase">{{ item.subjectCode || item.subjectName }}</span>
                                 <span class="text-border">·</span>
                                 <span>{{ relativeTime(item.publishedAt) }}</span>

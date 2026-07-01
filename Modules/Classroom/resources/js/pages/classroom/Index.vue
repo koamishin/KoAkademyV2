@@ -32,14 +32,14 @@ const statusColor = (status: string) => {
     <Head title="My Classes" />
     <AppLayout :breadcrumbs="[{ title: 'My Classes' }]">
         <div
-            class="mx-auto flex w-full max-w-[1400px] flex-col gap-6 p-4 sm:p-6 lg:p-8"
+            class="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-8"
         >
             <!-- Header -->
-            <header class="py-8">
+            <header class="py-6 sm:py-8">
                 <p class="text-sm font-medium text-primary uppercase tracking-wider">
                     Academic workspace
                 </p>
-                <h1 class="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
+                <h1 class="mt-2 text-xl font-semibold text-foreground sm:text-2xl">
                     {{ portalRole === 'admin' ? 'Classes' : 'My Classes' }}
                 </h1>
                 <p class="mt-2 text-sm text-muted-foreground">
@@ -59,29 +59,29 @@ const statusColor = (status: string) => {
                             classOffering: item.id,
                         })
                     "
-                    class="group rounded-lg border border-border p-4 transition-colors hover:bg-accent/50"
+                    class="group rounded-lg border border-border p-3 transition-colors hover:bg-accent/50 sm:p-4"
                 >
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="min-w-0">
+                    <div class="flex items-start justify-between gap-3 sm:gap-4">
+                        <div class="min-w-0 flex-1">
                             <p
-                                class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                                class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider sm:text-xs"
                             >
                                 {{ item.code }}
                             </p>
                             <h2
-                                class="mt-1 truncate text-lg font-semibold text-foreground transition-colors group-hover:text-primary"
+                                class="mt-1 truncate text-base font-semibold text-foreground transition-colors group-hover:text-primary sm:text-lg"
                             >
                                 {{ item.name }}
                             </h2>
                         </div>
                         <span
-                            class="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary uppercase"
+                            class="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary uppercase sm:px-2.5 sm:py-1 sm:text-xs"
                         >
                             {{ item.status }}
                         </span>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <div class="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
                         <span
                             v-if="item.teacher"
                             class="flex items-center gap-2 text-xs text-muted-foreground"

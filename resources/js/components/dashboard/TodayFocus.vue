@@ -88,14 +88,14 @@ function statusDotColor(status: string | null): string {
 </script>
 
 <template>
-    <div class="py-8">
-        <h2 class="text-lg font-semibold text-foreground">Today's Focus</h2>
+    <div class="py-6 sm:py-8">
+        <h2 class="text-base font-semibold text-foreground sm:text-lg">Today's Focus</h2>
         <p class="mt-1 text-sm text-muted-foreground">
             {{ new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) }}
         </p>
 
         <div v-if="schedule.length === 0 && assignments.length === 0" class="mt-6 py-12 text-center">
-            <p class="text-lg font-medium text-foreground">Free day</p>
+            <p class="text-base font-medium text-foreground sm:text-lg">Free day</p>
             <p class="mt-1 text-sm text-muted-foreground">No classes or tasks scheduled for today</p>
         </div>
 
@@ -107,15 +107,15 @@ function statusDotColor(status: string | null): string {
                     <div
                         v-for="item in schedule"
                         :key="item.id"
-                        class="flex items-start gap-4 rounded-lg p-4 transition-colors hover:bg-accent/30"
+                        class="flex items-start gap-3 rounded-lg p-3 sm:gap-4 sm:p-4 transition-colors hover:bg-accent/30"
                     >
                         <div class="flex shrink-0 flex-col items-center">
                             <div class="h-2 w-2 rounded-full bg-primary" />
                             <div class="mt-2 h-8 w-px bg-border" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-foreground">{{ item.subjectName }}</p>
-                            <div class="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <p class="text-sm font-medium text-foreground sm:text-base">{{ item.subjectName }}</p>
+                            <div class="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
                                 <span class="flex items-center gap-1.5">
                                     <Clock class="h-3.5 w-3.5" />
                                     {{ formatTime(item.startsAt) }} — {{ formatTime(item.endsAt) }}
@@ -137,7 +137,7 @@ function statusDotColor(status: string | null): string {
                     <div
                         v-for="item in assignments"
                         :key="item.id"
-                        class="flex items-start gap-4 rounded-lg p-4 transition-colors hover:bg-accent/30"
+                        class="flex items-start gap-3 rounded-lg p-3 sm:gap-4 sm:p-4 transition-colors hover:bg-accent/30"
                     >
                         <div class="flex shrink-0 flex-col items-center">
                             <div
@@ -149,13 +149,13 @@ function statusDotColor(status: string | null): string {
                             <div class="flex items-center gap-2">
                                 <span
                                     v-if="item.subjectCode"
-                                    class="text-xs font-medium text-muted-foreground"
+                                    class="text-[10px] font-medium text-muted-foreground sm:text-xs"
                                 >
                                     {{ item.subjectCode }}
                                 </span>
-                                <p class="font-medium text-foreground">{{ item.title }}</p>
+                                <p class="text-sm font-medium text-foreground sm:text-base">{{ item.title }}</p>
                             </div>
-                            <div class="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <div class="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
                                 <span class="flex items-center gap-1.5" :class="dueDateColor(item.dueAt)">
                                     <Calendar class="h-3.5 w-3.5" />
                                     {{ relativeDate(item.dueAt) }}

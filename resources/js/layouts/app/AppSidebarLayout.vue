@@ -4,6 +4,7 @@ import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
+import MobileNavigation from '@/components/MobileNavigation.vue';
 import Sonner from '@/components/ui/sonner/Sonner.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -19,11 +20,12 @@ withDefaults(defineProps<Props>(), {
 <template>
     <AppShell variant="sidebar">
         <AppSidebar />
-        <AppContent variant="sidebar" class="overflow-x-hidden">
+        <AppContent variant="sidebar" class="overflow-x-hidden pb-16 md:pb-0">
             <ImpersonateBanner />
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <slot />
         </AppContent>
         <Sonner />
+        <MobileNavigation />
     </AppShell>
 </template>

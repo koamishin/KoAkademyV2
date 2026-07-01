@@ -50,25 +50,25 @@ const enrollmentStatusLabel = computed(() => {
 </script>
 
 <template>
-    <div class="py-8">
-        <div class="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+    <div class="py-6 sm:py-8">
+        <div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <!-- Left: User Info & Greeting -->
             <div class="min-w-0 flex-1">
-                <div class="min-w-0 flex items-start gap-4">
+                <div class="min-w-0 flex items-start gap-3 sm:gap-4">
                     <!-- Avatar placeholder -->
-                    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
-                        <GraduationCap class="h-7 w-7 text-foreground" />
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent sm:h-14 sm:w-14">
+                        <GraduationCap class="h-6 w-6 text-foreground sm:h-7 sm:w-7" />
                     </div>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             {{ greeting }}
                         </p>
-                        <h1 class="mt-1 truncate text-2xl font-semibold text-foreground sm:text-3xl">
+                        <h1 class="mt-1 truncate text-xl font-semibold text-foreground sm:text-2xl">
                             {{ student?.fullName ?? 'Student' }}
                         </h1>
                         <p
                             v-if="academicContext"
-                            class="mt-2 text-sm text-muted-foreground"
+                            class="mt-1.5 text-sm text-muted-foreground"
                         >
                             {{ academicContext.academicYearName }}
                             <span
@@ -108,13 +108,13 @@ const enrollmentStatusLabel = computed(() => {
         <!-- Context Row -->
         <div
             v-if="enrollment?.sectionName"
-            class="mt-8 grid grid-cols-1 gap-6 border-t border-border/50 pt-8 md:grid-cols-3"
+            class="mt-6 grid grid-cols-1 gap-4 border-t border-border/50 pt-6 sm:gap-6 sm:mt-8 sm:pt-8 md:grid-cols-3"
         >
             <div class="flex flex-col gap-2">
                 <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                     >Section</span
                 >
-                <span class="text-base font-medium text-foreground">
+                <span class="text-sm font-medium text-foreground sm:text-base">
                     {{ enrollment.sectionName }}
                 </span>
             </div>
@@ -122,7 +122,7 @@ const enrollmentStatusLabel = computed(() => {
                 <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                     >Enrolled Subjects</span
                 >
-                <span class="text-base font-medium text-foreground">
+                <span class="text-sm font-medium text-foreground sm:text-base">
                     {{ enrollment.subjectsCount }}
                 </span>
             </div>
