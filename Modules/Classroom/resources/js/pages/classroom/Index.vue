@@ -19,11 +19,11 @@ const statusColor = (status: string) => {
     switch (status) {
         case 'active':
         case 'published':
-            return 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/20';
+            return 'bg-emerald-500/10 text-emerald-500';
         case 'draft':
-            return 'bg-amber-500/10 text-amber-500 ring-amber-500/20';
+            return 'bg-amber-500/10 text-amber-500';
         default:
-            return 'bg-white/5 text-zinc-400 ring-white/10';
+            return 'bg-muted text-muted-foreground';
     }
 };
 </script>
@@ -34,42 +34,22 @@ const statusColor = (status: string) => {
         <div
             class="mx-auto flex w-full max-w-[1400px] flex-col gap-6 p-4 sm:p-6 lg:p-8"
         >
-            <!-- Glassmorphic Banner -->
-            <header
-                class="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.02] p-8 backdrop-blur-2xl transition-all duration-500 sm:p-12"
-            >
-                <!-- Animated ambient light blobs (Amber/Orange tint) -->
-                <div
-                    class="pointer-events-none absolute -top-20 -right-20 h-80 w-80 animate-pulse rounded-full bg-amber-600/15 blur-[100px]"
-                    style="animation-duration: 5s"
-                />
-                <div
-                    class="pointer-events-none absolute -bottom-32 -left-20 h-[400px] w-[400px] animate-pulse rounded-full bg-orange-600/10 blur-[120px]"
-                    style="animation-duration: 7s; animation-delay: 2s"
-                />
-
-                <div class="relative z-10">
-                    <p
-                        class="text-xs font-semibold tracking-widest text-zinc-500 uppercase"
-                    >
-                        Academic workspace
-                    </p>
-                    <h1
-                        class="mt-2 text-4xl font-medium tracking-tighter text-zinc-100 sm:text-5xl"
-                    >
-                        {{ portalRole === 'admin' ? 'Classes' : 'My Classes' }}
-                    </h1>
-                    <p
-                        class="mt-4 max-w-2xl text-sm font-medium tracking-wide text-zinc-400"
-                    >
-                        Schedules, announcements, learning materials,
-                        assignments, and submissions in one organized place.
-                    </p>
-                </div>
+            <!-- Header -->
+            <header class="py-8">
+                <p class="text-sm font-medium text-primary uppercase tracking-wider">
+                    Academic workspace
+                </p>
+                <h1 class="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
+                    {{ portalRole === 'admin' ? 'Classes' : 'My Classes' }}
+                </h1>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Schedules, announcements, learning materials,
+                    assignments, and submissions in one organized place.
+                </p>
             </header>
 
-            <!-- Bento Grid -->
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <!-- Class Grid -->
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <Link
                     v-for="item in classes"
                     :key="item.id"
@@ -79,47 +59,42 @@ const statusColor = (status: string) => {
                             classOffering: item.id,
                         })
                     "
-                    class="group rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    class="group rounded-lg border border-border p-4 transition-colors hover:bg-accent/50"
                 >
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0">
                             <p
-                                class="text-[10px] font-bold tracking-widest text-zinc-500 uppercase transition-colors group-hover:text-amber-500/70"
+                                class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                             >
                                 {{ item.code }}
                             </p>
                             <h2
-                                class="mt-1.5 truncate text-xl font-semibold tracking-tight text-zinc-100 transition-colors group-hover:text-amber-300"
+                                class="mt-1 truncate text-lg font-semibold text-foreground transition-colors group-hover:text-primary"
                             >
                                 {{ item.name }}
                             </h2>
                         </div>
                         <span
-                            class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase ring-1"
-                            :class="statusColor(item.status)"
+                            class="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary uppercase"
                         >
                             {{ item.status }}
                         </span>
                     </div>
 
-                    <div class="mt-8 flex flex-wrap items-center gap-3">
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
                         <span
                             v-if="item.teacher"
-                            class="flex items-center gap-2 text-xs font-medium tracking-wide text-zinc-400"
+                            class="flex items-center gap-2 text-xs text-muted-foreground"
                         >
-                            <span
-                                class="h-1.5 w-1.5 rounded-full bg-zinc-600"
-                            ></span>
+                            <span class="h-1.5 w-1.5 rounded-full bg-border"></span>
                             {{ item.teacher.first_name }}
                             {{ item.teacher.last_name }}
                         </span>
                         <span
                             v-if="item.students !== undefined"
-                            class="flex items-center gap-2 text-xs font-medium tracking-wide text-zinc-400"
+                            class="flex items-center gap-2 text-xs text-muted-foreground"
                         >
-                            <span
-                                class="h-1.5 w-1.5 rounded-full bg-zinc-600"
-                            ></span>
+                            <span class="h-1.5 w-1.5 rounded-full bg-border"></span>
                             {{ item.students }} students
                         </span>
                     </div>
@@ -129,14 +104,10 @@ const statusColor = (status: string) => {
             <!-- Empty State -->
             <div
                 v-if="classes.length === 0"
-                class="mt-4 flex flex-col items-center justify-center rounded-[2rem] border border-white/[0.04] bg-white/[0.01] p-16 text-center backdrop-blur-sm"
+                class="py-12 text-center text-sm text-muted-foreground"
             >
-                <p
-                    class="text-3xl font-semibold tracking-tighter text-zinc-300"
-                >
-                    Workspace Empty
-                </p>
-                <p class="mt-3 text-sm font-medium tracking-wide text-zinc-500">
+                <p class="font-semibold text-foreground">Workspace Empty</p>
+                <p class="mt-2">
                     Your assigned classes will appear here once enrollment is
                     finalized.
                 </p>

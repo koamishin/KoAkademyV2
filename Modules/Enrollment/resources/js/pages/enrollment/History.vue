@@ -41,10 +41,8 @@ defineProps<{ enrollments: Enrollment[] }>();
     <Head title="Academic History" />
 
     <AppLayout :breadcrumbs="[{ title: 'Academic History' }]">
-        <div class="grid gap-6 p-4">
-            <header
-                class="rounded-xl border bg-card p-6 text-card-foreground shadow-sm"
-            >
+        <div class="p-4">
+            <header class="py-8">
                 <p class="text-sm font-medium text-primary">Student records</p>
                 <h1 class="mt-1 text-2xl font-semibold">Academic history</h1>
                 <p class="mt-2 text-sm text-muted-foreground">
@@ -56,10 +54,10 @@ defineProps<{ enrollments: Enrollment[] }>();
             <section
                 v-for="enrollment in enrollments"
                 :key="enrollment.id"
-                class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                class="py-6 border-t border-border/50 first:border-t-0"
             >
                 <div
-                    class="flex flex-col gap-3 border-b p-5 sm:flex-row sm:items-start sm:justify-between"
+                    class="flex flex-col gap-3 pb-4 sm:flex-row sm:items-start sm:justify-between"
                 >
                     <div>
                         <p class="text-sm font-medium text-primary">
@@ -80,11 +78,11 @@ defineProps<{ enrollments: Enrollment[] }>();
                     </span>
                 </div>
 
-                <div class="divide-y">
+                <div class="divide-y divide-border/50">
                     <article
                         v-for="subject in enrollment.subjects"
                         :key="subject.id"
-                        class="grid gap-2 p-4 sm:grid-cols-[1fr_auto_auto] sm:items-center"
+                        class="grid gap-2 py-3 sm:grid-cols-[1fr_auto_auto] sm:items-center"
                     >
                         <div>
                             <p class="font-medium">
@@ -106,7 +104,7 @@ defineProps<{ enrollments: Enrollment[] }>();
 
             <p
                 v-if="enrollments.length === 0"
-                class="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+                class="py-12 text-center text-sm text-muted-foreground"
             >
                 No academic history is available for your assigned campus.
             </p>
