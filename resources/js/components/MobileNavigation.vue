@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Home, BookOpen, History, User, Bell } from 'lucide-vue-next';
+import { Home, BookOpen, History, FileText } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { dashboard } from '@/routes/campus';
 import { index as classesIndex } from '@/routes/classroom';
+import { index as applicationsIndex } from '@/routes/applications';
 import type { AppPageProps } from '@/types';
 
 const page = usePage<AppPageProps>();
@@ -29,10 +30,10 @@ const navItems = computed(() => [
         active: page.url?.includes('academic-history'),
     },
     {
-        label: 'Profile',
-        icon: User,
-        href: '/settings/profile',
-        active: page.url?.includes('profile'),
+        label: 'Applications',
+        icon: FileText,
+        href: currentCampus.value ? applicationsIndex({ campus: currentCampus.value }).url : '#',
+        active: page.url?.includes('applications'),
     },
 ]);
 </script>
