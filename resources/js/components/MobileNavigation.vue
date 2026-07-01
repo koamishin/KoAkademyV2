@@ -25,13 +25,13 @@ const navItems = computed(() => [
     {
         label: 'History',
         icon: History,
-        href: '#',
-        active: page.url?.includes('history'),
+        href: currentCampus.value ? `/campus/${currentCampus.value}/academic-history` : '#',
+        active: page.url?.includes('academic-history'),
     },
     {
         label: 'Profile',
         icon: User,
-        href: '#',
+        href: '/settings/profile',
         active: page.url?.includes('profile'),
     },
 ]);
